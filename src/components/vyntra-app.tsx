@@ -37,6 +37,7 @@ import {
   TrendingUp,
   UserRound,
   UsersRound,
+  MapPin,
   X,
   Zap,
 } from "lucide-react";
@@ -54,6 +55,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Toaster } from "@/components/ui/sonner";
@@ -122,6 +124,7 @@ const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
 const FILTER_INITIAL: OpportunityFilters = {
   search: "",
   period: "30d",
+  state: "all",
   sellerId: "all",
   product: "all",
   category: "all",
@@ -996,6 +999,11 @@ function FilterBar({
         ["all", "Todos os vendedores"],
         ...sellers.map((s) => [s.id, s.name] as [string, string]),
       ])}
+      {select("state", "Estado", [
+        ["all", "RS e SC"],
+        ["RS", "Rio Grande do Sul"],
+        ["SC", "Santa Catarina"],
+      ])}
       {select("product", "Produto", [
         ["all", "Todos os produtos"],
         ...products.map((p) => [p, p] as [string, string]),
@@ -1041,6 +1049,7 @@ function FilterBar({
 function applyFilters(o: Opportunity, f: OpportunityFilters) {
   return (
     (f.sellerId === "all" || o.sellerId === f.sellerId) &&
+    (f.state === "all" || o.state === f.state) &&
     (f.product === "all" || o.product === f.product) &&
     (f.category === "all" || o.category === f.category) &&
     (f.method === "all" || o.method === f.method) &&
@@ -1051,9 +1060,32 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
 }
 
 function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }) {
-  const { opportunities, sellerById, now } = useVyntra();
+  const { opportunities, sellers, sellerById, assignLeads, now } = useVyntra();
   const [f, setF] = useState(FILTER_INITIAL);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [targetSeller, setTargetSeller] = useState("");
   const list = opportunities.filter((o) => applyFilters(o, f));
+  const visibleIds = list.map((o) => o.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+  const toggleLead = (id: string) =>
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id],
+    );
+  const toggleVisible = () =>
+    setSelectedIds((current) =>
+      allVisibleSelected
+        ? current.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...current, ...visibleIds])],
+    );
+  const distributeSelected = () => {
+    if (!targetSeller) {
+      toast.error("Escolha o vendedor que receberá os leads.");
+      return;
+    }
+    assignLeads(selectedIds, targetSeller);
+    setSelectedIds([]);
+    setTargetSeller("");
+  };
   return (
     <>
       <PageHeader
@@ -1076,14 +1108,51 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
         />
       </div>
       <FilterBar filters={f} setFilters={setF} />
+      {selectedIds.length > 0 && (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
+              {selectedIds.length}
+            </div>
+            <div>
+              <div className="text-sm font-semibold">
+                {selectedIds.length === 1 ? "Lead selecionado" : "Leads selecionados"}
+              </div>
+              <div className="text-xs text-muted-foreground">Escolha quem receberá esta carteira.</div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Select value={targetSeller} onValueChange={setTargetSeller}>
+              <SelectTrigger className="h-9 min-w-[220px] bg-surface">
+                <SelectValue placeholder="Escolher vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {sellers.map((seller) => (
+                  <SelectItem key={seller.id} value={seller.id}>
+                    {seller.name} · {seller.online ? "Online" : "Offline"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={distributeSelected}>
+              <Send /> Enviar leads
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="panel overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1400px] text-left">
+          <table className="w-full min-w-[1480px] text-left">
             <thead>
               <tr className="border-b border-border bg-surface-2/30 text-[10px] uppercase tracking-wider text-muted-foreground">
                 {[
+                  "Selecionar",
                   "Temperatura",
                   "Cliente",
+                  "Estado",
                   "Produto",
                   "Categoria",
                   "Forma de compra",
@@ -1112,12 +1181,24 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                     onClick={() => setSelected(o.id)}
                     className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40"
                   >
+                    <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                      <Checkbox
+                        aria-label={`Selecionar lead de ${o.customer.name}`}
+                        checked={selectedIds.includes(o.id)}
+                        onCheckedChange={() => toggleLead(o.id)}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <span className="text-lg">{tm.emoji}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium">{o.customer.name}</div>
                       <div className="text-[10px] text-muted-foreground">{o.id}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2 px-2 py-1 text-[10px] font-semibold">
+                        <MapPin className="size-3 text-primary" /> {o.state}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm">{o.product}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{o.category}</td>
@@ -1161,9 +1242,16 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
           </table>
         </div>
         <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground">
-          <span>
-            {list.length} de {opportunities.length} oportunidades de demonstração
-          </span>
+          <div className="flex items-center gap-3">
+            <Checkbox
+              aria-label="Selecionar todos os leads visíveis"
+              checked={allVisibleSelected}
+              onCheckedChange={toggleVisible}
+            />
+            <span>{allVisibleSelected ? "Desmarcar visíveis" : "Selecionar todos os visíveis"}</span>
+            <span>·</span>
+            <span>{list.length} de {opportunities.length} oportunidades</span>
+          </div>
           <span>Dados locais</span>
         </div>
       </div>
@@ -1274,6 +1362,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
                 ["Já fez simulação", o.simulated ? "Sim" : "Não"],
                 ["Principal objeção", o.objection],
                 ["Origem", o.source],
+                ["Estado", o.state === "RS" ? "Rio Grande do Sul" : "Santa Catarina"],
               ].map(([a, b]) => (
                 <div key={a}>
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -1498,6 +1587,14 @@ function Distribution() {
               </div>
               <h3 className="mt-4 font-semibold">{s.name}</h3>
               <p className="text-xs text-muted-foreground">{s.specialty}</p>
+              <div className="mt-3 flex gap-2 text-[10px] font-semibold">
+                <span className="rounded-md border border-border bg-surface-2 px-2 py-1">
+                  RS · {own.filter((o) => o.state === "RS").length}
+                </span>
+                <span className="rounded-md border border-border bg-surface-2 px-2 py-1">
+                  SC · {own.filter((o) => o.state === "SC").length}
+                </span>
+              </div>
               <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
                 <div>
                   <strong className="block text-lg">{own.length}</strong>
@@ -2132,8 +2229,8 @@ function Qualification() {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
               <div className="text-xs font-bold text-primary">ROTA COMERCIAL SUGERIDA</div>
               <div className="mt-3 text-lg font-semibold">
-                {answers.produto === "Honda 0 km" &&
-                (answers.orcamento === "Até R$300" || answers.orcamento === "R$300–500")
+                {answers["produto"] === "Honda 0 km" &&
+                (answers["orcamento"] === "Até R$300" || answers["orcamento"] === "R$300–500")
                   ? "Seminova — alternativa recomendada"
                   : "Financiamento — principal"}
               </div>

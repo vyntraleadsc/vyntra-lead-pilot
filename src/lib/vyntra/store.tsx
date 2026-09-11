@@ -74,6 +74,7 @@ interface VyntraContextValue extends PersistedState {
   registerContact: (id: string) => void;
   simulateWhatsApp: (id: string) => void;
   assignSeller: (id: string, sellerId: string) => void;
+  assignLeads: (ids: string[], sellerId: string) => void;
   changeRoute: (id: string, route: CommercialRoute) => void;
   sendProposal: (id: string) => void;
   setProposalStatus: (id: string, status: ProposalStatus) => void;
@@ -99,7 +100,16 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) setState(JSON.parse(stored) as PersistedState);
+      if (stored) {
+        const parsed = JSON.parse(stored) as PersistedState;
+        setState({
+          ...parsed,
+          opportunities: parsed.opportunities.map((opportunity, index) => ({
+            ...opportunity,
+            state: opportunity.state ?? (index % 2 === 0 ? "RS" : "SC"),
+          })),
+        });
+      }
     } catch {
       /* ignore corrupted demo state */
     }
@@ -199,6 +209,21 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         });
         toast.success(
           `Oportunidade redistribuída para ${sellerById(sellerId)?.name ?? "vendedor"}.`,
+        );
+      },
+      assignLeads: (ids, sellerId) => {
+        if (ids.length === 0) return;
+        const assignedAt = new Date().toISOString();
+        setState((s) => ({
+          ...s,
+          opportunities: s.opportunities.map((opportunity) =>
+            ids.includes(opportunity.id)
+              ? { ...opportunity, sellerId, assignedAt, firstResponseAt: null }
+              : opportunity,
+          ),
+        }));
+        toast.success(
+          `${ids.length} ${ids.length === 1 ? "lead enviado" : "leads enviados"} para ${sellerById(sellerId)?.name ?? "o vendedor"}.`,
         );
       },
       changeRoute: (id, route) => {

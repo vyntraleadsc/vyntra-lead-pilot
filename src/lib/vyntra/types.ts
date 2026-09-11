@@ -2,6 +2,8 @@ export type Temperature = "muito_quente" | "potencial" | "morno" | "baixo";
 
 export type Category = "0 km" | "Seminova";
 
+export type LeadState = "RS" | "SC";
+
 export type PurchaseMethod = "Financiamento" | "Consórcio" | "À vista";
 
 export type OpportunityStatus =
@@ -39,6 +41,7 @@ export interface RouteRecommendation {
 export interface Opportunity {
   id: string;
   customer: Customer;
+  state: LeadState;
   product: string;
   category: Category;
   method: PurchaseMethod;
@@ -127,6 +130,7 @@ export interface DistributionRules {
 export interface OpportunityFilters {
   search: string;
   period: string;
+  state: string;
   sellerId: string;
   product: string;
   category: string;

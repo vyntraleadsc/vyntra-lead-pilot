@@ -136,7 +136,12 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
       setState((s) => ({
         ...s,
         notifications: [
-          { ...n, id: `NT-${Math.random().toString(36).slice(2, 8)}`, read: false, createdAt: new Date().toISOString() },
+          {
+            ...n,
+            id: `NT-${Math.random().toString(36).slice(2, 8)}`,
+            read: false,
+            createdAt: new Date().toISOString(),
+          },
           ...s.notifications,
         ],
       }));
@@ -150,7 +155,8 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
       opportunityById,
       login: (email, password) => {
         const ok =
-          email.trim().toLowerCase() === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password;
+          email.trim().toLowerCase() === DEMO_CREDENTIALS.email &&
+          password === DEMO_CREDENTIALS.password;
         if (ok) setState((s) => ({ ...s, authed: true }));
         return ok;
       },
@@ -177,12 +183,23 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
       simulateWhatsApp: (id) => {
         const nowIso = new Date().toISOString();
         const o = opportunityById(id);
-        patchOpportunity(id, { lastContactAt: nowIso, firstResponseAt: o?.firstResponseAt ?? nowIso });
-        toast("WhatsApp simulado", { description: `Mensagem enviada para ${nameOf(id)} (ambiente demo).` });
+        patchOpportunity(id, {
+          lastContactAt: nowIso,
+          firstResponseAt: o?.firstResponseAt ?? nowIso,
+        });
+        toast("WhatsApp simulado", {
+          description: `Mensagem enviada para ${nameOf(id)} (ambiente demo).`,
+        });
       },
       assignSeller: (id, sellerId) => {
-        patchOpportunity(id, { sellerId, assignedAt: new Date().toISOString(), firstResponseAt: null });
-        toast.success(`Oportunidade redistribuída para ${sellerById(sellerId)?.name ?? "vendedor"}.`);
+        patchOpportunity(id, {
+          sellerId,
+          assignedAt: new Date().toISOString(),
+          firstResponseAt: null,
+        });
+        toast.success(
+          `Oportunidade redistribuída para ${sellerById(sellerId)?.name ?? "vendedor"}.`,
+        );
       },
       changeRoute: (id, route) => {
         const o = opportunityById(id);
@@ -196,7 +213,9 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         setState((s) => ({
           ...s,
           opportunities: s.opportunities.map((x) =>
-            x.id === id ? { ...x, status: "Proposta enviada", lastContactAt: new Date().toISOString() } : x,
+            x.id === id
+              ? { ...x, status: "Proposta enviada", lastContactAt: new Date().toISOString() }
+              : x,
           ),
           proposals: [
             {
@@ -248,7 +267,9 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         setState((s) => ({
           ...s,
           followUps: s.followUps.map((f) =>
-            f.id === id ? { ...f, dueAt: new Date(Date.now() + hoursFromNow * 3600000).toISOString() } : f,
+            f.id === id
+              ? { ...f, dueAt: new Date(Date.now() + hoursFromNow * 3600000).toISOString() }
+              : f,
           ),
         }));
         toast.success("Follow-up reagendado.");
@@ -279,9 +300,15 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
           notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
         })),
       markAllNotificationsRead: () =>
-        setState((s) => ({ ...s, notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
+        setState((s) => ({
+          ...s,
+          notifications: s.notifications.map((n) => ({ ...n, read: true })),
+        })),
       toggleDistributionRule: (key) =>
-        setState((s) => ({ ...s, distribution: { ...s.distribution, [key]: !s.distribution[key] } })),
+        setState((s) => ({
+          ...s,
+          distribution: { ...s.distribution, [key]: !s.distribution[key] },
+        })),
     };
   }, [state, hydrated, now, patchOpportunity]);
 

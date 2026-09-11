@@ -127,15 +127,16 @@
 }
 
 @utility glow-ring {
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent),
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent),
     0 18px 45px -25px color-mix(in oklab, var(--primary) 70%, transparent);
 }
 
 @utility grid-noise {
   background-image: radial-gradient(
-      circle at 1px 1px,
-      color-mix(in oklab, var(--foreground) 8%, transparent) 1px,
-      transparent 0
-    );
+    circle at 1px 1px,
+    color-mix(in oklab, var(--foreground) 8%, transparent) 1px,
+    transparent 0
+  );
   background-size: 28px 28px;
 }

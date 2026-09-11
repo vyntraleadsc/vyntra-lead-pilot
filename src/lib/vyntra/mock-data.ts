@@ -777,7 +777,9 @@ function buildReasons(r: Raw): string[] {
   else if (r.d === "Até 30 dias") out.push("Compra prevista em até 30 dias");
   else out.push("Horizonte de compra mais longo");
   out.push(`Produto definido: ${r.p} ${r.c}`);
-  out.push(r.e === "—" || r.e === "Sem entrada" ? "Sem entrada declarada" : `Entrada disponível (${r.e})`);
+  out.push(
+    r.e === "—" || r.e === "Sem entrada" ? "Sem entrada declarada" : `Entrada disponível (${r.e})`,
+  );
   if (r.sim) out.push("Já realizou simulação");
   if (r.trade) out.push("Possui moto para troca");
   out.push(`Forma de compra: ${r.m}`);

@@ -9,3 +9,6 @@
 - [x] Qualificação (simulador de 8 perguntas) e Impacto comercial/ROI
 - [x] Painel do vendedor (Carlos) + alternador de papel Gestor/Vendedor
 - [x] Configurações + verificação no navegador
+- [x] Estados RS/SC nos leads, filtros e detalhes
+- [x] Seleção individual/em massa e envio manual para vendedores
+- [x] Resumo da carteira por estado na distribuição

@@ -3,6 +3,7 @@ import type {
   Category,
   CommercialRoute,
   FollowUp,
+  LeadState,
   Opportunity,
   OpportunityStatus,
   Proposal,
@@ -788,13 +789,17 @@ function buildReasons(r: Raw): string[] {
 }
 
 export function buildOpportunities(): Opportunity[] {
-  return raw.map((r, i) => ({
+  return raw.map((r, i) => {
+    const state: LeadState = i % 2 === 0 ? "RS" : "SC";
+    const areaCode = state === "RS" ? "51" : "48";
+    return {
     id: `OPP-${String(1001 + i)}`,
     customer: {
       name: r.n,
-      whatsapp: `(35) 9${String(8000 + i).slice(0, 4)}-${String(1200 + i * 7).slice(0, 4)}`,
+      whatsapp: `(${areaCode}) 9${String(8000 + i).slice(0, 4)}-${String(1200 + i * 7).slice(0, 4)}`,
       email: `${r.n.toLowerCase().split(" ")[0]}@email.com`,
     },
+    state,
     product: r.p,
     category: r.c,
     method: r.m,
@@ -816,7 +821,8 @@ export function buildOpportunities(): Opportunity[] {
     simulated: Boolean(r.sim),
     route: { primary: r.rp, alternative: r.ra, rationale: r.rn, budgetFit: r.fit },
     source: r.src,
-  }));
+    };
+  });
 }
 
 export function buildFollowUps(opps: Opportunity[]): FollowUp[] {

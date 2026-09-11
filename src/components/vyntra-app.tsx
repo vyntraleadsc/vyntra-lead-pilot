@@ -1192,13 +1192,13 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                       <span className="text-lg">{tm.emoji}</span>
                     </td>
                     <td className="px-4 py-3">
+                      <div className="text-sm font-medium">{o.customer.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{o.id}</div>
+                    </td>
+                    <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2 px-2 py-1 text-[10px] font-semibold">
                         <MapPin className="size-3 text-primary" /> {o.state}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium">{o.customer.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{o.id}</div>
                     </td>
                     <td className="px-4 py-3 text-sm">{o.product}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{o.category}</td>
@@ -2229,8 +2229,8 @@ function Qualification() {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
               <div className="text-xs font-bold text-primary">ROTA COMERCIAL SUGERIDA</div>
               <div className="mt-3 text-lg font-semibold">
-                {answers.produto === "Honda 0 km" &&
-                (answers.orcamento === "Até R$300" || answers.orcamento === "R$300–500")
+                {answers["produto"] === "Honda 0 km" &&
+                (answers["orcamento"] === "Até R$300" || answers["orcamento"] === "R$300–500")
                   ? "Seminova — alternativa recomendada"
                   : "Financiamento — principal"}
               </div>

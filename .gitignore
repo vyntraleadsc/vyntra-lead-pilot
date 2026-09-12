@@ -30,3 +30,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Platform & local
+.env*
+.chat-history.json*
+.claude/
+.criefy/
+.references/
+.zheus/
+CLAUDE.md
+uploads/
+
+.git.old/

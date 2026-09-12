@@ -57,6 +57,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -352,35 +353,37 @@ function Sidebar({
 }) {
   const { logout, role, setRole } = useVyntra();
   const body = (
-    <div className="flex h-full flex-col bg-sidebar px-3 py-5">
-      <div className="px-3 pb-6">
+    <div className="flex h-full flex-col bg-sidebar px-3 py-4">
+      <div className="shrink-0 px-3 pb-4">
         <Brand />
       </div>
-      <div className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-        Navegação
-      </div>
-      <nav className="space-y-1">
-        {NAV.map((item) => {
-          const I = item.icon;
-          return (
-            <Button
-              key={item.id}
-              variant="ghost"
-              onClick={() => setView(item.id)}
-              className={cn(
-                "h-10 w-full justify-start px-3 text-muted-foreground",
-                view === item.id &&
-                  role === "gestor" &&
-                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--primary)]",
-              )}
-            >
-              <I className="size-[17px]" />
-              {item.label}
-            </Button>
-          );
-        })}
-      </nav>
-      <div className="mt-auto space-y-3">
+      <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2.5 custom-scrollbar">
+        <div className="mb-2.5 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Navegação
+        </div>
+        <nav className="space-y-1 pb-4">
+          {NAV.map((item) => {
+            const I = item.icon;
+            return (
+              <Button
+                key={item.id}
+                variant="ghost"
+                onClick={() => setView(item.id)}
+                className={cn(
+                  "h-10 w-full justify-start px-3 text-muted-foreground",
+                  view === item.id &&
+                    role === "gestor" &&
+                    "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--primary)]",
+                )}
+              >
+                <I className="size-[17px]" />
+                {item.label}
+              </Button>
+            );
+          })}
+        </nav>
+      </ScrollArea>
+      <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
         <div className="rounded-lg border border-border bg-surface/60 p-2.5">
           <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Visualizar como

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   BarChart3,
   Bell,
@@ -9,6 +10,7 @@ import {
   BriefcaseBusiness,
   CalendarClock,
   Check,
+  CheckCircle2,
   ChevronRight,
   CircleDollarSign,
   Clock3,
@@ -17,8 +19,11 @@ import {
   FileText,
   Flame,
   Gauge,
+  KeyRound,
   LayoutDashboard,
+  Lock,
   LogOut,
+  Mail,
   Menu,
   MessageCircle,
   MoreHorizontal,
@@ -36,6 +41,7 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
+  UserPlus,
   UserRound,
   UsersRound,
   MapPin,
@@ -155,24 +161,26 @@ export function VyntraApp() {
   );
 }
 
-function Brand({ compact = false }: { compact?: boolean }) {
+function Brand({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="relative grid size-8 place-items-center rounded-lg border border-primary/40 bg-primary/10">
-        <div className="h-3.5 w-3.5 rotate-45 border-b-2 border-r-2 border-primary" />
-        <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-[color:var(--violet)]" />
+    <div className={cn("inline-flex items-center gap-2.5", className)}>
+      <div className="relative overflow-hidden rounded-xl border border-cyan-500/25 bg-[#030712] p-1.5 shadow-[0_0_20px_-4px_rgba(6,182,212,0.3)] transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.4)]">
+        <img
+          src="/logo.png"
+          alt="VYNTRA"
+          className={cn(
+            "object-contain select-none",
+            compact ? "h-6 w-auto" : "h-7 sm:h-8 w-auto"
+          )}
+        />
       </div>
-      {!compact && (
-        <span className="font-display text-[19px] font-bold tracking-[0.16em] text-foreground">
-          VYNTRA
-        </span>
-      )}
     </div>
   );
 }
 
 function Login() {
   const { login, loginAs, sellers } = useVyntra();
+  const [authMode, setAuthMode] = useState<"login" | "forgot-password" | "first-access">("login");
   const [selectedRole, setSelectedRole] = useState<RoleView>("gestor");
   const [selectedSellerId, setSelectedSellerId] = useState("carlos");
   const [email, setEmail] = useState(DEMO_CREDENTIALS_GESTOR.email);
@@ -180,6 +188,18 @@ function Login() {
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotDone, setForgotDone] = useState(false);
+
+  // First access state
+  const [firstRole, setFirstRole] = useState<RoleView>("vendedor");
+  const [firstSellerId, setFirstSellerId] = useState("carlos");
+  const [firstEmail, setFirstEmail] = useState("carlos@vyntra.com");
+  const [firstPass, setFirstPass] = useState("");
+  const [firstPassConfirm, setFirstPassConfirm] = useState("");
+  const [firstShowPass, setFirstShowPass] = useState(false);
 
   const handleRoleChange = (role: RoleView) => {
     setSelectedRole(role);
@@ -205,206 +225,560 @@ function Login() {
     }
   };
 
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail || !forgotEmail.includes("@")) {
+      toast.error("Informe um e-mail válido para recuperação.");
+      return;
+    }
+    setForgotDone(true);
+    toast.success("Instruções de recuperação despachadas com sucesso.");
+  };
+
+  const handleFirstAccessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstEmail || !firstEmail.includes("@")) {
+      toast.error("Informe um e-mail corporativo válido.");
+      return;
+    }
+    if (firstPass.length < 6) {
+      toast.error("A senha deve conter no mínimo 6 caracteres.");
+      return;
+    }
+    if (firstPass !== firstPassConfirm) {
+      toast.error("A confirmação de senha não confere.");
+      return;
+    }
+    toast.success("Credencial corporativa ativada com sucesso. Acessando a plataforma...");
+    login(firstEmail, firstPass, firstRole, firstRole === "vendedor" ? firstSellerId : undefined);
+  };
+
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-      <section className="relative hidden overflow-hidden border-r border-border bg-sidebar p-12 lg:flex lg:flex-col">
-        <div className="absolute inset-0 grid-noise opacity-50" />
+    <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr] bg-[#030712] text-foreground selection:bg-cyan-500/30">
+      {/* Coluna Esquerda: Showcase & Branding Oficial */}
+      <section className="relative hidden overflow-hidden border-r border-border/40 bg-gradient-to-br from-[#02040a] via-[#050914] to-[#0a1128] p-12 lg:flex lg:flex-col justify-between">
+        {/* Glows de ambientação com a paleta original (Ciano Elétrico e Violeta) */}
+        <div className="pointer-events-none absolute -left-28 -top-28 size-[460px] rounded-full bg-cyan-500/15 blur-[120px] login-glow" />
+        <div
+          className="pointer-events-none absolute -bottom-28 -right-28 size-[520px] rounded-full bg-violet-600/15 blur-[140px] login-glow"
+          style={{ animationDelay: "-3.5s" }}
+        />
+        <div className="absolute inset-0 grid-noise opacity-35" />
+
+        {/* Topo: Logo Oficial em Alta Resolução */}
         <div className="relative z-10">
-          <Brand />
-        </div>
-        <div className="relative z-10 my-auto max-w-xl">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-            <Sparkles className="size-3.5" /> INTELIGÊNCIA COMERCIAL
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-cyan-500/30 bg-[#040816]/80 p-3 backdrop-blur-md shadow-[0_0_35px_-8px_rgba(6,182,212,0.35)] login-float">
+            <img
+              src="/logo.png"
+              alt="VYNTRA Logo Original"
+              className="h-9 w-auto object-contain select-none"
+            />
           </div>
-          <h1 className="text-5xl font-semibold leading-[1.08] text-foreground">
-            Da oportunidade ao resultado, <span className="text-primary">sem perder o timing.</span>
+        </div>
+
+        {/* Centro: Título e Proposta de Valor */}
+        <div className="relative z-10 my-auto max-w-xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/35 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-bold tracking-wider text-cyan-300 backdrop-blur-sm shadow-[0_0_25px_rgba(6,182,212,0.2)]">
+            <Sparkles className="size-3.5 text-cyan-300" />
+            MOTOR DE INTELIGÊNCIA COMERCIAL AUTOMOTIVA
+          </div>
+          <h1 className="text-5xl font-semibold leading-[1.08] text-foreground tracking-tight">
+            Da oportunidade ao fechamento,{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-violet-400 bg-clip-text text-transparent">
+              sem perder o timing.
+            </span>
           </h1>
-          <p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">
-            Qualifique, priorize e direcione cada oportunidade para a melhor rota comercial.
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground font-normal">
+            Qualificação preditiva com score de compra, SLA de primeiro contato em até 5 minutos e
+            direcionamento otimizado para a rede de concessionárias em RS e SC.
           </p>
-          <div className="mt-12 grid grid-cols-3 gap-3">
+
+          <div className="mt-10 grid grid-cols-3 gap-3">
             {[
-              ["QUALIFICAR", "Entender intenção"],
-              ["PRIORIZAR", "Agir no momento"],
-              ["RECUPERAR", "Reduzir perdas"],
+              ["QUALIFICAR", "Score de 0 a 100 e intenção real"],
+              ["SLA ÁGIL", "Resposta rápida em até 5 min"],
+              ["ROTA IDEAL", "0 km, seminova ou consórcio"],
             ].map(([a, b]) => (
-              <div key={a} className="border-l-2 border-primary/40 pl-3">
-                <div className="text-xs font-bold text-foreground">{a}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{b}</div>
+              <div
+                key={a}
+                className="rounded-xl border border-cyan-500/20 bg-[#080e22]/50 p-3.5 backdrop-blur-sm transition-all hover:border-cyan-400/40 hover:bg-[#0a122e]/70"
+              >
+                <div className="text-[11px] font-bold text-cyan-300 tracking-wide">{a}</div>
+                <div className="mt-1 text-xs text-muted-foreground leading-snug">{b}</div>
               </div>
             ))}
           </div>
         </div>
-        <p className="relative z-10 text-xs text-muted-foreground">
-          VYNTRA · Acessos separados para Gestão e Equipe de Vendas
-        </p>
+
+        {/* Rodapé: Concessionárias e Status */}
+        <div className="relative z-10 flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
+          <span className="font-medium">VYNTRA · Unidades Lages, Três Passos e Santa Rosa</span>
+          <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+            Ambiente operacional ativo
+          </span>
+        </div>
       </section>
-      <section className="flex items-center justify-center bg-background px-5 py-12">
-        <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden">
-            <Brand />
-          </div>
-          <div className="mb-6">
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary">
-              <span className="size-1.5 rounded-full bg-primary" /> ACESSO À PLATAFORMA
+
+      {/* Coluna Direita: Formulários Interativos com Efeitos de Entrada */}
+      <section className="relative flex items-center justify-center bg-gradient-to-b from-[#030611] to-[#060b1b] px-5 py-12 overflow-y-auto">
+        {/* Glow sutil no mobile e desktop */}
+        <div className="pointer-events-none absolute top-0 right-0 size-80 rounded-full bg-cyan-500/10 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 size-80 rounded-full bg-violet-600/10 blur-[100px]" />
+
+        <div className="relative z-10 w-full max-w-md my-auto">
+          {/* Logo no Mobile */}
+          <div className="mb-8 flex items-center justify-center lg:hidden login-enter-1">
+            <div className="rounded-2xl border border-cyan-500/30 bg-[#040816]/90 p-2.5 shadow-[0_0_30px_-5px_rgba(6,182,212,0.35)]">
+              <img src="/logo.png" alt="VYNTRA" className="h-8 w-auto object-contain" />
             </div>
-            <h2 className="text-2xl font-semibold sm:text-3xl">Selecione seu perfil</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Acesso especializado conforme o papel na operação comercial.
-            </p>
           </div>
 
-          <div className="mb-5 grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-surface p-1.5">
-            <button
-              type="button"
-              onClick={() => handleRoleChange("gestor")}
-              className={cn(
-                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all",
-                selectedRole === "gestor"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <ShieldCheck className="size-4" />
-              Acesso Gestor
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleChange("vendedor")}
-              className={cn(
-                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all",
-                selectedRole === "vendedor"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <UserRound className="size-4" />
-              Acesso Vendedor
-            </button>
-          </div>
+          {/* VISTA 1: LOGIN PRINCIPAL */}
+          {authMode === "login" && (
+            <div>
+              {/* Header do Login */}
+              <div className="mb-6 login-enter-1">
+                <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold text-cyan-400">
+                  <span className="size-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                  ACESSO À PLATAFORMA
+                </div>
+                <h2 className="text-2xl font-semibold sm:text-3xl text-foreground">
+                  Selecione seu perfil
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Acesso com permissões dedicadas para cada função comercial.
+                </p>
+              </div>
 
-          <div className="mb-5 rounded-xl border border-border bg-surface/60 p-3 text-xs leading-relaxed text-muted-foreground">
-            {selectedRole === "gestor" ? (
-              <>
-                <strong className="block font-semibold text-foreground mb-0.5">
-                  Painel da Gerência Geral:
-                </strong>
-                Visão consolidada das lojas de Lages/SC, Três Passos/RS e Santa Rosa/RS, métricas de conversão, funil global e regras de distribuição inteligente.
-              </>
-            ) : (
-              <>
-                <strong className="block font-semibold text-foreground mb-0.5">
-                  Painel do Consultor de Vendas:
-                </strong>
-                Fila de ação e atendimento rápido (SLA), leads atribuídos individualmente, agendamento de follow-ups e simulação com o cliente.
-              </>
-            )}
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {selectedRole === "vendedor" && (
-              <label className="block text-sm font-medium">
-                Consultor
-                <Select value={selectedSellerId} onValueChange={handleSellerChange}>
-                  <SelectTrigger className="mt-1.5 h-11 bg-surface">
-                    <SelectValue placeholder="Selecione o consultor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sellers.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name} ({s.specialty})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-            )}
-            <label className="block text-sm font-medium">
-              E-mail
-              <Input
-                className="mt-1.5 h-11 bg-surface"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError("");
-                }}
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              Senha
-              <div className="relative mt-1.5">
-                <Input
-                  className="h-11 bg-surface pr-11"
-                  type={show ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                />
-                <Button
+              {/* Seletor de Perfil Gestor vs Vendedor */}
+              <div className="mb-5 grid grid-cols-2 gap-1.5 rounded-xl border border-cyan-500/20 bg-[#060b1c]/80 p-1.5 backdrop-blur-sm login-enter-2 shadow-inner">
+                <button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1"
-                  onClick={() => setShow(!show)}
-                  aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                  onClick={() => handleRoleChange("gestor")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all duration-300",
+                    selectedRole === "gestor"
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                  )}
                 >
-                  {show ? <EyeOff /> : <Eye />}
-                </Button>
+                  <ShieldCheck className="size-4" />
+                  Acesso Gestor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRoleChange("vendedor")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all duration-300",
+                    selectedRole === "vendedor"
+                      ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                  )}
+                >
+                  <UserRound className="size-4" />
+                  Acesso Vendedor
+                </button>
               </div>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="size-4 accent-primary"
-              />{" "}
-              Lembrar de mim
-            </label>
-            {error && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-            <Button className="h-11 w-full font-semibold" type="submit">
-              Entrar como {selectedRole === "gestor" ? "Gestor" : "Vendedor"} <ArrowRight />
-            </Button>
-          </form>
 
-          <div className="mt-6 space-y-2">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Acesso Rápido de Demonstração
+              {/* Card Informativo do Perfil Selecionado */}
+              <div className="mb-5 rounded-xl border border-cyan-500/20 bg-[#070e24]/70 p-3.5 text-xs leading-relaxed text-muted-foreground backdrop-blur-sm login-enter-2">
+                {selectedRole === "gestor" ? (
+                  <>
+                    <div className="flex items-center gap-2 font-semibold text-cyan-300 mb-1">
+                      <ShieldCheck className="size-3.5" />
+                      Visão Gerencial e Supervisão:
+                    </div>
+                    Controle consolidado das unidades (Lages, Três Passos e Santa Rosa), funil
+                    geral, regras de distribuição e desempenho da equipe.
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 font-semibold text-violet-300 mb-1">
+                      <UserRound className="size-3.5" />
+                      Painel do Consultor Comercial:
+                    </div>
+                    Fila de ação em tempo real com SLA de resposta, leads individuais, propostas e
+                    follow-ups exclusivos.
+                  </>
+                )}
+              </div>
+
+              {/* Formulário de Login */}
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                {selectedRole === "vendedor" && (
+                  <label className="block text-sm font-medium login-enter-3">
+                    <span className="text-muted-foreground">Consultor responsável</span>
+                    <Select value={selectedSellerId} onValueChange={handleSellerChange}>
+                      <SelectTrigger className="mt-1.5 h-11 border-cyan-500/25 bg-[#070d20] focus:border-cyan-400 focus:ring-cyan-500/20">
+                        <SelectValue placeholder="Selecione o consultor" />
+                      </SelectTrigger>
+                      <SelectContent className="border-cyan-500/30 bg-[#080f26]">
+                        {sellers.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name} · {s.specialty}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                )}
+
+                <div className="login-enter-3">
+                  <label className="block text-sm font-medium">
+                    <span className="text-muted-foreground">E-mail corporativo</span>
+                    <div className="relative mt-1.5">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        className="h-11 border-cyan-500/25 bg-[#070d20] pl-10 focus:border-cyan-400 focus:ring-cyan-500/20"
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setError("");
+                        }}
+                      />
+                    </div>
+                  </label>
+                </div>
+
+                <div className="login-enter-4">
+                  <div className="flex items-center justify-between text-sm font-medium">
+                    <span className="text-muted-foreground">Senha</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotEmail(email);
+                        setForgotDone(false);
+                        setAuthMode("forgot-password");
+                      }}
+                      className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <div className="relative mt-1.5">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      className="h-11 border-cyan-500/25 bg-[#070d20] pl-10 pr-11 focus:border-cyan-400 focus:ring-cyan-500/20"
+                      type={show ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError("");
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShow(!show)}
+                      aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm login-enter-4">
+                  <label className="flex cursor-pointer items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="size-4 rounded accent-cyan-500"
+                    />
+                    Lembrar de mim neste dispositivo
+                  </label>
+                </div>
+
+                {error && (
+                  <div className="rounded-lg border border-destructive/40 bg-destructive/15 px-3.5 py-2.5 text-sm text-destructive font-medium animate-shake">
+                    {error}
+                  </div>
+                )}
+
+                <Button
+                  className="h-11 w-full font-semibold bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(6,182,212,0.5)] transition-all duration-300 login-enter-5"
+                  type="submit"
+                >
+                  Entrar como {selectedRole === "gestor" ? "Gestor" : "Vendedor"}
+                  <ArrowRight className="size-4 ml-1.5" />
+                </Button>
+
+                <div className="pt-2 text-center login-enter-5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFirstEmail(email);
+                      setFirstRole(selectedRole);
+                      setAuthMode("first-access");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-cyan-400 transition-colors"
+                  >
+                    <UserPlus className="size-3.5 text-cyan-400" />
+                    Primeiro acesso? <strong className="font-semibold text-cyan-400">Ative sua conta corporativa</strong>
+                  </button>
+                </div>
+              </form>
+
+              {/* Seção de Acesso Rápido para Demonstração */}
+              <div className="mt-7 space-y-2.5 login-enter-6">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span>Acesso Rápido de Demonstração</span>
+                  <span className="text-[10px] text-cyan-400 font-semibold">1-Clique</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => loginAs("gestor")}
+                    className="flex flex-col items-start gap-1 rounded-xl border border-cyan-500/30 bg-[#071026]/70 p-3 text-left transition-all hover:bg-cyan-500/10 hover:border-cyan-400/60 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)]"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400">
+                      <ShieldCheck className="size-3.5" />
+                      Entrar como Gestor
+                    </div>
+                    <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
+                    <div className="text-[10px] text-muted-foreground">Visão geral e lojas RS/SC</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loginAs("vendedor", "carlos")}
+                    className="flex flex-col items-start gap-1 rounded-xl border border-violet-500/30 bg-[#0d0a26]/70 p-3 text-left transition-all hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)]"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400">
+                      <UserRound className="size-3.5" />
+                      Entrar como Vendedor
+                    </div>
+                    <div className="text-[11px] text-foreground font-medium">carlos@vyntra.com</div>
+                    <div className="text-[10px] text-muted-foreground">Fila de ação e consultor</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Rodapé de Segurança */}
+              <div className="mt-8 flex items-center justify-center gap-2 text-[11px] text-muted-foreground login-enter-6">
+                <span className="size-1.5 rounded-full bg-cyan-400" />
+                <span>Autenticação criptografada TLS 1.3 · Rede Concessionárias</span>
+              </div>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
+          )}
+
+          {/* VISTA 2: ESQUECI MINHA SENHA */}
+          {authMode === "forgot-password" && (
+            <div className="login-enter-1">
               <button
                 type="button"
-                onClick={() => loginAs("gestor")}
-                className="flex flex-col items-start gap-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-left transition-all hover:bg-primary/10 hover:border-primary/50"
+                onClick={() => setAuthMode("login")}
+                className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
-                  <ShieldCheck className="size-3.5" />
-                  Entrar como Gestor
-                </div>
-                <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
-                <div className="text-[10px] text-muted-foreground">Gestão total de lojas e equipe</div>
+                <ArrowLeft className="size-4" /> Voltar para o login
               </button>
+
+              <div className="mb-6">
+                <div className="mb-3 grid size-12 place-items-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 shadow-[0_0_25px_rgba(6,182,212,0.3)]">
+                  <KeyRound className="size-6" />
+                </div>
+                <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                  Recuperar senha
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Informe o e-mail corporativo cadastrado na concessionária para redefinir sua credencial.
+                </p>
+              </div>
+
+              {!forgotDone ? (
+                <form className="space-y-4" onSubmit={handleForgotSubmit}>
+                  <label className="block text-sm font-medium">
+                    <span className="text-muted-foreground">E-mail corporativo</span>
+                    <div className="relative mt-1.5">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        className="h-11 border-cyan-500/25 bg-[#070d20] pl-10 focus:border-cyan-400 focus:ring-cyan-500/20"
+                        type="email"
+                        placeholder="seu.nome@vyntra.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </label>
+
+                  <Button
+                    className="h-11 w-full font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:shadow-[0_0_35px_rgba(6,182,212,0.5)]"
+                    type="submit"
+                  >
+                    Enviar link de recuperação
+                    <ArrowRight className="size-4 ml-1.5" />
+                  </Button>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-relaxed text-emerald-300">
+                    <div className="flex items-center gap-2 font-semibold text-emerald-400 mb-1">
+                      <CheckCircle2 className="size-4" />
+                      Instruções despachadas com sucesso!
+                    </div>
+                    Um token de verificação e instruções foram enviados para{" "}
+                    <strong>{forgotEmail}</strong>. No ambiente de demonstração, sua senha padrão é{" "}
+                    <span className="font-mono font-bold text-white">123456</span>.
+                  </div>
+
+                  <Button
+                    className="h-11 w-full font-semibold bg-cyan-600 text-white hover:bg-cyan-500"
+                    type="button"
+                    onClick={() => {
+                      setEmail(forgotEmail);
+                      setPassword("123456");
+                      setAuthMode("login");
+                    }}
+                  >
+                    Voltar ao login com este e-mail
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* VISTA 3: PRIMEIRO ACESSO */}
+          {authMode === "first-access" && (
+            <div className="login-enter-1">
               <button
                 type="button"
-                onClick={() => loginAs("vendedor", "carlos")}
-                className="flex flex-col items-start gap-1 rounded-xl border border-[color:var(--violet)]/30 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-3 text-left transition-all hover:bg-[color:color-mix(in_oklab,var(--violet)_10%,transparent)] hover:border-[color:var(--violet)]/50"
+                onClick={() => setAuthMode("login")}
+                className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[color:var(--violet)]">
-                  <UserRound className="size-3.5" />
-                  Entrar como Vendedor
-                </div>
-                <div className="text-[11px] text-foreground font-medium">vendedor@vyntra.com</div>
-                <div className="text-[10px] text-muted-foreground">Fila de ação e leads do consultor</div>
+                <ArrowLeft className="size-4" /> Voltar para o login
               </button>
+
+              <div className="mb-6">
+                <div className="mb-3 grid size-12 place-items-center rounded-xl border border-violet-500/30 bg-violet-500/10 text-violet-400 shadow-[0_0_25px_rgba(139,92,246,0.3)]">
+                  <Sparkles className="size-6" />
+                </div>
+                <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                  Primeiro acesso
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ative sua credencial corporativa na rede de concessionárias VYNTRA.
+                </p>
+              </div>
+
+              <form className="space-y-4" onSubmit={handleFirstAccessSubmit}>
+                {/* Escolha do Perfil */}
+                <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-cyan-500/20 bg-[#060b1c] p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFirstRole("gestor");
+                      setFirstEmail("gestor@vyntra.com");
+                    }}
+                    className={cn(
+                      "py-2 text-xs font-semibold rounded-lg transition-all",
+                      firstRole === "gestor"
+                        ? "bg-cyan-500 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    Gestor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFirstRole("vendedor");
+                      setFirstEmail(`${firstSellerId}@vyntra.com`);
+                    }}
+                    className={cn(
+                      "py-2 text-xs font-semibold rounded-lg transition-all",
+                      firstRole === "vendedor"
+                        ? "bg-violet-600 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    Consultor
+                  </button>
+                </div>
+
+                {firstRole === "vendedor" && (
+                  <label className="block text-sm font-medium">
+                    <span className="text-muted-foreground">Consultor associado</span>
+                    <Select
+                      value={firstSellerId}
+                      onValueChange={(v) => {
+                        setFirstSellerId(v);
+                        setFirstEmail(`${v}@vyntra.com`);
+                      }}
+                    >
+                      <SelectTrigger className="mt-1.5 h-11 border-cyan-500/25 bg-[#070d20]">
+                        <SelectValue placeholder="Selecione o consultor" />
+                      </SelectTrigger>
+                      <SelectContent className="border-cyan-500/30 bg-[#080f26]">
+                        {sellers.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name} ({s.specialty})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                )}
+
+                <label className="block text-sm font-medium">
+                  <span className="text-muted-foreground">E-mail corporativo</span>
+                  <Input
+                    className="mt-1.5 h-11 border-cyan-500/25 bg-[#070d20]"
+                    type="email"
+                    value={firstEmail}
+                    onChange={(e) => setFirstEmail(e.target.value)}
+                    required
+                  />
+                </label>
+
+                <label className="block text-sm font-medium">
+                  <span className="text-muted-foreground">Criar nova senha (mínimo 6 dígitos)</span>
+                  <div className="relative mt-1.5">
+                    <Input
+                      className="h-11 border-cyan-500/25 bg-[#070d20] pr-10"
+                      type={firstShowPass ? "text" : "password"}
+                      value={firstPass}
+                      onChange={(e) => setFirstPass(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1 text-muted-foreground"
+                      onClick={() => setFirstShowPass(!firstShowPass)}
+                    >
+                      {firstShowPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </Button>
+                  </div>
+                </label>
+
+                <label className="block text-sm font-medium">
+                  <span className="text-muted-foreground">Confirmar nova senha</span>
+                  <Input
+                    className="mt-1.5 h-11 border-cyan-500/25 bg-[#070d20]"
+                    type={firstShowPass ? "text" : "password"}
+                    value={firstPassConfirm}
+                    onChange={(e) => setFirstPassConfirm(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </label>
+
+                <Button
+                  className="h-11 w-full font-semibold bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-[0_0_25px_rgba(139,92,246,0.35)]"
+                  type="submit"
+                >
+                  Ativar conta e acessar agora
+                  <ArrowRight className="size-4 ml-1.5" />
+                </Button>
+              </form>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </main>

@@ -164,3 +164,59 @@
   }
 }
 
+@keyframes enterFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+
+.login-enter-1 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+.login-enter-2 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+.login-enter-3 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both;
+}
+.login-enter-4 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
+}
+.login-enter-5 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.33s both;
+}
+.login-enter-6 {
+  animation: enterFadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both;
+}
+.login-float {
+  animation: subtleFloat 5s ease-in-out infinite;
+}
+.login-glow {
+  animation: glowPulse 7s ease-in-out infinite;
+}
+

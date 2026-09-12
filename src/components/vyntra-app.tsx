@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -175,6 +175,20 @@ const FILTER_INITIAL: OpportunityFilters = {
 
 function VyntraAppContent() {
   const { hydrated, authed } = useVyntra();
+
+  useEffect(() => {
+    if (!authed) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const t = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 60);
+    return () => clearTimeout(t);
+  }, [authed]);
+
   if (!hydrated) return <div className="min-h-screen bg-background" />;
   return (
     <>
@@ -258,12 +272,18 @@ function Login() {
     explicitEmail?: string,
     explicitPass?: string,
   ) => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     const name =
       role === "gestor"
         ? "Airton Lindão"
         : sellers.find((s) => s.id === (sellerId || selectedSellerId))?.name || "Francine";
     setWelcomeUser({ name, role });
     setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       if (explicitEmail && explicitPass) {
         login(explicitEmail, explicitPass, role, sellerId);
       } else {
@@ -903,6 +923,18 @@ function Workspace() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const t = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 50);
+    return () => clearTimeout(t);
+  }, [view]);
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar
@@ -1342,7 +1374,7 @@ function ManagerView({
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
   if (view === "team") return <Team />;
-  if (view === "insights") return <Insights />;
+  if (view === "insights") return <Insights setView={setView} setSelected={setSelected} />;
   if (view === "qualification") return <Qualification />;
   if (view === "impact") return <Impact />;
   if (view === "integrations")
@@ -1440,6 +1472,12 @@ function Overview({
   setSelected: (v: string) => void;
   setView?: (v: View) => void;
 }) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   const { opportunities, followUps, now } = useVyntra();
   const hot = opportunities.filter((o) => o.score >= 80);
   const critical = hot.filter((o) => {
@@ -3804,133 +3842,801 @@ function Team() {
     </>
   );
 }
-function Insights() {
-  const loss = [
-    { n: "Parcela incompatível", v: 35 },
-    { n: "Sem entrada", v: 24 },
-    { n: "Cliente não respondeu", v: 18 },
-    { n: "Problema de crédito", v: 12 },
-    { n: "Comprou outra marca", v: 7 },
-    { n: "Outros", v: 4 },
+function Insights({
+  setView,
+  setSelected,
+}: {
+  setView?: (v: View) => void;
+  setSelected?: (v: string | null) => void;
+}) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
+  const [period, setPeriod] = useState<"30d" | "15d" | "7d">("30d");
+  const [activeTab, setActiveTab] = useState<"losses" | "funnel" | "regional">("losses");
+
+  // Detailed Loss Reasons Data with Monetary and Playbook metadata
+  const lossData = [
+    {
+      n: "Parcela incompatível",
+      v: 35,
+      amount: 280000,
+      color: "oklch(0.72 0.19 148)", // emerald/green
+      badge: "Rota Seminova",
+      action: "Orçamento aquém da 0 km: direcionar para motos seminovas certificadas.",
+    },
+    {
+      n: "Sem entrada imediata",
+      v: 24,
+      amount: 192000,
+      color: "oklch(0.82 0.17 85)", // golden amber
+      badge: "Consórcio Honda",
+      action: "Ativação de cota de consórcio sem entrada e parcelas reduzidas.",
+    },
+    {
+      n: "Cliente não respondeu (SLA)",
+      v: 18,
+      amount: 144000,
+      color: "oklch(0.86 0.17 95)", // bright yellow
+      badge: "Trava de SLA",
+      action: "Tempo de primeiro contato excedeu 10 minutos; esfriamento acelerado.",
+    },
+    {
+      n: "Restrição / Crédito reprovado",
+      v: 12,
+      amount: 96000,
+      color: "oklch(0.65 0.17 295)", // violet
+      badge: "Consórcio Nacional",
+      action: "Consórcio Honda não exige consulta prévia para adesão da cota.",
+    },
+    {
+      n: "Comprou concorrente (Yamaha)",
+      v: 7,
+      amount: 56000,
+      color: "oklch(0.64 0.22 25)", // red
+      badge: "Agilidade",
+      action: "Perda por falta de proposta formal no primeiro dia útil do lead.",
+    },
+    {
+      n: "Outros motivos / Desistência",
+      v: 4,
+      amount: 32000,
+      color: "oklch(0.7 0.022 258)", // muted
+      badge: "Follow-up",
+      action: "Adiar compra para momento futuro ou mudança de prioridade.",
+    },
   ];
-  const colors = [
-    "var(--hot)",
-    "var(--warm)",
-    "var(--mild)",
-    "var(--cold)",
-    "var(--violet)",
-    "var(--muted-foreground)",
+
+  const totalLossValue = lossData.reduce((acc, x) => acc + x.amount, 0);
+
+  // Conversion Funnel Data
+  const funnelStages = [
+    {
+      stage: "1. Qualificação Vyntra",
+      count: 168,
+      pct: 100,
+      conversion: 94,
+      drop: 6,
+      desc: "Leads identificados por Score comercial e intenção de compra",
+      tone: "from-cyan-500 to-blue-600",
+    },
+    {
+      stage: "2. Primeiro Contato (SLA <5m)",
+      count: 158,
+      pct: 94,
+      conversion: 68,
+      drop: 26,
+      desc: "Abordagem rápida via WhatsApp/Ligação pela equipe de vendas",
+      tone: "from-blue-500 to-indigo-600",
+    },
+    {
+      stage: "3. Envio de Proposta / Simulação",
+      count: 107,
+      pct: 64,
+      conversion: 62,
+      drop: 38,
+      desc: "Simulação de 0 km, Consórcio ou Seminova com entrada flexível",
+      tone: "from-indigo-500 to-purple-600",
+    },
+    {
+      stage: "4. Negociação & Fechamento",
+      count: 66,
+      pct: 39,
+      conversion: 59,
+      drop: 41,
+      desc: "Aprovação de crédito, assinatura de cota ou entrega da moto",
+      tone: "from-emerald-500 to-teal-500",
+    },
   ];
+
+  // Regional Dealerships Performance
+  const regionalStores = [
+    {
+      name: "Passos Honda Lages / SC",
+      region: "Serra Catarinense",
+      sla: "7 min",
+      conversion: "34%",
+      sales: 42,
+      leads: 124,
+      health: "Excelente",
+      healthTone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+      topRoute: "Honda 0 km & Consórcio",
+    },
+    {
+      name: "Passos Honda Três Passos / RS",
+      region: "Noroeste Gaúcho",
+      sla: "9 min",
+      conversion: "29%",
+      sales: 28,
+      leads: 97,
+      health: "Estável",
+      healthTone: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30",
+      topRoute: "Seminovas & Financiamento",
+    },
+    {
+      name: "Passos Honda Santa Rosa / RS",
+      region: "Missões / Região Noroeste",
+      sla: "11 min",
+      conversion: "25%",
+      sales: 22,
+      leads: 88,
+      health: "Atenção SLA",
+      healthTone: "text-amber-400 bg-amber-500/10 border-amber-500/30",
+      topRoute: "Consórcio & Financiamento",
+    },
+  ];
+
   return (
-    <>
-      <PageHeader
-        title="Insights"
-        subtitle="Entenda por que oportunidades avançam, travam ou são perdidas."
-        action={
-          <div className="flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary">
-            <Sparkles className="size-3" />
-            Análise simulada por IA
+    <div className="space-y-6">
+      {/* Hero Header Executivo de Inteligência */}
+      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-[#061329]/95 via-[#0a1835]/80 to-[#040816]/95 p-5 sm:p-6 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
+        <div className="pointer-events-none absolute -right-20 -top-20 size-72 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 -bottom-20 size-72 rounded-full bg-violet-600/15 blur-3xl" />
+
+        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                <Sparkles className="size-3 text-cyan-300 animate-pulse" />
+                Vyntra Cognitive Engine 4.2
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
+                Diagnóstico em Tempo Real
+              </span>
+              <span className="rounded-full border border-border/60 bg-surface-2/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-300">
+                Rede Passos Honda
+              </span>
+            </div>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Diagnósticos & Insights Estratégicos
+            </h1>
+            <p className="mt-1 max-w-2xl text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Mapeamento analítico de gargalos de atendimento, motivos reais de perda e planos de reversão comercial para as unidades de SC e RS.
+            </p>
           </div>
-        }
-      />
-      <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <section className="panel p-5">
-          <h2 className="font-semibold">Por que estamos perdendo oportunidades?</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Motivos registrados nos últimos 30 dias
-          </p>
-          <div className="mt-4 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={loss} layout="vertical" margin={{ left: 40 }}>
-                <CartesianGrid stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" stroke="var(--muted-foreground)" fontSize={10} />
-                <YAxis
-                  type="category"
-                  dataKey="n"
-                  width={130}
-                  stroke="var(--muted-foreground)"
-                  fontSize={10}
-                />
-                <ChartTooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)" }}
-                />
-                <Bar dataKey="v" radius={[0, 5, 5, 0]}>
-                  {loss.map((_, i) => (
-                    <Cell key={i} fill={colors[i]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+
+          {/* Controles de Período e Ações */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-xl border border-border/70 bg-surface-2/80 p-1 backdrop-blur-md">
+              <button
+                onClick={() => setPeriod("30d")}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                  period === "30d"
+                    ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Últimos 30 dias
+              </button>
+              <button
+                onClick={() => setPeriod("15d")}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                  period === "15d"
+                    ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                15 dias
+              </button>
+              <button
+                onClick={() => setPeriod("7d")}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                  period === "7d"
+                    ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                7 dias
+              </button>
+            </div>
+            {setView && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setView("impact")}
+                className="h-9 border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 text-xs font-semibold"
+              >
+                <Zap className="mr-1.5 size-3.5" />
+                Simulador de Impacto
+              </Button>
+            )}
           </div>
-        </section>
-        <section className="panel p-5">
-          <h2 className="font-semibold">Distribuição das perdas</h2>
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={loss}
-                  dataKey="v"
-                  nameKey="n"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={2}
+        </div>
+      </div>
+
+      {/* 4 Cards de Métricas Executivas com Glow e Status */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Receita Recuperável */}
+        <div className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#061814]/90 to-[#04100c]/90 p-4 transition-all duration-300 hover:border-emerald-500/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.18)]">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold text-slate-300">Receita Recuperável</span>
+            <div className="grid size-8 place-items-center rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+              <Coins className="size-4" />
+            </div>
+          </div>
+          <div className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            {BRL(496000)}
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1 font-semibold text-emerald-400">
+              <TrendingUp className="size-3" />
+              62% das perdas
+            </span>
+            <span className="text-muted-foreground">via Consórcio / Seminova</span>
+          </div>
+        </div>
+
+        {/* Card 2: Gargalo Crítico #1 */}
+        <div className="group relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-b from-[#1c0a12]/90 to-[#10050c]/90 p-4 transition-all duration-300 hover:border-rose-500/60 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)]">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold text-slate-300">Gargalo Crítico #1</span>
+            <div className="grid size-8 place-items-center rounded-lg border border-rose-500/40 bg-rose-500/15 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)]">
+              <Clock3 className="size-4" />
+            </div>
+          </div>
+          <div className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-rose-300">
+            SLA &gt; 10 min
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1 font-semibold text-rose-400">
+              <AlertTriangle className="size-3" />
+              64% das perdas
+            </span>
+            <span className="text-muted-foreground">esfriamento rápido</span>
+          </div>
+        </div>
+
+        {/* Card 3: Alavanca Consórcio */}
+        <div className="group relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#1c1408]/90 to-[#100a04]/90 p-4 transition-all duration-300 hover:border-amber-500/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)]">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold text-slate-300">Alavanca de Tração</span>
+            <div className="grid size-8 place-items-center rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+              <Sparkles className="size-4" />
+            </div>
+          </div>
+          <div className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-amber-300">
+            +32% Avanço
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1 font-semibold text-amber-400">
+              <CheckCircle2 className="size-3" />
+              Consórcio Honda
+            </span>
+            <span className="text-muted-foreground">sem barreira de entrada</span>
+          </div>
+        </div>
+
+        {/* Card 4: Score Médio de Conversão */}
+        <div className="group relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-[#061828]/90 to-[#040e1a]/90 p-4 transition-all duration-300 hover:border-cyan-500/60 hover:shadow-[0_0_30px_rgba(6,182,212,0.18)]">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold text-slate-300">Score de Conversão</span>
+            <div className="grid size-8 place-items-center rounded-lg border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+              <Target className="size-4" />
+            </div>
+          </div>
+          <div className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-cyan-300">
+            82 Pontos
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1 font-semibold text-cyan-400">
+              <TrendingUp className="size-3" />
+              4.2x mais vendas
+            </span>
+            <span className="text-muted-foreground">em leads Quentes</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navegação por Abas de Diagnóstico */}
+      <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+        <button
+          onClick={() => setActiveTab("losses")}
+          className={cn(
+            "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all border",
+            activeTab === "losses"
+              ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-2/60",
+          )}
+        >
+          <Coins className="size-3.5" />
+          Raio-X de Motivos de Perda & Dinheiro em Risco
+        </button>
+        <button
+          onClick={() => setActiveTab("funnel")}
+          className={cn(
+            "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all border",
+            activeTab === "funnel"
+              ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-2/60",
+          )}
+        >
+          <Activity className="size-3.5" />
+          Gargalos no Funil de Vendas
+        </button>
+        <button
+          onClick={() => setActiveTab("regional")}
+          className={cn(
+            "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all border",
+            activeTab === "regional"
+              ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-2/60",
+          )}
+        >
+          <MapPin className="size-3.5" />
+          Desempenho por Concessionária
+        </button>
+      </div>
+
+      {/* ABA 1: RAIO-X DE PERDAS & DINHEIRO EM RISCO */}
+      {activeTab === "losses" && (
+        <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+          {/* Coluna Esquerda: Lista Detalhada dos Motivos de Perda com Ações de Reversão */}
+          <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/85 to-surface-2/45 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/50 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-foreground">
+                  Motivos de Perda & Rotas de Reversão
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Auditoria de 105 oportunidades perdidas nos últimos 30 dias na rede Via Passos
+                </p>
+              </div>
+              <span className="rounded-lg bg-surface-2 px-2.5 py-1 font-mono text-xs font-bold text-cyan-300 border border-cyan-500/30">
+                Total Auditado: {BRL(totalLossValue)}
+              </span>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {lossData.map((item) => (
+                <div
+                  key={item.n}
+                  className="rounded-xl border border-border/60 bg-[#070e20]/60 p-3.5 transition-all hover:border-cyan-500/40 hover:bg-[#0a142c]/80"
                 >
-                  {loss.map((_, i) => (
-                    <Cell key={i} fill={colors[i]} />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="size-2.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]"
+                        style={{ color: item.color, background: item.color }}
+                      />
+                      <strong className="text-sm font-semibold text-foreground">{item.n}</strong>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-surface-2 px-2 py-0.5 font-mono text-xs font-bold text-foreground border border-border/50">
+                        {item.v}%
+                      </span>
+                      <span className="font-mono text-xs font-bold text-rose-300">
+                        {BRL(item.amount)}
+                      </span>
+                      <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
+                        {item.badge}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Barra de Progresso */}
+                  <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-secondary/80 border border-border/30">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${item.v}%`,
+                        background: item.color,
+                      }}
+                    />
+                  </div>
+
+                  {/* Recomendação de Reversão da IA */}
+                  <div className="mt-2 flex items-start gap-2 text-xs text-slate-300">
+                    <Sparkles className="mt-0.5 size-3 text-cyan-300 shrink-0" />
+                    <span>
+                      <strong className="text-cyan-300">Reversão Vyntra:</strong> {item.action}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Coluna Direita: Gráfico de Rosca com Centro Informativo */}
+          <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/85 to-surface-2/45 p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Distribuição Proporcional</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Impacto percentual por categoria
+                  </p>
+                </div>
+                <div className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
+                  Perdas Auditadas
+                </div>
+              </div>
+
+              {/* Rosca com Centro Resumido */}
+              <div className="relative mt-4 h-[240px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={lossData}
+                      dataKey="v"
+                      nameKey="n"
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                    >
+                      {lossData.map((x, i) => (
+                        <Cell key={i} fill={x.color} stroke="var(--surface)" strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length && payload[0]) {
+                          const data = payload[0].payload as (typeof lossData)[number];
+                          if (!data) return null;
+                          return (
+                            <div className="rounded-xl border border-border bg-popover p-2.5 shadow-xl text-xs">
+                              <div className="font-bold text-foreground">{data.n}</div>
+                              <div className="text-cyan-400 font-mono mt-0.5">
+                                {data.v}% ({BRL(data.amount)})
+                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-1">
+                                {data.badge}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Centro da Rosca */}
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="font-mono text-xs font-bold text-muted-foreground">TOTAL</span>
+                  <span className="font-mono text-base font-black text-foreground">
+                    {BRL(totalLossValue)}
+                  </span>
+                  <span className="text-[10px] text-cyan-400 font-semibold">105 Casos</span>
+                </div>
+              </div>
+
+              {/* Legenda Customizada em Grid */}
+              <div className="mt-4 grid grid-cols-1 gap-2 border-t border-border/50 pt-4">
+                {lossData.map((x) => (
+                  <div
+                    key={x.n}
+                    className="flex items-center justify-between text-xs rounded-lg px-2 py-1 bg-surface-2/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="size-2 rounded-full" style={{ background: x.color }} />
+                      <span className="text-muted-foreground truncate max-w-[170px]">{x.n}</span>
+                    </div>
+                    <strong className="font-mono text-foreground">{x.v}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-slate-200">
+              <strong className="text-amber-300 font-semibold">Alerta da IA:</strong> 59% das
+              perdas são recuperáveis através do redirecionamento imediato para Consórcio Nacional
+              ou Seminovas no primeiro atendimento.
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ABA 2: GARGALOS NO FUNIL DE VENDAS */}
+      {activeTab === "funnel" && (
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/85 to-surface-2/45 p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/50 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-foreground">
+                  Diagnóstico de Fricção no Funil de Conversão
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Acompanhe a taxa de avanço entre cada etapa e identifique onde a rede Passos perde volume
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/15 border border-rose-500/30 px-2 py-1 text-[11px] font-bold text-rose-300">
+                  Maior Atrito: Etapa 2 → 3 (-26%)
+                </span>
+              </div>
+            </div>
+
+            {/* Visualização de Etapas do Funil com Barras Gradientes */}
+            <div className="mt-6 space-y-5">
+              {funnelStages.map((st, i) => (
+                <div key={st.stage} className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded px-1.5 py-0.5">
+                        0{i + 1}
+                      </span>
+                      <strong className="text-sm font-semibold text-foreground">{st.stage}</strong>
+                    </div>
+                    <div className="flex items-center gap-3 font-mono text-xs">
+                      <span className="text-muted-foreground">
+                        Volume: <strong>{st.count} leads</strong>
+                      </span>
+                      <span className="text-foreground font-bold">Taxa: {st.pct}%</span>
+                      {st.drop > 0 && (
+                        <span className="text-rose-400 font-bold bg-rose-500/10 border border-rose-500/25 rounded px-1.5 py-0.5 text-[10px]">
+                          Perda: -{st.drop}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-3.5 overflow-hidden rounded-full bg-secondary/80 border border-border/40 p-0.5">
+                    <div
+                      className={cn(
+                        "h-full rounded-full bg-gradient-to-r transition-all duration-700 shadow-sm",
+                        st.tone,
+                      )}
+                      style={{ width: `${st.pct}%` }}
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground pl-1">{st.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Diagnóstico Sintético da IA */}
+            <div className="mt-8 grid gap-4 md:grid-cols-2 border-t border-border/50 pt-5">
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-cyan-300">
+                  <Sparkles className="size-4" />
+                  Gargalo Identificado: O "Susto da Parcela"
+                </div>
+                <p className="mt-2 text-xs text-slate-300 leading-relaxed">
+                  Entre o Primeiro Contato e o envio da Proposta, 26% dos leads param de responder ao ver o valor da parcela do financiamento tradicional da moto 0 km.
+                </p>
+                <div className="mt-3 text-xs font-semibold text-cyan-400">
+                  Solução Vyntra: Simular antecipadamente Rota de Consórcio e Seminova reduz esse cancelamento em até 31%.
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
+                  <Clock3 className="size-4" />
+                  Efeito Velocidade de Atendimento
+                </div>
+                <p className="mt-2 text-xs text-slate-300 leading-relaxed">
+                  Leads contatados em menos de 5 minutos registram taxa de avanço de 84%. Acima de 15 minutos, a taxa despenca para apenas 22%.
+                </p>
+                <div className="mt-3 text-xs font-semibold text-emerald-400">
+                  Ação Recomendada: Manter a trava de SLA ativada no roteador meritocrático.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ABA 3: DESEMPENHO POR CONCESSIONÁRIA */}
+      {activeTab === "regional" && (
+        <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/85 to-surface-2/45 p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/50 pb-4">
+            <div>
+              <h2 className="text-base font-bold text-foreground">
+                Comparativo por Unidade da Rede Via Passos
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Eficiência operacional nas lojas de Lages/SC, Três Passos/RS e Santa Rosa/RS
+              </p>
+            </div>
+            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+              3 Concessionárias Conectadas
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {loss.map((x, i) => (
-              <div key={x.n} className="flex items-center gap-2 text-xs">
-                <span className="size-2 rounded-full" style={{ background: colors[i] }} />
-                <span className="text-muted-foreground">{x.n}</span>
-                <strong className="ml-auto">{x.v}%</strong>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {regionalStores.map((st) => (
+              <div
+                key={st.name}
+                className="rounded-xl border border-border/70 bg-[#070e20]/70 p-5 space-y-4 hover:border-cyan-500/40 hover:bg-[#0a142c] transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">{st.name}</h3>
+                    <span className="text-xs text-muted-foreground">{st.region}</span>
+                  </div>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-[10px] font-bold border",
+                      st.healthTone,
+                    )}
+                  >
+                    {st.health}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 border-y border-border/50 py-3 text-center">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
+                      SLA Médio
+                    </span>
+                    <strong className="text-base font-bold text-foreground">{st.sla}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
+                      Conversão
+                    </span>
+                    <strong className="text-base font-bold text-emerald-400">{st.conversion}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
+                      Vendas
+                    </span>
+                    <strong className="text-base font-bold text-cyan-300">{st.sales}</strong>
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Leads Atendidos:</span>
+                    <strong className="text-foreground">{st.leads}</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Rota de Maior Saída:</span>
+                    <strong className="text-cyan-300 font-semibold">{st.topRoute}</strong>
+                  </div>
+                </div>
+
+                {setView && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs font-semibold border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-300"
+                    onClick={() => setView("team")}
+                  >
+                    Ver Vendedores da Loja <ArrowRight className="ml-1 size-3" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
         </section>
-      </div>
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        {[
-          [
-            "Gargalo crítico",
-            "Seu maior gargalo está entre qualificação e primeiro atendimento.",
-            AlertTriangle,
-          ],
-          [
-            "Velocidade converte",
-            "Leads respondidos em até 5 minutos apresentam maior taxa de avanço.",
-            Zap,
-          ],
-          [
-            "Recuperação por rota",
-            "Seminovas recuperam oportunidades que não se encaixam no orçamento de 0 km.",
-            RouteIcon,
-          ],
-        ].map(([t, d, I]) => {
-          const Icon = I as typeof Sparkles;
-          return (
-            <article key={String(t)} className="panel p-5">
-              <div className="grid size-9 place-items-center rounded-lg bg-primary/10">
-                <Icon className="size-4 text-primary" />
+      )}
+
+      {/* Planos de Ação Recomendados pela IA (Playbooks Acionáveis) */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 text-cyan-300" />
+          <h2 className="text-base font-bold text-foreground">
+            Planos de Ação Executivos Recomendados pela IA
+          </h2>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Card Ação 1 */}
+          <article className="group rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-[#06151c]/80 to-[#040e14]/90 p-5 flex flex-col justify-between transition-all hover:border-emerald-500/60 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="grid size-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <Coins className="size-4" />
+                </div>
+                <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                  +R$ 192k Potencial
+                </span>
               </div>
-              <h3 className="mt-4 font-semibold">{String(t)}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{String(d)}</p>
-              <Button variant="link" className="mt-2 h-auto p-0">
-                Explorar oportunidades <ArrowRight />
-              </Button>
-            </article>
-          );
-        })}
+              <h3 className="mt-4 font-bold text-base text-foreground">
+                Reversão via Consórcio Honda
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                24% das perdas acontecem por falta de entrada imediata. O Consórcio Nacional Honda viabiliza a compra da 0 km com parcelas sem juros e lances embutidos.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-border/40">
+              {setView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView("opportunities")}
+                  className="w-full text-xs font-semibold border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/15"
+                >
+                  Ver Oportunidades Elegíveis <ArrowRight className="ml-1 size-3" />
+                </Button>
+              )}
+            </div>
+          </article>
+
+          {/* Card Ação 2 */}
+          <article className="group rounded-2xl border border-rose-500/30 bg-gradient-to-b from-[#180a14]/80 to-[#0e040c]/90 p-5 flex flex-col justify-between transition-all hover:border-rose-500/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.15)]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="grid size-9 place-items-center rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                  <Clock3 className="size-4" />
+                </div>
+                <span className="rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                  Trava de 5 Minutos
+                </span>
+              </div>
+              <h3 className="mt-4 font-bold text-base text-foreground">
+                Redistribuição Automática por SLA
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                Leads atendidos em até 5 minutos convertem 3.8x mais. Configure a redistribuição automática para consultores online ativos caso o lead fique 7 min sem resposta.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-border/40">
+              {setView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView("distribution")}
+                  className="w-full text-xs font-semibold border-rose-500/40 text-rose-300 hover:bg-rose-500/15"
+                >
+                  Configurar Distribuição <ArrowRight className="ml-1 size-3" />
+                </Button>
+              )}
+            </div>
+          </article>
+
+          {/* Card Ação 3 */}
+          <article className="group rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-[#061426]/80 to-[#040c1a]/90 p-5 flex flex-col justify-between transition-all hover:border-cyan-500/60 hover:shadow-[0_0_25px_rgba(6,182,212,0.15)]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="grid size-9 place-items-center rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  <Zap className="size-4" />
+                </div>
+                <span className="rounded-full bg-cyan-500/15 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
+                  Simulação Financeira
+                </span>
+              </div>
+              <h3 className="mt-4 font-bold text-base text-foreground">
+                Simulador de Impacto Comercial
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                Calcule em tempo real o incremento de receita bruta ao reduzir o SLA médio da rede em 3 minutos e direcionar 30% mais leads para os fechadores ouro.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-border/40">
+              {setView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView("impact")}
+                  className="w-full text-xs font-semibold border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/15"
+                >
+                  Abrir Simulador de Impacto <ArrowRight className="ml-1 size-3" />
+                </Button>
+              )}
+            </div>
+          </article>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

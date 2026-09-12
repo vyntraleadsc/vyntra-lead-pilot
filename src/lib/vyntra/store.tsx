@@ -39,6 +39,7 @@ export type RoleView = "gestor" | "vendedor";
 interface PersistedState {
   authed: boolean;
   role: RoleView;
+  currentSellerId: string;
   opportunities: Opportunity[];
   followUps: FollowUp[];
   proposals: Proposal[];
@@ -51,6 +52,7 @@ function initialState(): PersistedState {
   return {
     authed: false,
     role: "gestor",
+    currentSellerId: "carlos",
     opportunities,
     followUps: buildFollowUps(opportunities),
     proposals: buildProposals(opportunities),
@@ -70,7 +72,9 @@ interface VyntraContextValue extends PersistedState {
   hydrated: boolean;
   sellers: Seller[];
   now: number;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string, roleHint?: RoleView, sellerIdHint?: string) => boolean;
+  loginAs: (role: RoleView, sellerId?: string) => void;
+  setCurrentSellerId: (sellerId: string) => void;
   logout: () => void;
   setRole: (role: RoleView) => void;
   resetDemo: () => void;
@@ -129,6 +133,8 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as PersistedState;
         setState({
           ...parsed,
+          currentSellerId: parsed.currentSellerId ?? "carlos",
+          role: parsed.role ?? "gestor",
           opportunities: parsed.opportunities.map((opportunity, index) => {
             const isSC = index % 3 === 0;
             const state: LeadState = opportunity.state ?? (isSC ? "SC" : "RS");
@@ -212,12 +218,56 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
       sellers: SELLERS,
       sellerById,
       opportunityById,
-      login: (email, password) => {
-        const ok =
-          email.trim().toLowerCase() === DEMO_CREDENTIALS.email &&
-          password === DEMO_CREDENTIALS.password;
-        if (ok) setState((s) => ({ ...s, authed: true }));
-        return ok;
+      currentSellerId: state.currentSellerId || "carlos",
+      setCurrentSellerId: (sellerId: string) =>
+        setState((s) => ({ ...s, currentSellerId: sellerId })),
+      login: (email, password, roleHint, sellerIdHint) => {
+        const clean = email.trim().toLowerCase();
+        const validPassword = password === DEMO_CREDENTIALS.password || password === "123456";
+        if (!validPassword) return false;
+
+        let targetRole: RoleView =
+          roleHint ??
+          (clean.includes("vendedor") ||
+          clean.includes("carlos") ||
+          clean.includes("juliana") ||
+          clean.includes("rafael") ||
+          clean.includes("marcos")
+            ? "vendedor"
+            : "gestor");
+        let targetSellerId = sellerIdHint ?? (state.currentSellerId || "carlos");
+
+        if (clean === "gestor@vyntra.com") {
+          targetRole = "gestor";
+        } else if (clean === "vendedor@vyntra.com" || clean.includes("carlos")) {
+          targetRole = "vendedor";
+          targetSellerId = "carlos";
+        } else if (clean.includes("juliana")) {
+          targetRole = "vendedor";
+          targetSellerId = "juliana";
+        } else if (clean.includes("rafael")) {
+          targetRole = "vendedor";
+          targetSellerId = "rafael";
+        } else if (clean.includes("marcos")) {
+          targetRole = "vendedor";
+          targetSellerId = "marcos";
+        }
+
+        setState((s) => ({
+          ...s,
+          authed: true,
+          role: targetRole,
+          currentSellerId: targetSellerId,
+        }));
+        return true;
+      },
+      loginAs: (role, sellerId = "carlos") => {
+        setState((s) => ({
+          ...s,
+          authed: true,
+          role,
+          currentSellerId: sellerId,
+        }));
       },
       logout: () => setState((s) => ({ ...s, authed: false, role: "gestor" })),
       setRole: (role) => setState((s) => ({ ...s, role })),

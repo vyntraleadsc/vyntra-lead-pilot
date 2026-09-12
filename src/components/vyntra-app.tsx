@@ -29,6 +29,7 @@ import {
   Search,
   Send,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -75,8 +76,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { DEMO_CREDENTIALS, DEALERSHIP } from "@/lib/vyntra/mock-data";
-import { useVyntra } from "@/lib/vyntra/store";
+import {
+  DEMO_CREDENTIALS,
+  DEMO_CREDENTIALS_GESTOR,
+  DEMO_CREDENTIALS_VENDEDOR,
+  DEALERSHIP,
+} from "@/lib/vyntra/mock-data";
+import { useVyntra, type RoleView } from "@/lib/vyntra/store";
 import type {
   CommercialRoute,
   FollowUpBucket,
@@ -166,12 +172,38 @@ function Brand({ compact = false }: { compact?: boolean }) {
 }
 
 function Login() {
-  const { login } = useVyntra();
-  const [email, setEmail] = useState(DEMO_CREDENTIALS.email);
-  const [password, setPassword] = useState(DEMO_CREDENTIALS.password);
+  const { login, loginAs, sellers } = useVyntra();
+  const [selectedRole, setSelectedRole] = useState<RoleView>("gestor");
+  const [selectedSellerId, setSelectedSellerId] = useState("carlos");
+  const [email, setEmail] = useState(DEMO_CREDENTIALS_GESTOR.email);
+  const [password, setPassword] = useState("123456");
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
+
+  const handleRoleChange = (role: RoleView) => {
+    setSelectedRole(role);
+    setError("");
+    if (role === "gestor") {
+      setEmail("gestor@vyntra.com");
+    } else {
+      const s = sellers.find((x) => x.id === selectedSellerId) ?? sellers[0];
+      setEmail(`${s?.id || "carlos"}@vyntra.com`);
+    }
+  };
+
+  const handleSellerChange = (sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    setEmail(`${sellerId}@vyntra.com`);
+    setError("");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!login(email, password, selectedRole, selectedSellerId)) {
+      setError("E-mail ou senha inválidos. Utilize a senha padrão 123456 para demonstração.");
+    }
+  };
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
@@ -204,35 +236,93 @@ function Login() {
           </div>
         </div>
         <p className="relative z-10 text-xs text-muted-foreground">
-          VYNTRA · Ambiente seguro de demonstração
+          VYNTRA · Acessos separados para Gestão e Equipe de Vendas
         </p>
       </section>
       <section className="flex items-center justify-center bg-background px-5 py-12">
         <div className="w-full max-w-md">
-          <div className="mb-10 lg:hidden">
+          <div className="mb-8 lg:hidden">
             <Brand />
           </div>
-          <div className="mb-8">
-            <div className="mb-4 flex items-center gap-2 text-xs font-semibold text-primary">
+          <div className="mb-6">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary">
               <span className="size-1.5 rounded-full bg-primary" /> ACESSO À PLATAFORMA
             </div>
-            <h2 className="text-3xl font-semibold">Bem-vindo à Vyntra</h2>
-            <p className="mt-2 text-muted-foreground">
-              Inteligência para transformar oportunidades em resultados.
+            <h2 className="text-2xl font-semibold sm:text-3xl">Selecione seu perfil</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Acesso especializado conforme o papel na operação comercial.
             </p>
           </div>
-          <form
-            className="space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!login(email, password))
-                setError("E-mail ou senha inválidos. Use o acesso de demonstração.");
-            }}
-          >
+
+          <div className="mb-5 grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-surface p-1.5">
+            <button
+              type="button"
+              onClick={() => handleRoleChange("gestor")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all",
+                selectedRole === "gestor"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <ShieldCheck className="size-4" />
+              Acesso Gestor
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleChange("vendedor")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all",
+                selectedRole === "vendedor"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <UserRound className="size-4" />
+              Acesso Vendedor
+            </button>
+          </div>
+
+          <div className="mb-5 rounded-xl border border-border bg-surface/60 p-3 text-xs leading-relaxed text-muted-foreground">
+            {selectedRole === "gestor" ? (
+              <>
+                <strong className="block font-semibold text-foreground mb-0.5">
+                  Painel da Gerência Geral:
+                </strong>
+                Visão consolidada das lojas de Lages/SC, Três Passos/RS e Santa Rosa/RS, métricas de conversão, funil global e regras de distribuição inteligente.
+              </>
+            ) : (
+              <>
+                <strong className="block font-semibold text-foreground mb-0.5">
+                  Painel do Consultor de Vendas:
+                </strong>
+                Fila de ação e atendimento rápido (SLA), leads atribuídos individualmente, agendamento de follow-ups e simulação com o cliente.
+              </>
+            )}
+          </div>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {selectedRole === "vendedor" && (
+              <label className="block text-sm font-medium">
+                Consultor
+                <Select value={selectedSellerId} onValueChange={handleSellerChange}>
+                  <SelectTrigger className="mt-1.5 h-11 bg-surface">
+                    <SelectValue placeholder="Selecione o consultor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sellers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} ({s.specialty})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+            )}
             <label className="block text-sm font-medium">
               E-mail
               <Input
-                className="mt-2 h-11 bg-surface"
+                className="mt-1.5 h-11 bg-surface"
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -243,7 +333,7 @@ function Login() {
             </label>
             <label className="block text-sm font-medium">
               Senha
-              <div className="relative mt-2">
+              <div className="relative mt-1.5">
                 <Input
                   className="h-11 bg-surface pr-11"
                   type={show ? "text" : "password"}
@@ -280,18 +370,39 @@ function Login() {
               </div>
             )}
             <Button className="h-11 w-full font-semibold" type="submit">
-              Entrar <ArrowRight />
+              Entrar como {selectedRole === "gestor" ? "Gestor" : "Vendedor"} <ArrowRight />
             </Button>
           </form>
-          <div className="mt-7 rounded-xl border border-primary/25 bg-primary/5 p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-primary">
-              <ShieldCheck className="size-4" /> ACESSO DE DEMONSTRAÇÃO
+
+          <div className="mt-6 space-y-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Acesso Rápido de Demonstração
             </div>
-            <div className="grid grid-cols-[80px_1fr] gap-y-2 text-sm">
-              <span className="text-muted-foreground">E-mail</span>
-              <span className="font-medium">gestor@vyntra.com</span>
-              <span className="text-muted-foreground">Senha</span>
-              <span className="font-medium">123456</span>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => loginAs("gestor")}
+                className="flex flex-col items-start gap-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-left transition-all hover:bg-primary/10 hover:border-primary/50"
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <ShieldCheck className="size-3.5" />
+                  Entrar como Gestor
+                </div>
+                <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
+                <div className="text-[10px] text-muted-foreground">Gestão total de lojas e equipe</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => loginAs("vendedor", "carlos")}
+                className="flex flex-col items-start gap-1 rounded-xl border border-[color:var(--violet)]/30 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-3 text-left transition-all hover:bg-[color:color-mix(in_oklab,var(--violet)_10%,transparent)] hover:border-[color:var(--violet)]/50"
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[color:var(--violet)]">
+                  <UserRound className="size-3.5" />
+                  Entrar como Vendedor
+                </div>
+                <div className="text-[11px] text-foreground font-medium">vendedor@vyntra.com</div>
+                <div className="text-[10px] text-muted-foreground">Fila de ação e leads do consultor</div>
+              </button>
             </div>
           </div>
         </div>
@@ -333,13 +444,46 @@ function Workspace() {
         />
         <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           {role === "vendedor" ? (
-            <SellerDashboard setSelected={setSelected} />
+            <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
           ) : (
             <ManagerView view={view} setSelected={setSelected} />
           )}
         </main>
       </div>
       <OpportunityDrawer id={selected} onClose={() => setSelected(null)} />
+    </div>
+  );
+}
+
+function SellerWorkspace({
+  view,
+  setView,
+  setSelected,
+}: {
+  view: View;
+  setView: (v: View) => void;
+  setSelected: (v: string | null) => void;
+}) {
+  if (view === "overview") return <SellerDashboard setSelected={setSelected} />;
+  if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
+  if (view === "followups") return <FollowUps setSelected={setSelected} />;
+  if (view === "proposals") return <Proposals setSelected={setSelected} />;
+  if (view === "qualification") return <Qualification />;
+
+  return (
+    <div className="panel mx-auto mt-12 max-w-lg p-8 text-center">
+      <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-destructive/10 text-destructive">
+        <ShieldAlert className="size-6" />
+      </div>
+      <h2 className="text-xl font-semibold">Painel Restrito à Gerência</h2>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        Esta visão contém indicadores executivos e regras de distribuição da concessionária reservadas para o perfil de Gerência.
+      </p>
+      <div className="mt-6 flex justify-center gap-3">
+        <Button onClick={() => setView("overview")}>
+          Voltar para minha fila de atendimento
+        </Button>
+      </div>
     </div>
   );
 }
@@ -355,7 +499,21 @@ function Sidebar({
   mobileOpen: boolean;
   setMobileOpen: (v: boolean) => void;
 }) {
-  const { logout, role, setRole } = useVyntra();
+  const { logout, role, setRole, currentSellerId, setCurrentSellerId, sellers, sellerById } =
+    useVyntra();
+  const currentSeller = sellerById(currentSellerId || "carlos") ?? sellers[0]!;
+
+  const navItems =
+    role === "vendedor"
+      ? [
+          { id: "overview" as View, label: "Fila de atendimento", icon: Zap },
+          { id: "opportunities" as View, label: "Meus leads", icon: Target },
+          { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
+          { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
+          { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
+        ]
+      : NAV;
+
   const body = (
     <div className="flex h-full flex-col bg-sidebar px-3 py-4">
       <div className="shrink-0 px-3 pb-4">
@@ -363,11 +521,12 @@ function Sidebar({
       </div>
       <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2.5 custom-scrollbar">
         <div className="mb-2.5 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          Navegação
+          {role === "gestor" ? "Gestão Comercial" : "Painel do Vendedor"}
         </div>
         <nav className="space-y-1 pb-4">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const I = item.icon;
+            const active = view === item.id;
             return (
               <Button
                 key={item.id}
@@ -375,9 +534,8 @@ function Sidebar({
                 onClick={() => setView(item.id)}
                 className={cn(
                   "h-10 w-full justify-start px-3 text-muted-foreground",
-                  view === item.id &&
-                    role === "gestor" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--primary)]",
+                  active &&
+                    "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--primary)] font-medium",
                 )}
               >
                 <I className="size-[17px]" />
@@ -389,33 +547,80 @@ function Sidebar({
       </ScrollArea>
       <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
         <div className="rounded-lg border border-border bg-surface/60 p-2.5">
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Visualizar como
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Alternar Perfil
+            </span>
+            <span
+              className={cn(
+                "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                role === "gestor"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-[color:var(--violet)]/20 text-[color:var(--violet)]",
+              )}
+            >
+              {role === "gestor" ? "Gestor" : "Vendedor"}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-1 rounded-md bg-background p-1">
             <Button
               variant={role === "gestor" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setRole("gestor")}
+              onClick={() => {
+                setRole("gestor");
+                setView("overview");
+              }}
             >
               Gestor
             </Button>
             <Button
               variant={role === "vendedor" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setRole("vendedor")}
+              onClick={() => {
+                setRole("vendedor");
+                setView("overview");
+              }}
             >
-              Carlos
+              Vendedor
             </Button>
           </div>
+          {role === "vendedor" && (
+            <div className="mt-2">
+              <Select
+                value={currentSellerId || "carlos"}
+                onValueChange={(val) => setCurrentSellerId(val)}
+              >
+                <SelectTrigger className="h-7 text-xs bg-background">
+                  <SelectValue placeholder="Escolher vendedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sellers.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs">
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3 border-t border-border pt-3">
           <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-sm font-bold text-primary">
-            GP
+            {role === "gestor"
+              ? "GC"
+              : currentSeller.name
+                  .split(" ")
+                  .map((x) => x[0])
+                  .join("")
+                  .slice(0, 2)}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold">Gestor</div>
-            <div className="truncate text-[11px] text-muted-foreground">gestor@vyntra.com</div>
+            <div className="truncate text-sm font-semibold">
+              {role === "gestor" ? "Gestor Comercial" : currentSeller.name}
+            </div>
+            <div className="truncate text-[11px] text-muted-foreground">
+              {role === "gestor" ? "gestor@vyntra.com" : `${currentSeller.id}@vyntra.com`}
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={logout} aria-label="Sair">
             <LogOut className="size-4" />
@@ -476,7 +681,9 @@ function Topbar({
     markNotificationRead,
     markAllNotificationsRead,
     role,
+    currentSellerId,
   } = useVyntra();
+  const currentSeller = sellerById(currentSellerId || "carlos");
   const matches = useMemo(() => {
     const q = globalSearch.toLowerCase().trim();
     if (!q) return [];
@@ -597,12 +804,21 @@ function Topbar({
       </div>
       <div className="hidden h-8 items-center gap-2 border-l border-border pl-3 sm:flex">
         <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
-          {role === "gestor" ? "GP" : "CM"}
+          {role === "gestor"
+            ? "GP"
+            : (currentSeller?.name || "VD")
+                .split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
         </div>
         <div className="hidden xl:block">
-          <div className="text-xs font-semibold">{role === "gestor" ? "Gestor" : "Carlos"}</div>
+          <div className="text-xs font-semibold">
+            {role === "gestor" ? "Gestor Comercial" : currentSeller?.name || "Consultor"}
+          </div>
           <div className="text-[10px] text-muted-foreground">
-            {role === "gestor" ? "Gerência comercial" : "Consultor"}
+            {role === "gestor" ? "Gerência & Supervisão" : currentSeller?.specialty || "Consultor comercial"}
           </div>
         </div>
       </div>
@@ -971,9 +1187,11 @@ function ScoreMini({ score }: { score: number }) {
 function FilterBar({
   filters,
   setFilters,
+  hideSellerFilter,
 }: {
   filters: OpportunityFilters;
   setFilters: (v: OpportunityFilters) => void;
+  hideSellerFilter?: boolean;
 }) {
   const { sellers, opportunities } = useVyntra();
   const products = [...new Set(opportunities.map((o) => o.product))];
@@ -1031,10 +1249,11 @@ function FilterBar({
         ["7d", "Últimos 7 dias"],
         ["today", "Hoje"],
       ])}
-      {select("sellerId", "Vendedor", [
-        ["all", "Todos os vendedores"],
-        ...sellers.map((s) => [s.id, s.name] as [string, string]),
-      ])}
+      {!hideSellerFilter &&
+        select("sellerId", "Vendedor", [
+          ["all", "Todos os vendedores"],
+          ...sellers.map((s) => [s.id, s.name] as [string, string]),
+        ])}
       <Select value={filters.state} onValueChange={handleStateChange}>
         <SelectTrigger className="h-9 min-w-[140px] bg-surface">
           <SelectValue placeholder="Estado" />
@@ -1125,11 +1344,14 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
 }
 
 function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }) {
-  const { opportunities, sellers, sellerById, assignLeads, now } = useVyntra();
+  const { opportunities, sellers, sellerById, assignLeads, now, role, currentSellerId } = useVyntra();
+  const isSeller = role === "vendedor";
   const [f, setF] = useState(FILTER_INITIAL);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetSeller, setTargetSeller] = useState("");
-  const list = opportunities.filter((o) => applyFilters(o, f));
+  const list = opportunities.filter(
+    (o) => (isSeller ? o.sellerId === currentSellerId : true) && applyFilters(o, f),
+  );
   const visibleIds = list.map((o) => o.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
   const toggleLead = (id: string) =>
@@ -1154,8 +1376,12 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
   return (
     <>
       <PageHeader
-        title="Oportunidades"
-        subtitle="Priorize, direcione e monitore cada oportunidade comercial."
+        title={isSeller ? "Meus Leads & Oportunidades" : "Oportunidades"}
+        subtitle={
+          isSeller
+            ? "Acompanhe e gerencie sua carteira individual de atendimento."
+            : "Priorize, direcione e monitore cada oportunidade comercial."
+        }
         action={
           <Button>
             <Plus />
@@ -1172,8 +1398,8 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
           onChange={(e) => setF({ ...f, search: e.target.value })}
         />
       </div>
-      <FilterBar filters={f} setFilters={setF} />
-      {selectedIds.length > 0 && (
+      <FilterBar filters={f} setFilters={setF} hideSellerFilter={isSeller} />
+      {!isSeller && selectedIds.length > 0 && (
         <div className="mb-4 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
@@ -1778,7 +2004,15 @@ function Distribution() {
 
 function FollowUps({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
-  const active = v.followUps.filter((f) => !f.done);
+  const isSeller = v.role === "vendedor";
+  const active = v.followUps.filter((f) => {
+    if (f.done) return false;
+    if (isSeller) {
+      const opp = v.opportunityById(f.opportunityId);
+      return opp?.sellerId === v.currentSellerId;
+    }
+    return true;
+  });
   const buckets: Array<[FollowUpBucket, string, string]> = [
     ["atrasado", "Atrasados", "text-destructive"],
     ["hoje", "Hoje", "text-primary"],
@@ -1788,8 +2022,12 @@ function FollowUps({ setSelected }: { setSelected: (id: string) => void }) {
   return (
     <>
       <PageHeader
-        title="Follow-ups"
-        subtitle="Próximas ações organizadas por urgência e potencial comercial."
+        title={isSeller ? "Meus Follow-ups" : "Follow-ups"}
+        subtitle={
+          isSeller
+            ? "Suas próximas ações organizadas por urgência e prazo com o cliente."
+            : "Próximas ações organizadas por urgência e potencial comercial."
+        }
         action={
           <Button onClick={() => toast("Selecione uma oportunidade para agendar um follow-up.")}>
             <Plus />
@@ -1884,6 +2122,10 @@ function FollowUps({ setSelected }: { setSelected: (id: string) => void }) {
 
 function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
+  const isSeller = v.role === "vendedor";
+  const proposals = isSeller
+    ? v.proposals.filter((p) => p.sellerId === v.currentSellerId)
+    : v.proposals;
   const stages = [
     "Rascunho",
     "Enviada",
@@ -1896,14 +2138,18 @@ function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
   return (
     <>
       <PageHeader
-        title="Propostas"
-        subtitle="Acompanhe cada condição enviada até o fechamento."
+        title={isSeller ? "Minhas Propostas" : "Propostas"}
+        subtitle={
+          isSeller
+            ? "Acompanhe suas condições enviadas até o fechamento."
+            : "Acompanhe cada condição enviada até o fechamento."
+        }
         action={
           <div className="text-sm">
             <span className="text-muted-foreground">Volume em negociação </span>
             <strong>
               {BRL(
-                v.proposals
+                proposals
                   .filter((p) => !["Fechada", "Perdida"].includes(p.status))
                   .reduce((a, p) => a + p.value, 0),
               )}
@@ -1916,7 +2162,7 @@ function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
           <div key={s} className="min-w-[150px] rounded-lg border border-border bg-surface p-3">
             <div className="text-xs text-muted-foreground">{s}</div>
             <div className="mt-1 text-xl font-semibold">
-              {v.proposals.filter((p) => p.status === s).length}
+              {proposals.filter((p) => p.status === s).length}
             </div>
           </div>
         ))}
@@ -1929,11 +2175,11 @@ function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">{stage}</h2>
                 <span className="text-xs text-muted-foreground">
-                  {v.proposals.filter((p) => p.status === stage).length}
+                  {proposals.filter((p) => p.status === stage).length}
                 </span>
               </div>
               <div className="space-y-3">
-                {v.proposals
+                {proposals
                   .filter((p) => p.status === stage)
                   .map((p) => {
                     const o = v.opportunityById(p.opportunityId);
@@ -2799,8 +3045,11 @@ function SettingsPage() {
 }
 function SellerDashboard({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
+  const sellerId = v.currentSellerId || "carlos";
+  const seller = v.sellerById(sellerId);
+  const firstName = seller?.name?.split(" ")[0] || "Consultor";
   const own = v.opportunities.filter(
-    (o) => o.sellerId === "carlos" && !["Venda", "Perdida"].includes(o.status),
+    (o) => o.sellerId === sellerId && !["Venda", "Perdida"].includes(o.status),
   );
   const hot = own.filter((o) => o.score >= 80);
   const overdue = v.followUps.filter(
@@ -2808,16 +3057,16 @@ function SellerDashboard({ setSelected }: { setSelected: (id: string) => void })
       !f.done && new Date(f.dueAt).getTime() < v.now && own.some((o) => o.id === f.opportunityId),
   );
   const proposals = v.proposals.filter(
-    (p) => p.sellerId === "carlos" && !["Fechada", "Perdida"].includes(p.status),
+    (p) => p.sellerId === sellerId && !["Fechada", "Perdida"].includes(p.status),
   );
   return (
     <>
       <PageHeader
-        title="Olá, Carlos."
-        subtitle={`Você possui ${own.length} oportunidades aguardando ação.`}
+        title={`Olá, ${firstName}.`}
+        subtitle={`Você possui ${own.length} oportunidades aguardando ação na sua carteira.`}
         action={
           <div className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary">
-            Painel do vendedor
+            Painel do vendedor · {seller?.name || "Consultor"}
           </div>
         }
       />

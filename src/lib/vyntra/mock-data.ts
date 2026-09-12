@@ -982,3 +982,18 @@ export function buildNotifications(opps: Opportunity[]): AppNotification[] {
 export const DEALERSHIP = "Via Passos Honda — Demonstração";
 
 export const DEMO_CREDENTIALS = { email: "gestor@vyntra.com", password: "123456" };
+export const DEMO_CREDENTIALS_GESTOR = {
+  email: "gestor@vyntra.com",
+  password: "123456",
+  name: "Gestor Comercial",
+  role: "gestor" as const,
+  title: "Gerência Geral de Vendas",
+};
+export const DEMO_CREDENTIALS_VENDEDOR = {
+  email: "vendedor@vyntra.com",
+  password: "123456",
+  name: "Carlos Menezes",
+  sellerId: "carlos",
+  role: "vendedor" as const,
+  title: "Consultor de Vendas (0 km / Financiamento)",
+};

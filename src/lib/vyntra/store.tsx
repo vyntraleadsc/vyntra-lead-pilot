@@ -46,7 +46,7 @@ import {
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v4";
+const STORAGE_KEY = "vyntra-demo-state-v5";
 
 export type RoleView = "gestor" | "vendedor";
 

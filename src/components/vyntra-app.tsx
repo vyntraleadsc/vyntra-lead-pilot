@@ -435,7 +435,7 @@ function Login() {
                       <SelectContent className="border-cyan-500/30 bg-[#080f26]">
                         {sellers.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.name} · {s.specialty}
+                            {s.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -734,7 +734,7 @@ function Login() {
                       <SelectContent className="border-cyan-500/30 bg-[#080f26]">
                         {sellers.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.name} ({s.specialty})
+                            {s.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1211,7 +1211,7 @@ function Topbar({
             {role === "gestor" ? "Gestor Comercial" : currentSeller?.name || "Consultor"}
           </div>
           <div className="text-[10px] text-muted-foreground">
-            {role === "gestor" ? "Gerência & Supervisão" : currentSeller?.specialty || "Consultor comercial"}
+            {role === "gestor" ? "Gerência & Supervisão" : "Consultor Comercial"}
           </div>
         </div>
       </div>
@@ -2687,7 +2687,7 @@ function Distribution() {
       "Distribuição automática e meritocrática",
       "Prioriza mais leads para vendedores com maior volume de vendas e taxa de conversão",
     ],
-    ["byProduct", "Especialidade de Produto", "Direciona Consórcio e Financiamento aos consultores de melhor fit"],
+    ["byProduct", "Portfólio Completo", "Todos os consultores atendem todas as modalidades (0 km, consórcio, seminovas e financiamento)"],
     ["bySellerProfile", "Perfil e Eficiência", "Pondera experiência e taxa de conversão histórica"],
     ["byAvailability", "Disponibilidade Online", "Garante atendimento imediato para consultores ativos"],
     ["byWorkload", "Equilíbrio de Carga", "Evita gargalos sem prejudicar a fila prioritária dos top closers"],
@@ -2853,9 +2853,6 @@ function Distribution() {
                   {s.online ? "Online" : "Offline"}
                 </span>
               </div>
-
-              {/* Especialidade */}
-              <p className="mt-3 text-xs text-muted-foreground">{s.specialty}</p>
 
               {/* Indicador de Conversão e Fechamento */}
               <div className="mt-3 rounded-lg border border-border/60 bg-surface-2/40 p-2.5">
@@ -3459,8 +3456,7 @@ function Team() {
                 return (
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="px-5 py-4">
-                      <div className="font-medium">{s.name}</div>
-                      <div className="text-xs text-muted-foreground">{s.specialty}</div>
+                      <div className="font-medium text-foreground">{s.name}</div>
                     </td>
                     <td className="px-5 py-4">
                       <span
@@ -3507,7 +3503,7 @@ function Team() {
               </div>
               <div>
                 <h2 className="font-semibold">{seller.name}</h2>
-                <p className="text-xs text-muted-foreground">{seller.specialty}</p>
+                <p className="text-xs text-muted-foreground">Consultor Comercial</p>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -3923,7 +3919,7 @@ function Qualification() {
             : "Financiamento",
         alternative: isConsorcio ? "0 km" : "Consórcio",
         rationale: isConsorcio
-          ? `Lead qualificado para Consórcio Honda com roteamento prioritário para consultores especialistas da loja ${loc.store}.`
+          ? `Lead qualificado para Consórcio Honda com roteamento comercial para consultores da loja ${loc.store}.`
           : `Lead qualificado para atendimento presencial na concessionária ${loc.store} (${loc.city}).`,
         budgetFit: result.score >= 70 ? "alta" : "média",
       },
@@ -4022,7 +4018,7 @@ function Qualification() {
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {isConsorcio
-                  ? `Excelente opção para clientes que desejam investir em moto 0 km sem pagar juros bancários e sem barreira de entrada imediata. Roteado com prioridade para consultores especializados em cotas da loja ${loc.store}.`
+                  ? `Excelente opção para clientes que desejam investir em moto 0 km sem pagar juros bancários e sem barreira de entrada imediata. Roteado com prioridade para consultores da loja ${loc.store}.`
                   : `Opção recomendada para avaliação conforme intenção, orçamento e momento de compra. Encaminhamento automático para concessionária ${loc.store}.`}
               </p>
             </div>
@@ -4401,7 +4397,7 @@ function Impact() {
           </div>
           <h3 className="mt-3 text-xl font-bold text-foreground">Roteamento Inteligente & SLA Rápido</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Top closers recebem leads quentes prioritariamente e consórcios vão para especialistas.
+            Top closers e consultores com maior taxa de fechamento recebem leads quentes prioritariamente.
           </p>
 
           <div className="mt-6 space-y-4">
@@ -4462,7 +4458,7 @@ function Impact() {
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
                   <strong className="text-foreground block">Santa Rosa / RS (Missões / Fronteira)</strong>
-                  <span className="text-[11px] text-muted-foreground">Rafael Duarte & Juliana (Cotas)</span>
+                  <span className="text-[11px] text-muted-foreground">Rafael Duarte & Juliana Reis</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-indigo-300">+R$ 36.400</span>

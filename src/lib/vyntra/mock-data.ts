@@ -27,7 +27,7 @@ export const SELLERS: Seller[] = [
     avgResponseMinutes: 6,
     conversion: 18,
     sales: 4,
-    specialty: "Financiamento / 0 km",
+    specialty: "Consultor Comercial",
   },
   {
     id: "juliana",
@@ -36,7 +36,7 @@ export const SELLERS: Seller[] = [
     avgResponseMinutes: 4,
     conversion: 21,
     sales: 5,
-    specialty: "Consórcio / Scooters",
+    specialty: "Consultora Comercial",
   },
   {
     id: "rafael",
@@ -45,7 +45,7 @@ export const SELLERS: Seller[] = [
     avgResponseMinutes: 13,
     conversion: 9,
     sales: 2,
-    specialty: "Seminovas / Troca",
+    specialty: "Consultor Comercial",
   },
   {
     id: "marcos",
@@ -54,7 +54,7 @@ export const SELLERS: Seller[] = [
     avgResponseMinutes: 8,
     conversion: 14,
     sales: 2,
-    specialty: "Entrada / Consultivo",
+    specialty: "Consultor Comercial",
   },
 ];
 

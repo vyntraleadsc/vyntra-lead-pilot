@@ -107,14 +107,14 @@ function JsonPayloadViewer({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const clientName = (payload.nome || payload.name || payload.customer_name || "Cliente sem nome informado") as string;
-  const phone = (payload.telefone || payload.whatsapp || payload.phone || "Não informado") as string;
-  const product = (payload.modelo_moto || payload.moto || payload.produto || "Honda 0 km") as string;
-  const method = (payload.forma_pagamento || payload.method || "Financiamento / Consórcio") as string;
-  const downPayment = (payload.valor_entrada || payload.downPayment || "Sem entrada especificada") as string;
-  const city = (payload.cidade || payload.city || "Detectada automaticamente") as string;
-  const state = (payload.estado || payload.state || "SC/RS") as string;
-  const message = (payload.mensagem || payload.message || "") as string;
+  const clientName = (payload["nome"] || payload["name"] || payload["customer_name"] || "Cliente sem nome informado") as string;
+  const phone = (payload["telefone"] || payload["whatsapp"] || payload["phone"] || "Não informado") as string;
+  const product = (payload["modelo_moto"] || payload["moto"] || payload["produto"] || "Honda 0 km") as string;
+  const method = (payload["forma_pagamento"] || payload["method"] || "Financiamento / Consórcio") as string;
+  const downPayment = (payload["valor_entrada"] || payload["downPayment"] || "Sem entrada especificada") as string;
+  const city = (payload["cidade"] || payload["city"] || "Detectada automaticamente") as string;
+  const state = (payload["estado"] || payload["state"] || "SC/RS") as string;
+  const message = (payload["mensagem"] || payload["message"] || "") as string;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">

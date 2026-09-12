@@ -245,11 +245,40 @@ function Login() {
     setError("");
   };
 
+  const [welcomeUser, setWelcomeUser] = useState<{
+    name: string;
+    role: RoleView;
+  } | null>(null);
+
+  const triggerAnimatedLogin = (
+    role: RoleView,
+    sellerId?: string,
+    explicitEmail?: string,
+    explicitPass?: string,
+  ) => {
+    const name =
+      role === "gestor"
+        ? "Airton Lindão"
+        : sellers.find((s) => s.id === (sellerId || selectedSellerId))?.name || "Francine";
+    setWelcomeUser({ name, role });
+    setTimeout(() => {
+      if (explicitEmail && explicitPass) {
+        login(explicitEmail, explicitPass, role, sellerId);
+      } else {
+        loginAs(role, sellerId);
+      }
+    }, 1100);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!login(email, password, selectedRole, selectedSellerId)) {
+    const validPassword = password === DEMO_CREDENTIALS.password || password === "123456";
+    if (!validPassword) {
       setError("E-mail ou senha inválidos. Utilize a senha padrão 123456 para demonstração.");
+      return;
     }
+    setError("");
+    triggerAnimatedLogin(selectedRole, selectedSellerId, email, password);
   };
 
   const handleForgotSubmit = (e: React.FormEvent) => {
@@ -277,7 +306,12 @@ function Login() {
       return;
     }
     toast.success("Credencial corporativa ativada com sucesso. Acessando a plataforma...");
-    login(firstEmail, firstPass, firstRole, firstRole === "vendedor" ? firstSellerId : undefined);
+    triggerAnimatedLogin(
+      firstRole,
+      firstRole === "vendedor" ? firstSellerId : undefined,
+      firstEmail,
+      firstPass,
+    );
   };
 
   return (
@@ -559,7 +593,7 @@ function Login() {
                 <div className="grid gap-2 sm:grid-cols-2">
                   <button
                     type="button"
-                    onClick={() => loginAs("gestor")}
+                    onClick={() => triggerAnimatedLogin("gestor")}
                     className="flex flex-col items-start gap-1 rounded-xl border border-cyan-500/30 bg-[#071026]/70 p-3 text-left transition-all hover:bg-cyan-500/10 hover:border-cyan-400/60 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)]"
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400">
@@ -571,7 +605,7 @@ function Login() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => loginAs("vendedor", "francine")}
+                    onClick={() => triggerAnimatedLogin("vendedor", "francine")}
                     className="flex flex-col items-start gap-1 rounded-xl border border-violet-500/30 bg-[#0d0a26]/70 p-3 text-left transition-all hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)]"
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400">
@@ -808,6 +842,52 @@ function Login() {
           )}
         </div>
       </section>
+
+      {/* Overlay Animado de Login Efetivado */}
+      {welcomeUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md welcome-overlay">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-500/50 bg-[#060e22]/95 p-8 text-center shadow-[0_0_60px_rgba(6,182,212,0.4)] welcome-card">
+            {/* Efeitos de Glow */}
+            <div className="pointer-events-none absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/25 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -right-24 size-48 rounded-full bg-violet-600/25 blur-3xl" />
+
+            {/* Ícone com pulso e anel de energia */}
+            <div className="relative mx-auto mb-5 grid size-16 place-items-center rounded-2xl border border-cyan-400/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/20 shadow-[0_0_35px_rgba(6,182,212,0.35)]">
+              <div className="absolute inset-0 rounded-2xl border border-cyan-400/60 welcome-ring" />
+              {welcomeUser.role === "gestor" ? (
+                <ShieldCheck className="size-8 text-cyan-300 animate-pulse" />
+              ) : (
+                <UserRound className="size-8 text-violet-400 animate-pulse" />
+              )}
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-300 mb-3">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
+              Login Efetivado com Sucesso
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+              Olá, {welcomeUser.name}!
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+              {welcomeUser.role === "gestor"
+                ? "Acessando a Visão Geral do Gestor com métricas e inteligência em tempo real..."
+                : "Acessando sua fila de atendimento personalizada e oportunidades quentes..."}
+            </p>
+
+            {/* Barra de progresso animada */}
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800/90 border border-slate-700/60">
+              <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-400 welcome-progress-bar" />
+            </div>
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-cyan-400" />
+              <span>Conexão Segura TLS 1.3 · Rede Concessionárias</span>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -1254,7 +1334,7 @@ function ManagerView({
   setView: (v: View) => void;
   setSelected: (v: string | null) => void;
 }) {
-  if (view === "overview") return <Overview setSelected={setSelected} />;
+  if (view === "overview") return <Overview setSelected={setSelected} setView={setView} />;
   if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
   if (view === "distribution") return <Distribution />;
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
@@ -1314,28 +1394,50 @@ function Kpi({
   danger?: boolean;
 }) {
   return (
-    <div className="panel p-4">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-xl border p-4 transition-all duration-300 group",
+        danger
+          ? "border-rose-500/30 bg-gradient-to-b from-[#140a12]/80 to-[#0c0816]/90 hover:border-rose-500/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.18)]"
+          : "border-border/60 bg-gradient-to-b from-[#0b1328]/80 to-[#060c1c]/90 hover:border-cyan-500/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.14)]",
+      )}
+    >
       <div className="flex items-start justify-between">
-        <div className="text-xs font-medium text-muted-foreground">{label}</div>
-        <I className={cn("size-4 text-primary", danger && "text-destructive")} />
+        <div className="text-[11px] font-medium text-muted-foreground line-clamp-1">{label}</div>
+        <div
+          className={cn(
+            "grid size-7 place-items-center rounded-lg border transition-colors",
+            danger
+              ? "border-rose-500/30 bg-rose-500/10 text-rose-400 group-hover:bg-rose-500/20"
+              : "border-cyan-500/20 bg-cyan-500/10 text-cyan-300 group-hover:bg-cyan-500/20",
+          )}
+        >
+          <I className="size-3.5" />
+        </div>
       </div>
-      <div className="mt-3 text-2xl font-semibold">{value}</div>
+      <div className="mt-2.5 text-2xl font-bold tracking-tight text-foreground">{value}</div>
       {change && (
         <div
           className={cn(
-            "mt-2 flex items-center gap-1 text-[11px]",
-            danger ? "text-destructive" : "text-[color:var(--success)]",
+            "mt-1.5 flex items-center gap-1 text-[10.5px] font-medium",
+            danger ? "text-rose-400" : "text-emerald-400",
           )}
         >
-          <TrendingUp className="size-3" />
-          {change}
+          {danger ? <TrendingDown className="size-3" /> : <TrendingUp className="size-3" />}
+          <span>{change}</span>
         </div>
       )}
     </div>
   );
 }
 
-function Overview({ setSelected }: { setSelected: (v: string) => void }) {
+function Overview({
+  setSelected,
+  setView,
+}: {
+  setSelected: (v: string) => void;
+  setView?: (v: View) => void;
+}) {
   const { opportunities, followUps, now } = useVyntra();
   const hot = opportunities.filter((o) => o.score >= 80);
   const critical = hot.filter((o) => {
@@ -1347,12 +1449,12 @@ function Overview({ setSelected }: { setSelected: (v: string) => void }) {
     .filter((o) => !["Venda", "Perdida"].includes(o.status))
     .reduce((a, o) => a + o.potentialValue, 0);
   const stages = [
-    { n: "Recebidas", v: 142 },
-    { n: "Qualificadas", v: 87 },
-    { n: "Atendimento", v: 61 },
-    { n: "Propostas", v: 28 },
-    { n: "Negociação", v: 19 },
-    { n: "Vendas", v: 11 },
+    { n: "Recebidas", v: 142, color: "from-cyan-500 to-blue-600" },
+    { n: "Qualificadas", v: 87, color: "from-blue-500 to-indigo-600" },
+    { n: "Atendimento", v: 61, color: "from-indigo-500 to-violet-600" },
+    { n: "Propostas", v: 28, color: "from-violet-500 to-purple-600" },
+    { n: "Negociação", v: 19, color: "from-purple-500 to-fuchsia-600" },
+    { n: "Vendas", v: 11, color: "from-emerald-500 to-teal-500" },
   ];
   const temp = [
     { key: "muito_quente" as const, v: hot.length },
@@ -1363,41 +1465,112 @@ function Overview({ setSelected }: { setSelected: (v: string) => void }) {
     { key: "morno" as const, v: opportunities.filter((o) => o.score >= 40 && o.score < 60).length },
     { key: "baixo" as const, v: opportunities.filter((o) => o.score < 40).length },
   ];
+
   return (
-    <>
-      <PageHeader
-        title="Visão geral"
-        subtitle="Veja onde suas oportunidades estão e onde o dinheiro está sendo perdido."
-        action={
-          <div className="text-xs text-muted-foreground">Atualizado agora · Últimos 30 dias</div>
-        }
-      />
-      {critical.length > 0 && (
-        <div className="mb-5 flex flex-col justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-lg bg-destructive/15">
-              <Flame className="size-5 text-destructive" />
+    <div className="space-y-6">
+      {/* Hero Executivo de Boas-Vindas */}
+      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-[#061226]/95 via-[#0a1835]/75 to-[#040816]/95 p-5 sm:p-6 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
+        <div className="pointer-events-none absolute -right-20 -top-20 size-72 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 -bottom-20 size-72 rounded-full bg-violet-600/15 blur-3xl" />
+
+        <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="relative grid size-14 shrink-0 place-items-center rounded-2xl border border-cyan-400/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/25 text-xl font-bold text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]">
+              AL
+              <span className="absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-[#050b1a] bg-emerald-500" title="Gestor Online" />
             </div>
             <div>
-              <div className="text-sm font-semibold">
-                {critical.length} oportunidades muito quentes sem atendimento
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-300">
+                  <ShieldCheck className="size-3 text-cyan-400" />
+                  Gerência Geral de Vendas
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Operação em Tempo Real
+                </span>
+                <span className="hidden sm:inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/50 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                  Via Passos Honda
+                </span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                Ação imediata recomendada — potencial de{" "}
-                {BRL(critical.reduce((a, o) => a + o.potentialValue, 0))}
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+                Olá, Airton Lindão!
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+                Central executiva de comando · Monitoramento consolidado das concessionárias em <strong className="text-cyan-300">Lages/SC</strong>, <strong className="text-cyan-300">Três Passos/RS</strong> e <strong className="text-cyan-300">Santa Rosa/RS</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* Ações Rápidas Executivas */}
+          <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t border-border/40 lg:border-t-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setView?.("impact")}
+              className="border-cyan-500/40 bg-cyan-950/30 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            >
+              <TrendingUp className="mr-1.5 size-3.5 text-cyan-400" />
+              Simulador de Impacto
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setView?.("distribution")}
+              className="border-violet-500/40 bg-violet-950/30 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/60 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+            >
+              <Sparkles className="mr-1.5 size-3.5 text-violet-400" />
+              Distribuição de Leads
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setView?.("opportunities")}
+              className="border-border/60 bg-surface-2/60 text-xs font-medium hover:bg-surface-2"
+            >
+              <Target className="mr-1.5 size-3.5 text-primary" />
+              Ver Todas Oportunidades
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Alerta Crítico Executivo */}
+      {critical.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-950/40 via-red-950/25 to-[#0b0814]/90 p-4 sm:p-5 shadow-[0_0_35px_rgba(244,63,94,0.18)] flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3.5">
+            <div className="relative grid size-11 shrink-0 place-items-center rounded-xl border border-rose-500/50 bg-rose-500/20 text-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.3)]">
+              <Flame className="size-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base font-bold text-rose-300">
+                  {critical.length} Oportunidades Muito Quentes Aguardando Atendimento
+                </span>
+                <span className="rounded-full bg-rose-500/20 border border-rose-500/40 px-2 py-0.5 text-[10px] font-bold text-rose-300 uppercase tracking-wider">
+                  Prioridade Máxima
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Tempo sem resposta superior a 10 min — Potencial acumulado em risco:{" "}
+                <strong className="text-rose-400 font-bold text-sm">
+                  {BRL(critical.reduce((a, o) => a + o.potentialValue, 0))}
+                </strong>
               </div>
             </div>
           </div>
           <Button
             size="sm"
-            variant="destructive"
             onClick={() => setSelected(critical[0]?.id ?? "")}
+            className="shrink-0 bg-rose-600 hover:bg-rose-500 text-white font-semibold shadow-[0_0_20px_rgba(244,63,94,0.35)]"
           >
-            Ver prioridade <ArrowRight />
+            Atribuir Prioridade Imediata <ArrowRight className="ml-1.5 size-4" />
           </Button>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
+
+      {/* Grid de KPIs Principais (8 colunas) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4 xl:grid-cols-8">
         <Kpi label="Oportunidades recebidas" value="142" change="+12% no período" icon={Target} />
         <Kpi label="Qualificadas" value="87" change="61,3% do total" icon={ShieldCheck} />
         <Kpi label="Muito quentes" value="24" change="17 precisam de ação" icon={Flame} />
@@ -1407,80 +1580,129 @@ function Overview({ setSelected }: { setSelected: (v: string) => void }) {
         <Kpi label="Oportunidades perdidas" value="19" danger icon={TrendingDown} />
         <Kpi label="Taxa de conversão" value="12,6%" change="+1,4 p.p." icon={TrendingUp} />
       </div>
-      <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <Kpi label="Tempo médio de primeira resposta" value="8 min" icon={Clock3} />
-        <Kpi
-          label="Follow-ups atrasados"
-          value={String(overdue.length)}
-          danger
-          icon={CalendarClock}
-        />
-        <Kpi
-          label="Potencial comercial em aberto"
-          value={BRL(recoverable)}
-          change="23 oportunidades recuperáveis"
-          icon={CircleDollarSign}
-        />
-      </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_0.8fr]">
-        <section className="panel p-5">
-          <div className="mb-5 flex items-start justify-between">
-            <div>
-              <h2 className="text-base font-semibold">Funil de oportunidades</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Conversão por etapa comercial</p>
+
+      {/* Trio de Indicadores Executivos em Destaque */}
+      <div className="grid gap-3.5 md:grid-cols-3">
+        <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-[#0b1428]/80 to-[#060c1a]/90 p-5 shadow-[0_0_25px_rgba(6,182,212,0.08)]">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Tempo Médio 1ª Resposta</span>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              Meta: &lt; 10 min
+            </span>
+          </div>
+          <div className="text-3xl font-bold tracking-tight text-white">8 min</div>
+          <div className="mt-3">
+            <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+              <span>Velocidade de Contato</span>
+              <span className="text-emerald-400 font-semibold">Zona Segura</span>
             </div>
-            <div className="rounded-md bg-secondary px-2 py-1 text-[10px] text-muted-foreground">
-              30 DIAS
+            <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div style={{ width: "40%" }} className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" />
             </div>
           </div>
-          <div className="space-y-3">
+        </div>
+
+        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-b from-[#18120c]/80 to-[#0e0a06]/90 p-5 shadow-[0_0_25px_rgba(245,158,11,0.08)]">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Follow-ups Pendentes</span>
+            <span
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                overdue.length > 0
+                  ? "border-rose-500/30 bg-rose-500/15 text-rose-400"
+                  : "border-emerald-500/30 bg-emerald-500/15 text-emerald-400",
+              )}
+            >
+              {overdue.length > 0 ? "Atrasados" : "Em Dia"}
+            </span>
+          </div>
+          <div className="text-3xl font-bold tracking-tight text-white">{overdue.length} atrasados</div>
+          <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+            Contatos programados que necessitam de reengajamento para não perder a oportunidade.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-[#081814]/80 to-[#040e0c]/90 p-5 shadow-[0_0_25px_rgba(16,185,129,0.08)]">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Potencial Comercial Ativo</span>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              Pipeline Aberto
+            </span>
+          </div>
+          <div className="text-3xl font-bold tracking-tight text-emerald-400">{BRL(recoverable)}</div>
+          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+            <span>23 oportunidades em negociação</span>
+            <span className="text-cyan-300 font-medium">Lojas SC & RS</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Funil e Temperatura */}
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.8fr]">
+        <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/80 to-surface-2/40 p-5 sm:p-6">
+          <div className="mb-5 flex items-start justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Funil de Oportunidades</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Eficiência e conversão por etapa da jornada de compra</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-secondary/80 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+              ÚLTIMOS 30 DIAS
+            </div>
+          </div>
+          <div className="space-y-3.5">
             {stages.map((s, i) => (
-              <div key={s.n} className="grid grid-cols-[90px_1fr_46px] items-center gap-3">
+              <div key={s.n} className="grid grid-cols-[100px_1fr_50px] items-center gap-3">
                 <div>
-                  <div className="text-sm font-semibold">{s.v}</div>
-                  <div className="text-[10px] text-muted-foreground">{s.n}</div>
+                  <div className="text-sm font-bold text-foreground">{s.v}</div>
+                  <div className="text-[11px] text-muted-foreground font-medium">{s.n}</div>
                 </div>
-                <div className="relative h-7 overflow-hidden rounded bg-secondary">
+                <div className="relative h-8 overflow-hidden rounded-lg bg-secondary/60 border border-border/40">
                   <div
-                    className="h-full rounded bg-primary/70"
-                    style={{ width: `${Math.max(12, (s.v / stages[0]!.v) * 100)}%` }}
+                    className={cn("h-full rounded-lg bg-gradient-to-r transition-all duration-500", s.color)}
+                    style={{ width: `${Math.max(10, (s.v / stages[0]!.v) * 100)}%` }}
                   />
+                  <span className="absolute inset-y-0 left-3 flex items-center text-[10px] font-semibold text-white/90 drop-shadow">
+                    {s.n} ({s.v})
+                  </span>
                 </div>
-                <div className="text-right text-[10px] text-muted-foreground">
+                <div className="text-right text-xs font-mono font-medium text-cyan-300">
                   {i === 0 ? "100%" : `${Math.round((s.v / stages[i - 1]!.v) * 100)}%`}
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-5 flex items-start gap-3 rounded-lg border border-[color:var(--warm)]/25 bg-[color:color-mix(in_oklab,var(--warm)_8%,transparent)] p-3">
-            <Sparkles className="mt-0.5 size-4 shrink-0 text-[color:var(--warm)]" />
-            <div className="text-xs leading-5">
-              <strong>Insight Vyntra:</strong> você está perdendo oportunidades principalmente entre
-              atendimento e proposta.
+          <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+            <Sparkles className="mt-0.5 size-4 shrink-0 text-amber-400" />
+            <div className="text-xs leading-relaxed text-slate-200">
+              <strong className="text-amber-300 font-semibold">Insight Vyntra AI:</strong> Você tem maior índice de atrito na transição de atendimento para proposta. A aceleração de simulação de consórcio e entrada flexível eleva a taxa de avanço em até 28%.
             </div>
           </div>
         </section>
-        <section className="panel p-5">
-          <h2 className="text-base font-semibold">Temperatura das oportunidades</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Prioridade calculada pelo Vyntra Score
+
+        <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/80 to-surface-2/40 p-5 sm:p-6">
+          <h2 className="text-base font-semibold text-foreground">Temperatura das Oportunidades</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Priorização calculada pelo algoritmo Vyntra Score
           </p>
           <div className="mt-5 space-y-4">
             {temp.map((t) => {
               const m = TEMPERATURE_META[t.key];
+              const share = Math.round((t.v / Math.max(1, opportunities.length)) * 100);
               return (
                 <div key={t.key}>
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-sm">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-foreground">
                       {m.emoji} {m.label}
                     </span>
-                    <strong>{t.v}</strong>
+                    <span className="font-mono text-xs">
+                      <strong>{t.v}</strong> ({share}%)
+                    </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-secondary/80 border border-border/40">
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full transition-all duration-500"
                       style={{
-                        width: `${(t.v / opportunities.length) * 100}%`,
+                        width: `${share}%`,
                         background: m.color,
                       }}
                     />
@@ -1489,38 +1711,44 @@ function Overview({ setSelected }: { setSelected: (v: string) => void }) {
               );
             })}
           </div>
-          <p className="mt-6 border-t border-border pt-4 text-[11px] leading-5 text-muted-foreground">
-            Temperatura baseada em intenção de compra, prazo, orçamento, produto, forma de pagamento
-            e comportamento.
+          <p className="mt-6 border-t border-border/40 pt-4 text-[11px] leading-relaxed text-muted-foreground">
+            Critérios multivariáveis: intenção imediata, orçamento vs. modelo Honda, prazo de compra, entrada em dinheiro ou moto seminova.
           </p>
         </section>
       </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+
+      {/* Prioridades Imediatas e Dinheiro em Risco */}
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <PriorityList setSelected={setSelected} />
-        <section className="panel p-5">
+        <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/80 to-surface-2/40 p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Dinheiro em risco agora</h2>
-            <span className="text-lg font-semibold text-destructive">R$ 84.900</span>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Dinheiro em Risco Agora</h2>
+              <p className="text-xs text-muted-foreground">Leads de alto valor sem contato nas últimas 2h</p>
+            </div>
+            <span className="text-lg font-bold text-rose-400">R$ 84.900</span>
           </div>
-          {critical.slice(0, 3).map((o) => (
-            <button
-              key={o.id}
-              onClick={() => setSelected(o.id)}
-              className="flex w-full items-center gap-3 border-t border-border py-3 text-left"
-            >
-              <ScoreMini score={o.score} />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{o.customer.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {o.product} · {o.objection}
+          <div className="divide-y divide-border/40">
+            {critical.slice(0, 3).map((o) => (
+              <button
+                key={o.id}
+                onClick={() => setSelected(o.id)}
+                className="flex w-full items-center gap-3 py-3 text-left transition-colors hover:bg-white/5 px-2 rounded-lg"
+              >
+                <ScoreMini score={o.score} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate text-foreground">{o.customer.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {o.product} · {o.city} · {o.objection}
+                  </div>
                 </div>
-              </div>
-              <div className="text-sm font-semibold">{BRL(o.potentialValue)}</div>
-            </button>
-          ))}
+                <div className="text-sm font-bold text-cyan-300 shrink-0">{BRL(o.potentialValue)}</div>
+              </button>
+            ))}
+          </div>
         </section>
       </div>
-    </>
+    </div>
   );
 }
 

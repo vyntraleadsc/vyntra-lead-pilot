@@ -278,3 +278,70 @@
   }
 }
 
+/* Animação do Login Efetivado */
+@keyframes welcomeOverlayIn {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(16px);
+  }
+}
+
+@keyframes welcomeCardPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes welcomeProgressAnim {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes welcomePulseRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+}
+
+.welcome-overlay {
+  animation: welcomeOverlayIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.welcome-card {
+  animation: welcomeCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+.welcome-progress-bar {
+  animation: welcomeProgressAnim 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+}
+
+.welcome-ring {
+  animation: welcomePulseRing 2s ease-in-out infinite;
+}
+

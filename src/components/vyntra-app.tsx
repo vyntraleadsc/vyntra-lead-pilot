@@ -103,7 +103,7 @@ import {
   DEALERSHIP,
   pickSellerByPerformance,
 } from "@/lib/vyntra/mock-data";
-import { useVyntra, type RoleView } from "@/lib/vyntra/store";
+import { useVyntra, VyntraProvider, type RoleView } from "@/lib/vyntra/store";
 import {
   LAGES_REGION_CITIES,
   type CommercialRoute,
@@ -171,7 +171,7 @@ const FILTER_INITIAL: OpportunityFilters = {
   status: "all",
 };
 
-export function VyntraApp() {
+function VyntraAppContent() {
   const { hydrated, authed } = useVyntra();
   if (!hydrated) return <div className="min-h-screen bg-background" />;
   return (
@@ -179,6 +179,14 @@ export function VyntraApp() {
       {authed ? <Workspace /> : <Login />}
       <Toaster position="top-right" richColors />
     </>
+  );
+}
+
+export function VyntraApp() {
+  return (
+    <VyntraProvider>
+      <VyntraAppContent />
+    </VyntraProvider>
   );
 }
 

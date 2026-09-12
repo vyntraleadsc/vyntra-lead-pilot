@@ -142,7 +142,7 @@ interface VyntraContextValue extends PersistedState {
 
 const VyntraContext = createContext<VyntraContextValue | null>(null);
 
-export function VyntraProvider({ children }: { children: ReactNode }) {
+function VyntraProviderInternal({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PersistedState>(() => initialState());
   const [hydrated, setHydrated] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -629,8 +629,75 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
   return <VyntraContext.Provider value={value}>{children}</VyntraContext.Provider>;
 }
 
+export function VyntraProvider({ children }: { children: ReactNode }) {
+  const parent = useContext(VyntraContext);
+  if (parent) {
+    return <>{children}</>;
+  }
+  return <VyntraProviderInternal>{children}</VyntraProviderInternal>;
+}
+
+let defaultFallbackContext: VyntraContextValue | null = null;
+
+function getFallbackContext(): VyntraContextValue {
+  if (!defaultFallbackContext) {
+    const init = initialState();
+    defaultFallbackContext = {
+      ...init,
+      hydrated: true,
+      sellers: SELLERS,
+      now: Date.now(),
+      login: () => false,
+      loginAs: () => {},
+      setCurrentSellerId: () => {},
+      logout: () => {},
+      setRole: () => {},
+      resetDemo: () => {},
+      setStatus: () => {},
+      registerContact: () => {},
+      simulateWhatsApp: () => {},
+      assignSeller: () => {},
+      assignLeads: () => {},
+      changeRoute: () => {},
+      sendProposal: () => {},
+      setProposalStatus: () => {},
+      scheduleFollowUp: () => {},
+      completeFollowUp: () => {},
+      rescheduleFollowUp: () => {},
+      notifySeller: () => {},
+      escalate: () => {},
+      markNotificationRead: () => {},
+      markAllNotificationsRead: () => {},
+      toggleDistributionRule: () => {},
+      sellerById: (id: string) => SELLERS.find((s) => s.id === id),
+      opportunityById: (id: string) => init.opportunities.find((o) => o.id === id),
+      addOpportunityFromQuiz: () => "",
+      webhookCompany: getCompany("vyntra-automotive")!,
+      integrationLogs: getCompanyLogs("vyntra-automotive"),
+      toggleWebhookActive: () => {},
+      rotateWebhookToken: () => {},
+      clearIntegrationLogs: () => {},
+      testWebhookLead: async () => ({
+        success: false,
+        result: {
+          status: "error" as const,
+          httpCode: 500,
+          opportunityId: null,
+          logs: [],
+          message: "Fallback de demonstração",
+          payloadReceived: {},
+        },
+      }),
+      refreshIntegrationData: () => {},
+    };
+  }
+  return defaultFallbackContext!;
+}
+
 export function useVyntra() {
   const ctx = useContext(VyntraContext);
-  if (!ctx) throw new Error("useVyntra must be used inside VyntraProvider");
+  if (!ctx) {
+    return getFallbackContext();
+  }
   return ctx;
 }

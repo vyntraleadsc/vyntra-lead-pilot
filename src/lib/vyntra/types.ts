@@ -132,11 +132,28 @@ export interface DistributionRules {
   byPriority: boolean;
 }
 
+export const LAGES_REGION_CITIES = [
+  "Lages",
+  "Capão Alto",
+  "Campo Belo",
+  "Correia Pinto",
+  "Palmeira",
+  "Bocaina",
+  "Painel",
+  "Otacílio",
+  "Ponte Alta",
+  "Cerro Negro",
+  "São José do Cerrito",
+] as const;
+
+export type LagesRegionCity = (typeof LAGES_REGION_CITIES)[number];
+
 export interface OpportunityFilters {
   search: string;
   period: string;
   state: string;
   store: string;
+  city: string;
   sellerId: string;
   product: string;
   category: string;
@@ -144,3 +161,4 @@ export interface OpportunityFilters {
   temperature: string;
   status: string;
 }
+

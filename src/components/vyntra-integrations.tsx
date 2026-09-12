@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { useVyntra } from "@/lib/vyntra/store";
 import type { IntegrationLog, ProcessWebhookResult } from "@/lib/vyntra/webhook-service";
 import { BRL, relativeTime } from "@/lib/vyntra/utils";
+import { LAGES_REGION_CITIES } from "@/lib/vyntra/types";
 
 // ---------------------------------------------------------------------------
 // Componente de Badge de Score e Classificação
@@ -552,6 +553,18 @@ export function IntegrationsPage({
                 onChange={(e) => setCustomCity(e.target.value)}
                 className="mt-1 h-8 text-xs bg-background/80"
               />
+              <div className="mt-1 flex flex-wrap gap-1">
+                {LAGES_REGION_CITIES.slice(0, 6).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCustomCity(c)}
+                    className="rounded bg-primary/10 px-1 py-0.5 text-[9px] text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
               <label className="text-[11px] text-muted-foreground font-medium">Origem (Source)</label>

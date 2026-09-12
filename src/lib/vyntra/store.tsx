@@ -16,8 +16,9 @@ import {
   buildOpportunities,
   buildProposals,
 } from "./mock-data";
-import type {
-  AppNotification,
+import {
+  LAGES_REGION_CITIES,
+  type AppNotification,
   Category,
   CommercialRoute,
   DistributionRules,
@@ -44,7 +45,7 @@ import {
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v1";
+const STORAGE_KEY = "vyntra-demo-state-v3";
 
 export type RoleView = "gestor" | "vendedor";
 
@@ -224,7 +225,7 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
             const city =
               opportunity.city ??
               (store === "Lages / SC"
-                ? "Lages"
+                ? LAGES_REGION_CITIES[Math.floor(index / 3) % LAGES_REGION_CITIES.length]
                 : store === "Três Passos / RS"
                   ? "Três Passos"
                   : "Santa Rosa");

@@ -92,15 +92,16 @@ import {
   DEALERSHIP,
 } from "@/lib/vyntra/mock-data";
 import { useVyntra, type RoleView } from "@/lib/vyntra/store";
-import type {
-  CommercialRoute,
-  FollowUpBucket,
-  LeadState,
-  LeadStore,
-  Opportunity,
-  OpportunityFilters,
-  OpportunityStatus,
-  PurchaseMethod,
+import {
+  LAGES_REGION_CITIES,
+  type CommercialRoute,
+  type FollowUpBucket,
+  type LeadState,
+  type LeadStore,
+  type Opportunity,
+  type OpportunityFilters,
+  type OpportunityStatus,
+  type PurchaseMethod,
 } from "@/lib/vyntra/types";
 import {
   BRL,
@@ -149,6 +150,7 @@ const FILTER_INITIAL: OpportunityFilters = {
   period: "30d",
   state: "all",
   store: "all",
+  city: "all",
   sellerId: "all",
   product: "all",
   category: "all",
@@ -1616,11 +1618,11 @@ function FilterBar({
     } else if (newState === "RS" && filters.store === "Lages / SC") {
       nextStore = "all";
     }
-    setFilters({ ...filters, state: newState, store: nextStore });
+    setFilters({ ...filters, state: newState, store: nextStore, city: "all" });
   };
 
   const select = (key: keyof OpportunityFilters, label: string, items: Array<[string, string]>) => (
-    <Select value={filters[key]} onValueChange={(v) => setFilters({ ...filters, [key]: v })}>
+    <Select value={filters[key] || ""} onValueChange={(v) => setFilters({ ...filters, [key]: v })}>
       <SelectTrigger className="h-9 min-w-[130px] bg-surface">
         <SelectValue placeholder={label} />
       </SelectTrigger>
@@ -1633,6 +1635,19 @@ function FilterBar({
       </SelectContent>
     </Select>
   );
+
+  // Lista de cidades disponíveis com base nos filtros regionais
+  const availableCities: Array<[string, string]> = [["all", "Todas as cidades"]];
+  if (filters.state === "SC" || filters.store === "Lages / SC") {
+    LAGES_REGION_CITIES.forEach((c) => availableCities.push([c, c]));
+  } else if (filters.state === "RS") {
+    const rsCities = Array.from(new Set(opportunities.filter((o) => o.state === "RS").map((o) => o.city))).sort();
+    rsCities.forEach((c) => availableCities.push([c, c]));
+  } else {
+    const allUniqueCities = Array.from(new Set([...LAGES_REGION_CITIES, ...opportunities.map((o) => o.city)])).sort();
+    allUniqueCities.forEach((c) => availableCities.push([c, c]));
+  }
+
   return (
     <div className="mb-4 flex flex-wrap gap-2 rounded-xl border border-border bg-surface/50 p-3">
       <div className="flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground">
@@ -1665,7 +1680,7 @@ function FilterBar({
           let nextState = filters.state;
           if (v === "Lages / SC" && filters.state === "RS") nextState = "SC";
           if ((v === "Três Passos / RS" || v === "Santa Rosa / RS") && filters.state === "SC") nextState = "RS";
-          setFilters({ ...filters, store: v, state: nextState });
+          setFilters({ ...filters, store: v, state: nextState, city: "all" });
         }}
       >
         <SelectTrigger className="h-9 min-w-[160px] bg-surface">
@@ -1673,6 +1688,29 @@ function FilterBar({
         </SelectTrigger>
         <SelectContent>
           {storeOptions.map(([v, l]) => (
+            <SelectItem key={v} value={v}>
+              {l}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={filters.city || "all"}
+        onValueChange={(v) => {
+          let nextState = filters.state;
+          let nextStore = filters.store;
+          if (LAGES_REGION_CITIES.includes(v as (typeof LAGES_REGION_CITIES)[number])) {
+            nextState = "SC";
+            nextStore = "Lages / SC";
+          }
+          setFilters({ ...filters, city: v, state: nextState, store: nextStore });
+        }}
+      >
+        <SelectTrigger className="h-9 min-w-[140px] bg-surface">
+          <SelectValue placeholder="Cidade" />
+        </SelectTrigger>
+        <SelectContent>
+          {availableCities.map(([v, l]) => (
             <SelectItem key={v} value={v}>
               {l}
             </SelectItem>
@@ -1726,6 +1764,7 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
     (f.sellerId === "all" || o.sellerId === f.sellerId) &&
     (f.state === "all" || o.state === f.state) &&
     (f.store === "all" || o.store === f.store) &&
+    (f.city === "all" || !f.city || o.city === f.city) &&
     (f.product === "all" || o.product === f.product) &&
     (f.category === "all" || o.category === f.category) &&
     (f.method === "all" || o.method === f.method) &&
@@ -2266,8 +2305,22 @@ function Distribution() {
           </div>
           <div className="mt-1.5 text-sm font-medium">Loja Central: Lages / SC</div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Atendimento para Lages, Correia Pinto, São Joaquim, Urubici e planalto catarinense.
+            Cobertura regional: Lages, Capão Alto, Campo Belo, Correia Pinto, Palmeira, Bocaina, Painel, Otacílio, Ponte Alta, Cerro Negro e São José do Cerrito.
           </p>
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {LAGES_REGION_CITIES.map((c) => {
+              const count = v.opportunities.filter((o) => o.city === c).length;
+              return (
+                <span
+                  key={c}
+                  className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-background/80 px-1.5 py-0.5 text-[10px] text-foreground"
+                >
+                  <span>{c}</span>
+                  <span className="font-semibold text-primary">({count})</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
         <div className="rounded-xl border border-[color:var(--violet)]/20 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-3.5">
           <div className="flex items-center justify-between">
@@ -3067,11 +3120,18 @@ function getQuizQuestions(answers: Record<string, string>): QuizQuestion[] {
         : "Selecione o estado no passo anterior",
     options: isSC
       ? [
-          "Lages / SC (Loja Autorizada)",
-          "Correia Pinto (Região Lages)",
-          "São Joaquim (Região Lages)",
-          "Urubici (Região Lages)",
-          "Outra cidade de Santa Catarina (Atendimento Lages)",
+          "Lages (Loja Central)",
+          "Capão Alto",
+          "Campo Belo",
+          "Correia Pinto",
+          "Palmeira",
+          "Bocaina",
+          "Painel",
+          "Otacílio",
+          "Ponte Alta",
+          "Cerro Negro",
+          "São José do Cerrito",
+          "Outra cidade da Região de Lages / SC",
         ]
       : isRS
         ? [
@@ -3158,7 +3218,27 @@ function resolveLeadLocation(answers: Record<string, string>): {
   const cityRaw = answers["cidade_loja"] || (isSC ? "Lages" : "Três Passos");
   const cleanCity = cityRaw.split("(")[0]?.split("/")[0]?.trim() || (isSC ? "Lages" : "Três Passos");
 
-  if (isSC) {
+  const lagesKeywords = [
+    "lages",
+    "capão alto",
+    "capao alto",
+    "campo belo",
+    "correia pinto",
+    "palmeira",
+    "bocaina",
+    "painel",
+    "otacílio",
+    "otacilio",
+    "ponte alta",
+    "cerro negro",
+    "são josé do cerrito",
+    "sao jose do cerrito",
+    "cerrito",
+  ];
+
+  const matchesLages = lagesKeywords.some((kw) => cityRaw.toLowerCase().includes(kw));
+
+  if (isSC || matchesLages) {
     return {
       state: "SC",
       store: "Lages / SC",

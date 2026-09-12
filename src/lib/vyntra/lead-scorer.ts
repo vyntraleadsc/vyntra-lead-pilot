@@ -150,7 +150,21 @@ export function qualifyLead(payload: WebhookLeadPayload): LeadScoreResult {
 
   if (
     cityLower.includes("lages") ||
+    cityLower.includes("capão alto") ||
+    cityLower.includes("capao alto") ||
+    cityLower.includes("campo belo") ||
+    cityLower.includes("correia pinto") ||
+    cityLower.includes("palmeira") ||
+    cityLower.includes("bocaina") ||
+    cityLower.includes("painel") ||
+    cityLower.includes("otacílio") ||
+    cityLower.includes("otacilio") ||
+    cityLower.includes("ponte alta") ||
+    cityLower.includes("cerro negro") ||
+    cityLower.includes("são josé do cerrito") ||
+    cityLower.includes("sao jose do cerrito") ||
     cityLower.includes("sc") ||
+    cityLower.includes("santa catarina") ||
     cityLower.includes("florianópolis") ||
     cityLower.includes("florianopolis") ||
     cityLower.includes("chapecó") ||

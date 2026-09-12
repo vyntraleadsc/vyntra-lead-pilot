@@ -1,15 +1,16 @@
-import type {
-  AppNotification,
-  Category,
-  CommercialRoute,
-  FollowUp,
-  LeadState,
-  LeadStore,
-  Opportunity,
-  OpportunityStatus,
-  Proposal,
-  PurchaseMethod,
-  Seller,
+import {
+  LAGES_REGION_CITIES,
+  type AppNotification,
+  type Category,
+  type CommercialRoute,
+  type FollowUp,
+  type LeadState,
+  type LeadStore,
+  type Opportunity,
+  type OpportunityStatus,
+  type Proposal,
+  type PurchaseMethod,
+  type Seller,
 } from "./types";
 
 const MIN = 60 * 1000;
@@ -790,7 +791,7 @@ function buildReasons(r: Raw): string[] {
 }
 
 export function buildOpportunities(): Opportunity[] {
-  const scCities = ["Lages", "Correia Pinto", "São Joaquim", "Lages", "Urubici"];
+  const scCities = [...LAGES_REGION_CITIES];
   const tpCities = ["Três Passos", "Tenente Portela", "Crissiumal", "Três Passos", "Esperança do Sul"];
   const srCities = ["Santa Rosa", "Giruá", "Tuparendi", "Santa Rosa", "Santo Cristo"];
 
@@ -804,7 +805,7 @@ export function buildOpportunities(): Opportunity[] {
 
     if (state === "SC") {
       store = "Lages / SC";
-      city = scCities[i % scCities.length]!;
+      city = scCities[Math.floor(i / 3) % scCities.length]!;
       region = "Santa Catarina";
       areaCode = "49";
     } else if (i % 2 === 0) {

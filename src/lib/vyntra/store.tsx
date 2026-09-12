@@ -31,6 +31,18 @@ import type {
   PurchaseMethod,
   Seller,
 } from "./types";
+import {
+  getCompany,
+  getCompanyLogs,
+  toggleCompanyIntegration,
+  rotateCompanyToken,
+  clearCompanyLogs,
+  processLeadWebhook,
+  subscribeToWebhookEvents,
+  type Company,
+  type IntegrationLog,
+  type ProcessWebhookResult,
+} from "./webhook-service";
 
 const STORAGE_KEY = "vyntra-demo-state-v1";
 
@@ -117,6 +129,13 @@ interface VyntraContextValue extends PersistedState {
       budgetFit: "alta" | "média" | "baixa";
     };
   }) => string;
+  webhookCompany: Company;
+  integrationLogs: IntegrationLog[];
+  toggleWebhookActive: () => void;
+  rotateWebhookToken: () => void;
+  clearIntegrationLogs: () => void;
+  testWebhookLead: (customPayload?: Record<string, unknown>) => Promise<{ success: boolean; result: ProcessWebhookResult }>;
+  refreshIntegrationData: () => void;
 }
 
 const VyntraContext = createContext<VyntraContextValue | null>(null);
@@ -125,6 +144,63 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PersistedState>(() => initialState());
   const [hydrated, setHydrated] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [webhookCompany, setWebhookCompany] = useState<Company>(
+    () => getCompany("vyntra-automotive")!,
+  );
+  const [integrationLogs, setIntegrationLogs] = useState<IntegrationLog[]>(
+    () => getCompanyLogs("vyntra-automotive"),
+  );
+
+  useEffect(() => {
+    // Sincronização em tempo real de novos leads recebidos via Webhook
+    const unsubscribe = subscribeToWebhookEvents((event) => {
+      if (event.companyId === "vyntra-automotive") {
+        if (event.type === "new_lead" && event.lead) {
+          const lead = event.lead;
+          setState((s) => {
+            if (s.opportunities.some((o) => o.id === lead.id)) return s;
+            return {
+              ...s,
+              opportunities: [lead, ...s.opportunities],
+              notifications: [
+                {
+                  id: `NT-${Math.random().toString(36).slice(2, 8)}`,
+                  kind: lead.score >= 80 ? "hot" : "seller",
+                  title: `Novo lead via Webhook — ${lead.customer.name} (Score ${lead.score}/100)`,
+                  description: `${lead.product} · Loja ${lead.store} (${lead.city}) · Origem: ${lead.source}`,
+                  opportunityId: lead.id,
+                  read: false,
+                  createdAt: new Date().toISOString(),
+                },
+                ...s.notifications,
+              ],
+            };
+          });
+          toast.success(
+            `Lead recebido via Webhook: ${lead.customer.name} (${lead.score} pts - ${lead.score >= 70 ? "Hot" : lead.score >= 40 ? "Warm" : "Cold"})`,
+          );
+        }
+        setIntegrationLogs([...getCompanyLogs("vyntra-automotive")]);
+      }
+    });
+
+    const handleCustomEvent = (e: Event) => {
+      const customEv = e as CustomEvent;
+      if (customEv.detail?.companyId === "vyntra-automotive") {
+        setIntegrationLogs([...getCompanyLogs("vyntra-automotive")]);
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("vyntra-webhook-event", handleCustomEvent);
+    }
+
+    return () => {
+      unsubscribe();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("vyntra-webhook-event", handleCustomEvent);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -483,8 +559,68 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         toast.success(`Oportunidade criada e direcionada para a loja ${payload.store}!`);
         return id;
       },
+      webhookCompany,
+      integrationLogs,
+      toggleWebhookActive: () => {
+        const updated = toggleCompanyIntegration("vyntra-automotive");
+        if (updated) {
+          setWebhookCompany({ ...updated });
+          toast.success(
+            updated.isActive ? "Integração Webhook ativada." : "Integração Webhook desativada.",
+          );
+        }
+      },
+      rotateWebhookToken: () => {
+        const updated = rotateCompanyToken("vyntra-automotive");
+        if (updated) {
+          setWebhookCompany({ ...updated });
+          toast.success("Novo token secreto de webhook gerado com sucesso.");
+        }
+      },
+      clearIntegrationLogs: () => {
+        clearCompanyLogs("vyntra-automotive");
+        setIntegrationLogs([]);
+        toast.success("Logs de integração limpos com sucesso.");
+      },
+      testWebhookLead: async (customPayload) => {
+        const result = await processLeadWebhook(
+          "vyntra-automotive",
+          customPayload || {
+            name: "Carlos Eduardo Nogueira (Lead Teste)",
+            phone: "(54) 99199-8877",
+            email: "carlos.nogueira@teste.com.br",
+            interest: "Toyota Corolla Cross XRE 0km",
+            budget: 185000,
+            city: "Santa Rosa",
+            message:
+              "Quero simular financiamento com 40% de entrada e taxa zero. Teste de webhook ao vivo.",
+            source: "Simulador Webhook Vyntra",
+            campaign: "Teste de Homologação de Integração",
+          },
+          state.opportunities,
+        );
+
+        setIntegrationLogs([...getCompanyLogs("vyntra-automotive")]);
+
+        if (result.status === "success" && result.lead) {
+          const lead = result.lead;
+          setState((s) => ({
+            ...s,
+            opportunities: [lead, ...s.opportunities.filter((o) => o.id !== lead.id)],
+          }));
+          return { success: true, result };
+        } else if (result.status === "duplicate") {
+          return { success: true, result };
+        }
+        return { success: false, result };
+      },
+      refreshIntegrationData: () => {
+        const comp = getCompany("vyntra-automotive");
+        if (comp) setWebhookCompany({ ...comp });
+        setIntegrationLogs([...getCompanyLogs("vyntra-automotive")]);
+      },
     };
-  }, [state, hydrated, now, patchOpportunity]);
+  }, [state, hydrated, now, patchOpportunity, webhookCompany, integrationLogs]);
 
   return <VyntraContext.Provider value={value}>{children}</VyntraContext.Provider>;
 }

@@ -45,9 +45,12 @@ import {
   UserRound,
   UsersRound,
   MapPin,
+  Terminal,
+  Webhook,
   X,
   Zap,
 } from "lucide-react";
+import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
 import {
   Bar,
   BarChart,
@@ -122,6 +125,8 @@ type View =
   | "insights"
   | "qualification"
   | "impact"
+  | "integrations"
+  | "integration-logs"
   | "settings";
 
 const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
@@ -134,6 +139,8 @@ const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: "insights", label: "Insights", icon: Sparkles },
   { id: "qualification", label: "Qualificação", icon: Bot },
   { id: "impact", label: "Impacto comercial", icon: CircleDollarSign },
+  { id: "integrations", label: "Integrações", icon: Webhook },
+  { id: "integration-logs", label: "Logs de integração", icon: Terminal },
   { id: "settings", label: "Configurações", icon: Settings },
 ];
 
@@ -818,7 +825,7 @@ function Workspace() {
           {role === "vendedor" ? (
             <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
           ) : (
-            <ManagerView view={view} setSelected={setSelected} />
+            <ManagerView view={view} setView={setView} setSelected={setSelected} />
           )}
         </main>
       </div>
@@ -1218,9 +1225,11 @@ function AlertIcon({ kind }: { kind: string }) {
 
 function ManagerView({
   view,
+  setView,
   setSelected,
 }: {
   view: View;
+  setView: (v: View) => void;
   setSelected: (v: string | null) => void;
 }) {
   if (view === "overview") return <Overview setSelected={setSelected} />;
@@ -1232,7 +1241,21 @@ function ManagerView({
   if (view === "insights") return <Insights />;
   if (view === "qualification") return <Qualification />;
   if (view === "impact") return <Impact />;
-  return <SettingsPage />;
+  if (view === "integrations")
+    return (
+      <IntegrationsPage
+        setSelected={setSelected}
+        onNavigateLogs={() => setView("integration-logs")}
+      />
+    );
+  if (view === "integration-logs")
+    return (
+      <IntegrationLogsPage
+        setSelected={setSelected}
+        onNavigateSettings={() => setView("integrations")}
+      />
+    );
+  return <SettingsPage setView={setView} />;
 }
 
 function PageHeader({
@@ -3504,14 +3527,66 @@ function Impact() {
   );
 }
 
-function SettingsPage() {
+function SettingsPage({ setView }: { setView?: (v: View) => void }) {
   const v = useVyntra();
   return (
     <>
       <PageHeader
         title="Configurações"
-        subtitle="Parâmetros do ambiente e preferências da operação."
+        subtitle="Parâmetros do ambiente, regras e integrações da operação."
       />
+
+      {/* Cartão em destaque de Integrações Webhook */}
+      <section className="mb-6 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-[#060e26] via-[#091535] to-[#04091a] p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="grid size-11 place-items-center rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
+            <Webhook className="size-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground">Integração de Webhook de Leads</h2>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold border",
+                  v.webhookCompany.isActive
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : "bg-muted/30 border-border text-muted-foreground",
+                )}
+              >
+                {v.webhookCompany.isActive ? "Ativo" : "Inativo"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground max-w-xl">
+              Endpoint ativo para recebimento automático de leads de campanhas (Meta Ads, Google Ads, formulários e portais). Inclui qualificação preditiva com Lead Score (0 a 100) e distribuição instantânea.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {setView && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setView("integration-logs")}
+                className="h-9 text-xs border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+              >
+                <Terminal className="size-3.5 mr-1" />
+                Logs
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setView("integrations")}
+                className="h-9 text-xs bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold"
+              >
+                Gerenciar Integração
+                <ChevronRight className="size-3.5 ml-1" />
+              </Button>
+            </>
+          )}
+        </div>
+      </section>
+
       <div className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <section className="panel p-5">
           <h2 className="font-semibold">Ambiente de demonstração</h2>

@@ -163,17 +163,15 @@ export function VyntraApp() {
 
 function Brand({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
-    <div className={cn("inline-flex items-center gap-2.5", className)}>
-      <div className="relative overflow-hidden rounded-xl border border-cyan-500/25 bg-[#030712] p-1.5 shadow-[0_0_20px_-4px_rgba(6,182,212,0.3)] transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.4)]">
-        <img
-          src="/logo.png"
-          alt="VYNTRA"
-          className={cn(
-            "object-contain select-none",
-            compact ? "h-6 w-auto" : "h-7 sm:h-8 w-auto"
-          )}
-        />
-      </div>
+    <div className={cn("inline-flex items-center", className)}>
+      <img
+        src="/logo.png"
+        alt="VYNTRA"
+        className={cn(
+          "object-contain select-none transition-transform duration-300 hover:scale-105 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.35)]",
+          compact ? "h-6 w-auto" : "h-7 sm:h-8 w-auto",
+        )}
+      />
     </div>
   );
 }
@@ -265,15 +263,13 @@ function Login() {
         />
         <div className="absolute inset-0 grid-noise opacity-35" />
 
-        {/* Topo: Logo Oficial em Alta Resolução */}
+        {/* Topo: Logo Oficial Sem Fundo em Alta Resolução */}
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-cyan-500/30 bg-[#040816]/80 p-3 backdrop-blur-md shadow-[0_0_35px_-8px_rgba(6,182,212,0.35)] login-float">
-            <img
-              src="/logo.png"
-              alt="VYNTRA Logo Original"
-              className="h-9 w-auto object-contain select-none"
-            />
-          </div>
+          <img
+            src="/logo.png"
+            alt="VYNTRA Logo Sem Fundo"
+            className="h-11 w-auto object-contain select-none login-float filter drop-shadow-[0_0_25px_rgba(6,182,212,0.45)]"
+          />
         </div>
 
         {/* Centro: Título e Proposta de Valor */}
@@ -329,9 +325,11 @@ function Login() {
         <div className="relative z-10 w-full max-w-md my-auto">
           {/* Logo no Mobile */}
           <div className="mb-8 flex items-center justify-center lg:hidden login-enter-1">
-            <div className="rounded-2xl border border-cyan-500/30 bg-[#040816]/90 p-2.5 shadow-[0_0_30px_-5px_rgba(6,182,212,0.35)]">
-              <img src="/logo.png" alt="VYNTRA" className="h-8 w-auto object-contain" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="VYNTRA"
+              className="h-10 w-auto object-contain filter drop-shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+            />
           </div>
 
           {/* VISTA 1: LOGIN PRINCIPAL */}

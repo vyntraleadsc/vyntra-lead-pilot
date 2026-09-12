@@ -220,3 +220,61 @@
   animation: glowPulse 7s ease-in-out infinite;
 }
 
+/* Scrollbar ultra moderna para a tela Minhas Propostas */
+.proposals-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.45) rgba(15, 23, 42, 0.4);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(6, 11, 28, 0.6);
+    border-radius: 9999px;
+    margin: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.5), rgba(139, 92, 246, 0.5));
+    border-radius: 9999px;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.85), rgba(139, 92, 246, 0.85));
+    border-color: rgba(6, 182, 212, 0.7);
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.6);
+  }
+}
+
+.column-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
+  scroll-behavior: smooth;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.3);
+    border-radius: 9999px;
+    transition: background 0.2s;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.6);
+  }
+}
+

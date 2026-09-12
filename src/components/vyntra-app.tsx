@@ -2495,9 +2495,12 @@ function FollowUps({ setSelected }: { setSelected: (id: string) => void }) {
 function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
   const isSeller = v.role === "vendedor";
-  const proposals = isSeller
+  const [selectedFilter, setSelectedFilter] = useState<"ativas" | "todas" | "fechadas" | "perdidas">("ativas");
+
+  const allSellerProposals = isSeller
     ? v.proposals.filter((p) => p.sellerId === v.currentSellerId)
     : v.proposals;
+
   const stages = [
     "Rascunho",
     "Enviada",
@@ -2507,95 +2510,261 @@ function Proposals({ setSelected }: { setSelected: (id: string) => void }) {
     "Fechada",
     "Perdida",
   ] as const;
+
+  const activeStages =
+    selectedFilter === "ativas"
+      ? (["Rascunho", "Enviada", "Visualizada", "Aguardando retorno", "Negociação"] as const)
+      : selectedFilter === "fechadas"
+        ? (["Fechada"] as const)
+        : selectedFilter === "perdidas"
+          ? (["Perdida"] as const)
+          : stages;
+
+  const displayedProposals =
+    selectedFilter === "ativas"
+      ? allSellerProposals.filter((p) => !["Fechada", "Perdida"].includes(p.status))
+      : selectedFilter === "fechadas"
+        ? allSellerProposals.filter((p) => p.status === "Fechada")
+        : selectedFilter === "perdidas"
+          ? allSellerProposals.filter((p) => p.status === "Perdida")
+          : allSellerProposals;
+
+  const volumeEmNegociacao = allSellerProposals
+    .filter((p) => !["Fechada", "Perdida"].includes(p.status))
+    .reduce((a, p) => a + p.value, 0);
+
   return (
     <>
       <PageHeader
         title={isSeller ? "Minhas Propostas" : "Propostas"}
         subtitle={
           isSeller
-            ? "Acompanhe suas condições enviadas até o fechamento."
+            ? "Acompanhe e avance suas condições comerciais até o fechamento."
             : "Acompanhe cada condição enviada até o fechamento."
         }
         action={
-          <div className="text-sm">
-            <span className="text-muted-foreground">Volume em negociação </span>
-            <strong>
-              {BRL(
-                proposals
-                  .filter((p) => !["Fechada", "Perdida"].includes(p.status))
-                  .reduce((a, p) => a + p.value, 0),
-              )}
-            </strong>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-xl border border-cyan-500/20 bg-[#060c20]/80 px-3.5 py-1.5 text-xs backdrop-blur-sm">
+              <span className="text-muted-foreground">Volume em negociação: </span>
+              <strong className="text-cyan-400 font-bold">{BRL(volumeEmNegociacao)}</strong>
+            </div>
           </div>
         }
       />
-      <div className="mb-5 flex gap-3 overflow-x-auto pb-2">
-        {stages.map((s) => (
-          <div key={s} className="min-w-[150px] rounded-lg border border-border bg-surface p-3">
-            <div className="text-xs text-muted-foreground">{s}</div>
-            <div className="mt-1 text-xl font-semibold">
-              {proposals.filter((p) => p.status === s).length}
-            </div>
-          </div>
-        ))}
+
+      {/* Barra de Resumo das Etapas com Scroll Horizontal Estilizado */}
+      <div className="mb-5 relative">
+        <div className="flex gap-3 overflow-x-auto pb-2.5 pt-1 proposals-scroll">
+          {stages.map((s) => {
+            const count = allSellerProposals.filter((p) => p.status === s).length;
+            const isClosing = s === "Fechada";
+            const isLost = s === "Perdida";
+            return (
+              <div
+                key={s}
+                className={cn(
+                  "min-w-[155px] shrink-0 rounded-xl border p-3 transition-all duration-200 backdrop-blur-sm",
+                  isClosing
+                    ? "border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-500/50"
+                    : isLost
+                      ? "border-destructive/30 bg-destructive/10 hover:border-destructive/50"
+                      : "border-cyan-500/20 bg-[#060b1e]/80 hover:border-cyan-400/50 hover:bg-[#09112e]/90 shadow-sm",
+                )}
+              >
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className={cn(isClosing && "text-emerald-400 font-medium", isLost && "text-destructive font-medium")}>
+                    {s}
+                  </span>
+                  <span className="size-1.5 rounded-full bg-cyan-400" />
+                </div>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-2xl font-bold tracking-tight text-foreground">{count}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {count === 1 ? "proposta" : "propostas"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="grid gap-4 xl:grid-cols-4">
-        {stages
-          .filter((s) => !["Fechada", "Perdida"].includes(s))
-          .map((stage) => (
-            <section key={stage} className="rounded-xl border border-border bg-surface/40 p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold">{stage}</h2>
-                <span className="text-xs text-muted-foreground">
-                  {proposals.filter((p) => p.status === stage).length}
-                </span>
-              </div>
-              <div className="space-y-3">
-                {proposals
-                  .filter((p) => p.status === stage)
-                  .map((p) => {
-                    const o = v.opportunityById(p.opportunityId);
-                    if (!o) return null;
-                    return (
-                      <article
-                        key={p.id}
-                        className="rounded-lg border border-border bg-surface p-3"
-                      >
-                        <button className="w-full text-left" onClick={() => setSelected(o.id)}>
-                          <div className="text-sm font-semibold">{o.customer.name}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {o.product} · {p.method}
-                          </div>
-                          <div className="mt-3 text-lg font-semibold">{BRL(p.value)}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {p.installment
-                              ? `Parcela estimada ${BRL(p.installment)}`
-                              : "Pagamento à vista"}
-                          </div>
-                          <div className="mt-2 text-[10px] text-muted-foreground">
-                            Responsável: {v.sellerById(p.sellerId)?.name}
-                          </div>
-                        </button>
-                        <div className="mt-3 flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="flex-1"
-                            onClick={() => {
-                              const i = stages.indexOf(stage);
-                              const next = stages[Math.min(i + 1, 5)];
-                              if (next) v.setProposalStatus(p.id, next);
-                            }}
-                          >
-                            Avançar <ArrowRight />
-                          </Button>
-                        </div>
-                      </article>
-                    );
-                  })}
-              </div>
-            </section>
-          ))}
+
+      {/* Barra de Controles e Indicador de Scroll da Pipeline */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Filtro de Visão */}
+        <div className="inline-flex rounded-lg border border-cyan-500/20 bg-[#060c20] p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setSelectedFilter("ativas")}
+            className={cn(
+              "px-3 py-1.5 rounded-md font-medium transition-all",
+              selectedFilter === "ativas"
+                ? "bg-cyan-500 text-white shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Em andamento (5 etapas)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedFilter("fechadas")}
+            className={cn(
+              "px-3 py-1.5 rounded-md font-medium transition-all",
+              selectedFilter === "fechadas"
+                ? "bg-emerald-600 text-white shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Fechadas
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedFilter("perdidas")}
+            className={cn(
+              "px-3 py-1.5 rounded-md font-medium transition-all",
+              selectedFilter === "perdidas"
+                ? "bg-destructive text-white shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Perdidas
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedFilter("todas")}
+            className={cn(
+              "px-3 py-1.5 rounded-md font-medium transition-all",
+              selectedFilter === "todas"
+                ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Todas as etapas
+          </button>
+        </div>
+
+        {/* Indicador visual de rolagem horizontal */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span>Pipeline Kanban</span>
+          <span className="hidden sm:inline-block text-[11px] text-cyan-400/80">
+            · Deslize horizontalmente para navegar
+          </span>
+          <ArrowRight className="size-3 text-cyan-400" />
+        </div>
+      </div>
+
+      {/* Pipeline Kanban com Scroll Horizontal Suave e Scroll Vertical Interno por Coluna */}
+      <div className="relative">
+        <div className="flex gap-4 overflow-x-auto pb-6 pt-1 proposals-scroll snap-x">
+          {activeStages.map((stage) => {
+            const stageProposals = displayedProposals.filter((p) => p.status === stage);
+            const isClosing = stage === "Fechada";
+            const isLost = stage === "Perdida";
+
+            return (
+              <section
+                key={stage}
+                className={cn(
+                  "w-[305px] sm:w-[325px] lg:w-[340px] shrink-0 snap-start flex flex-col rounded-xl border p-3.5 backdrop-blur-md transition-all",
+                  isClosing
+                    ? "border-emerald-500/30 bg-[#051515]/70"
+                    : isLost
+                      ? "border-destructive/30 bg-[#160a0a]/70"
+                      : "border-cyan-500/20 bg-[#070d22]/70 hover:border-cyan-500/40 shadow-lg",
+                )}
+              >
+                {/* Cabeçalho da Coluna com Contador */}
+                <div className="mb-3 flex items-center justify-between border-b border-border/40 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "size-2 rounded-full",
+                        isClosing ? "bg-emerald-400" : isLost ? "bg-destructive" : "bg-cyan-400",
+                      )}
+                    />
+                    <h2 className="text-sm font-semibold text-foreground tracking-wide">{stage}</h2>
+                  </div>
+                  <span
+                    className={cn(
+                      "grid size-6 place-items-center rounded-full text-xs font-bold border",
+                      isClosing
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : isLost
+                          ? "bg-destructive/10 border-destructive/30 text-destructive"
+                          : "bg-cyan-500/10 border-cyan-500/25 text-cyan-400",
+                    )}
+                  >
+                    {stageProposals.length}
+                  </span>
+                </div>
+
+                {/* Lista de Cards com Scrollbar Vertical Interna Suave */}
+                <div className="space-y-3 max-h-[calc(100vh-340px)] min-h-[160px] overflow-y-auto pr-1 column-scroll flex-1">
+                  {stageProposals.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 p-6 text-center text-xs text-muted-foreground my-auto">
+                      <FileText className="size-6 text-muted-foreground/30 mb-2" />
+                      <span>Nenhuma proposta nesta etapa</span>
+                    </div>
+                  ) : (
+                    stageProposals.map((p) => {
+                      const o = v.opportunityById(p.opportunityId);
+                      if (!o) return null;
+                      return (
+                        <article
+                          key={p.id}
+                          className="rounded-lg border border-border/60 bg-[#09112a]/95 p-3.5 transition-all duration-200 hover:border-cyan-400/50 hover:shadow-[0_0_16px_rgba(6,182,212,0.2)] hover:-translate-y-0.5"
+                        >
+                          <button className="w-full text-left" onClick={() => setSelected(o.id)}>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="text-sm font-semibold text-foreground hover:text-cyan-300 transition-colors">
+                                {o.customer.name}
+                              </div>
+                              <span className="shrink-0 text-[10px] font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
+                                {p.method}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {o.product} · {o.store}
+                            </div>
+                            <div className="mt-3 flex items-baseline justify-between">
+                              <div className="text-lg font-bold text-foreground">{BRL(p.value)}</div>
+                              <div className="text-[11px] text-muted-foreground font-medium">
+                                {p.installment ? `Parc. ${BRL(p.installment)}` : "À vista"}
+                              </div>
+                            </div>
+                            <div className="mt-2 text-[10px] text-muted-foreground flex items-center justify-between border-t border-border/30 pt-1.5">
+                              <span>Consultor: {v.sellerById(p.sellerId)?.name}</span>
+                              <span>{relativeTime(p.createdAt)}</span>
+                            </div>
+                          </button>
+
+                          {/* Ações de Avanço do Funil */}
+                          {!["Fechada", "Perdida"].includes(stage) && (
+                            <div className="mt-3 flex gap-1.5 border-t border-border/30 pt-2.5">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="flex-1 text-xs h-8 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/20"
+                                onClick={() => {
+                                  const i = stages.indexOf(stage);
+                                  const next = stages[Math.min(i + 1, 5)];
+                                  if (next) v.setProposalStatus(p.id, next);
+                                }}
+                              >
+                                Avançar etapa <ArrowRight className="size-3.5 ml-1" />
+                              </Button>
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
       </div>
     </>
   );

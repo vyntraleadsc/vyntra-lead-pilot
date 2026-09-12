@@ -46,7 +46,7 @@ import {
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v5";
+const STORAGE_KEY = "vyntra-demo-state-v6";
 
 export type RoleView = "gestor" | "vendedor";
 
@@ -66,7 +66,7 @@ function initialState(): PersistedState {
   return {
     authed: false,
     role: "gestor",
-    currentSellerId: "carlos",
+    currentSellerId: "francine",
     opportunities,
     followUps: buildFollowUps(opportunities),
     proposals: buildProposals(opportunities),
@@ -211,7 +211,7 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as PersistedState;
         setState({
           ...parsed,
-          currentSellerId: parsed.currentSellerId ?? "carlos",
+          currentSellerId: parsed.currentSellerId ?? "francine",
           role: parsed.role ?? "gestor",
           opportunities: parsed.opportunities.map((opportunity, index) => {
             const isSC = index % 3 === 0;
@@ -296,7 +296,7 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
       sellers: SELLERS,
       sellerById,
       opportunityById,
-      currentSellerId: state.currentSellerId || "carlos",
+      currentSellerId: state.currentSellerId || "francine",
       setCurrentSellerId: (sellerId: string) =>
         setState((s) => ({ ...s, currentSellerId: sellerId })),
       login: (email, password, roleHint, sellerIdHint) => {
@@ -307,28 +307,30 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         let targetRole: RoleView =
           roleHint ??
           (clean.includes("vendedor") ||
+          clean.includes("francine") ||
+          clean.includes("guilherme") ||
+          clean.includes("vitor") ||
+          clean.includes("gabriel") ||
           clean.includes("carlos") ||
-          clean.includes("juliana") ||
-          clean.includes("rafael") ||
-          clean.includes("marcos")
+          clean.includes("juliana")
             ? "vendedor"
             : "gestor");
-        let targetSellerId = sellerIdHint ?? (state.currentSellerId || "carlos");
+        let targetSellerId = sellerIdHint ?? (state.currentSellerId || "francine");
 
         if (clean === "gestor@vyntra.com") {
           targetRole = "gestor";
-        } else if (clean === "vendedor@vyntra.com" || clean.includes("carlos")) {
+        } else if (clean === "vendedor@vyntra.com" || clean.includes("francine") || clean.includes("juliana")) {
           targetRole = "vendedor";
-          targetSellerId = "carlos";
-        } else if (clean.includes("juliana")) {
+          targetSellerId = "francine";
+        } else if (clean.includes("guilherme") || clean.includes("carlos")) {
           targetRole = "vendedor";
-          targetSellerId = "juliana";
-        } else if (clean.includes("rafael")) {
+          targetSellerId = "guilherme";
+        } else if (clean.includes("vitor") || clean.includes("marcos")) {
           targetRole = "vendedor";
-          targetSellerId = "rafael";
-        } else if (clean.includes("marcos")) {
+          targetSellerId = "vitor";
+        } else if (clean.includes("gabriel") || clean.includes("rafael")) {
           targetRole = "vendedor";
-          targetSellerId = "marcos";
+          targetSellerId = "gabriel";
         }
 
         setState((s) => ({
@@ -339,7 +341,7 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         }));
         return true;
       },
-      loginAs: (role, sellerId = "carlos") => {
+      loginAs: (role, sellerId = "francine") => {
         setState((s) => ({
           ...s,
           authed: true,

@@ -201,7 +201,7 @@ function Login() {
   const { login, loginAs, sellers } = useVyntra();
   const [authMode, setAuthMode] = useState<"login" | "forgot-password" | "first-access">("login");
   const [selectedRole, setSelectedRole] = useState<RoleView>("gestor");
-  const [selectedSellerId, setSelectedSellerId] = useState("carlos");
+  const [selectedSellerId, setSelectedSellerId] = useState("francine");
   const [email, setEmail] = useState(DEMO_CREDENTIALS_GESTOR.email);
   const [password, setPassword] = useState("123456");
   const [show, setShow] = useState(false);
@@ -214,8 +214,8 @@ function Login() {
 
   // First access state
   const [firstRole, setFirstRole] = useState<RoleView>("vendedor");
-  const [firstSellerId, setFirstSellerId] = useState("carlos");
-  const [firstEmail, setFirstEmail] = useState("carlos@vyntra.com");
+  const [firstSellerId, setFirstSellerId] = useState("francine");
+  const [firstEmail, setFirstEmail] = useState("francine@vyntra.com");
   const [firstPass, setFirstPass] = useState("");
   const [firstPassConfirm, setFirstPassConfirm] = useState("");
   const [firstShowPass, setFirstShowPass] = useState(false);
@@ -227,7 +227,7 @@ function Login() {
       setEmail("gestor@vyntra.com");
     } else {
       const s = sellers.find((x) => x.id === selectedSellerId) ?? sellers[0];
-      setEmail(`${s?.id || "carlos"}@vyntra.com`);
+      setEmail(`${s?.id || "francine"}@vyntra.com`);
     }
   };
 
@@ -563,15 +563,15 @@ function Login() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => loginAs("vendedor", "carlos")}
+                    onClick={() => loginAs("vendedor", "francine")}
                     className="flex flex-col items-start gap-1 rounded-xl border border-violet-500/30 bg-[#0d0a26]/70 p-3 text-left transition-all hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)]"
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400">
                       <UserRound className="size-3.5" />
                       Entrar como Vendedor
                     </div>
-                    <div className="text-[11px] text-foreground font-medium">carlos@vyntra.com</div>
-                    <div className="text-[10px] text-muted-foreground">Fila de ação e consultor</div>
+                    <div className="text-[11px] text-foreground font-medium">francine@vyntra.com</div>
+                    <div className="text-[10px] text-muted-foreground">Fila de ação e consultora</div>
                   </button>
                 </div>
               </div>
@@ -894,7 +894,7 @@ function Sidebar({
 }) {
   const { logout, role, setRole, currentSellerId, setCurrentSellerId, sellers, sellerById } =
     useVyntra();
-  const currentSeller = sellerById(currentSellerId || "carlos") ?? sellers[0]!;
+  const currentSeller = sellerById(currentSellerId || "francine") ?? sellers[0]!;
 
   const navItems =
     role === "vendedor"
@@ -980,7 +980,7 @@ function Sidebar({
           {role === "vendedor" && (
             <div className="mt-2">
               <Select
-                value={currentSellerId || "carlos"}
+                value={currentSellerId || "francine"}
                 onValueChange={(val) => setCurrentSellerId(val)}
               >
                 <SelectTrigger className="h-7 text-xs bg-background">
@@ -1076,7 +1076,7 @@ function Topbar({
     role,
     currentSellerId,
   } = useVyntra();
-  const currentSeller = sellerById(currentSellerId || "carlos");
+  const currentSeller = sellerById(currentSellerId || "francine");
   const matches = useMemo(() => {
     const q = globalSearch.toLowerCase().trim();
     if (!q) return [];
@@ -2772,7 +2772,7 @@ function Distribution() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Consultores com maior taxa de fechamento recebem até <strong className="text-cyan-300">3.5x mais leads</strong> e exclusividade na primeira rodada de oportunidades quentes (Score 80+).
-                Atualmente liderado por <strong className="text-emerald-400">Juliana Reis (21% conv. · 5 vendas)</strong> e <strong className="text-cyan-300">Carlos Menezes (18% conv. · 4 vendas)</strong>.
+                Atualmente liderado por <strong className="text-emerald-400">Francine (21% conv. · 5 vendas)</strong> e <strong className="text-cyan-300">Guilherme (18% conv. · 4 vendas)</strong>.
               </p>
             </div>
           </div>
@@ -2782,13 +2782,13 @@ function Distribution() {
         <div className="mt-4 pt-3 border-t border-border/40">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5 font-medium">
             <span>Participação Projetada no Volume de Novos Leads (Lead Share por Fechamento):</span>
-            <span className="font-mono text-cyan-300">Juliana 38% · Carlos 29% · Marcos 20% · Rafael 13%</span>
+            <span className="font-mono text-cyan-300">Francine 38% · Guilherme 29% · Vitor 20% · Gabriel 13%</span>
           </div>
           <div className="h-2.5 w-full rounded-full bg-slate-900 overflow-hidden flex border border-border/60">
-            <div style={{ width: "38%" }} className="h-full bg-emerald-500" title="Juliana Reis (38%)" />
-            <div style={{ width: "29%" }} className="h-full bg-cyan-500" title="Carlos Menezes (29%)" />
-            <div style={{ width: "20%" }} className="h-full bg-indigo-500" title="Marcos Lima (20%)" />
-            <div style={{ width: "13%" }} className="h-full bg-amber-500/80" title="Rafael Duarte (13%)" />
+            <div style={{ width: "38%" }} className="h-full bg-emerald-500" title="Francine (38%)" />
+            <div style={{ width: "29%" }} className="h-full bg-cyan-500" title="Guilherme (29%)" />
+            <div style={{ width: "20%" }} className="h-full bg-indigo-500" title="Vitor (20%)" />
+            <div style={{ width: "13%" }} className="h-full bg-amber-500/80" title="Gabriel (13%)" />
           </div>
         </div>
       </div>
@@ -4436,7 +4436,7 @@ function Impact() {
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
                   <strong className="text-foreground block">Lages / SC (Serra Catarinense)</strong>
-                  <span className="text-[11px] text-muted-foreground">Juliana Reis & Carlos Menezes</span>
+                  <span className="text-[11px] text-muted-foreground">Francine & Guilherme</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-cyan-300">+R$ 98.000</span>
@@ -4447,7 +4447,7 @@ function Impact() {
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
                   <strong className="text-foreground block">Três Passos / RS (Noroeste RS)</strong>
-                  <span className="text-[11px] text-muted-foreground">Marcos Lima & Fila Regional</span>
+                  <span className="text-[11px] text-muted-foreground">Vitor & Fila Regional</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-emerald-400">+R$ 52.000</span>
@@ -4458,7 +4458,7 @@ function Impact() {
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
                   <strong className="text-foreground block">Santa Rosa / RS (Missões / Fronteira)</strong>
-                  <span className="text-[11px] text-muted-foreground">Rafael Duarte & Juliana Reis</span>
+                  <span className="text-[11px] text-muted-foreground">Gabriel & Francine</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-indigo-300">+R$ 36.400</span>
@@ -4642,7 +4642,7 @@ function SettingsPage({ setView }: { setView?: (v: View) => void }) {
 }
 function SellerDashboard({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
-  const sellerId = v.currentSellerId || "carlos";
+  const sellerId = v.currentSellerId || "francine";
   const seller = v.sellerById(sellerId);
   const firstName = seller?.name?.split(" ")[0] || "Consultor";
   const own = v.opportunities.filter(

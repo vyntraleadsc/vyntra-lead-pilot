@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { VyntraApp } from "@/components/vyntra-app";
+import { VyntraProvider } from "@/lib/vyntra/store";
+
+function VyntraPage() {
+  return (
+    <VyntraProvider>
+      <VyntraApp />
+    </VyntraProvider>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,5 +27,5 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: VyntraApp,
+  component: VyntraPage,
 });

@@ -567,7 +567,7 @@ function Login() {
                       Entrar como Gestor
                     </div>
                     <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
-                    <div className="text-[10px] text-muted-foreground">Visão geral e lojas RS/SC</div>
+                    <div className="text-[10px] text-muted-foreground">Airton Lindão · Lojas RS/SC</div>
                   </button>
                   <button
                     type="button"
@@ -1008,7 +1008,7 @@ function Sidebar({
         <div className="flex items-center gap-3 border-t border-border pt-3">
           <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-sm font-bold text-primary">
             {role === "gestor"
-              ? "GC"
+              ? "AL"
               : currentSeller.name
                   .split(" ")
                   .map((x) => x[0])
@@ -1017,7 +1017,7 @@ function Sidebar({
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">
-              {role === "gestor" ? "Gestor Comercial" : currentSeller.name}
+              {role === "gestor" ? "Airton Lindão" : currentSeller.name}
             </div>
             <div className="truncate text-[11px] text-muted-foreground">
               {role === "gestor" ? "gestor@vyntra.com" : `${currentSeller.id}@vyntra.com`}
@@ -1206,7 +1206,7 @@ function Topbar({
       <div className="hidden h-8 items-center gap-2 border-l border-border pl-3 sm:flex">
         <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
           {role === "gestor"
-            ? "GP"
+            ? "AL"
             : (currentSeller?.name || "VD")
                 .split(" ")
                 .map((n) => n[0])
@@ -1216,7 +1216,7 @@ function Topbar({
         </div>
         <div className="hidden xl:block">
           <div className="text-xs font-semibold">
-            {role === "gestor" ? "Gestor Comercial" : currentSeller?.name || "Consultor"}
+            {role === "gestor" ? "Airton Lindão" : currentSeller?.name || "Consultor"}
           </div>
           <div className="text-[10px] text-muted-foreground">
             {role === "gestor" ? "Gerência & Supervisão" : "Consultor Comercial"}

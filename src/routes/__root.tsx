@@ -8,7 +8,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { VyntraProvider } from "@/lib/vyntra/store";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -132,9 +131,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <VyntraProvider>
-        <Outlet />
-      </VyntraProvider>
+      <Outlet />
     </QueryClientProvider>
   );
 }

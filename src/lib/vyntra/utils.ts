@@ -136,36 +136,42 @@ export function computeScore(answers: Record<string, string>): {
 
   if (answers["produto"] === "Honda 0 km") add(12, "Produto definido (0 km)");
   else if (answers["produto"] === "Honda seminova") add(10, "Produto definido (seminova)");
+  else if (answers["produto"]?.includes("Consórcio")) add(14, "Consórcio Honda — perfil de planejamento estruturado");
 
   if (answers["forma"] === "Financiamento") add(10, "Forma de compra definida: financiamento");
   else if (answers["forma"] === "À vista") add(14, "Pagamento à vista");
-  else if (answers["forma"] === "Consórcio") add(7, "Consórcio como forma de compra");
+  else if (answers["forma"]?.includes("Consórcio")) add(12, "Consórcio Honda: compra programada sem juros");
+
+  if (answers["consorcio_modalidade"]) {
+    add(8, `Modalidade Consórcio: ${answers["consorcio_modalidade"]}`);
+  }
 
   const budget = answers["orcamento"];
   if (budget === "R$1.000+") add(14, "Orçamento mensal elevado");
   else if (budget === "R$700–1.000") add(11, "Orçamento mensal compatível");
   else if (budget === "R$500–700") add(8, "Orçamento mensal intermediário");
-  else if (budget === "R$300–500") add(5, "Orçamento mensal limitado");
-  else if (budget === "Até R$300") add(2, "");
+  else if (budget === "R$300–500") add(5, "Orçamento mensal compatível com parcelas de consórcio");
+  else if (budget === "Até R$300") add(3, "Ideal para cotas acessíveis de Consórcio Honda");
 
-  if (answers["entrada"] === "Sim") add(12, "Entrada disponível");
+  if (answers["entrada"] === "Sim") add(12, "Entrada disponível para lance ou financiamento");
   else if (answers["entrada"] === "Ainda não") add(3, "");
 
   if (answers["simulacao"] === "Já estou negociando") add(14, "Negociação já iniciada");
   else if (answers["simulacao"] === "Já simulei") add(10, "Já realizou simulação");
   else if (answers["simulacao"] === "Apenas pesquisei") add(4, "");
 
-  if (answers["moto"] === "Sim") add(8, "Possui moto para troca");
+  if (answers["moto"] === "Sim") add(8, "Possui moto para troca / lance");
 
   const objection = answers["objecao"];
+  const isConsorcio = answers["forma"]?.includes("Consórcio") || answers["produto"]?.includes("Consórcio");
   if (objection === "Nada") add(6, "Sem objeção declarada");
-  else if (objection === "Questão de crédito") add(-8, "");
-  else if (objection === "Não tenho entrada") add(-6, "");
-  else if (objection === "Estou juntando dinheiro") add(-5, "");
+  else if (objection === "Questão de crédito") add(isConsorcio ? 4 : -8, isConsorcio ? "Consórcio facilita adesão sem travas imediatas de financiamento" : "");
+  else if (objection === "Não tenho entrada") add(isConsorcio ? 6 : -6, isConsorcio ? "Consórcio Nacional Honda não exige entrada obrigatória" : "");
+  else if (objection === "Estou juntando dinheiro") add(isConsorcio ? 8 : -5, isConsorcio ? "Consórcio viabiliza poupança forçada inteligente" : "");
 
-  if (answers["produto"] === "Honda 0 km" && (budget === "Até R$300" || budget === "R$300–500")) {
+  if (answers["produto"] === "Honda 0 km" && !isConsorcio && (budget === "Até R$300" || budget === "R$300–500")) {
     add(-10, "");
-    reasons.push("Baixa compatibilidade entre produto 0 km e orçamento informado");
+    reasons.push("Baixa compatibilidade entre produto 0 km financiado e orçamento — recomendada rota de Consórcio");
   }
 
   return { score: Math.max(0, Math.min(100, Math.round(score))), reasons: reasons.filter(Boolean) };

@@ -58,6 +58,47 @@ export const SELLERS: Seller[] = [
   },
 ];
 
+/**
+ * Roteamento meritocrático: direciona proporcionalmente mais leads para os
+ * vendedores com maior histórico de fechamento de vendas (sales e conversão).
+ */
+export function pickSellerByPerformance(
+  sellers: Seller[] = SELLERS,
+  rules?: { byPriority?: boolean; byAvailability?: boolean; bySellerProfile?: boolean },
+  isHot?: boolean,
+): Seller {
+  if (!sellers || sellers.length === 0) return SELLERS[0]!;
+
+  // Peso calculado a partir de vendas concluídas + taxa de conversão
+  const weighted = sellers.map((s) => {
+    let weight = Math.max(3, s.sales * 16 + s.conversion * 2.5);
+
+    // Se disponibilidade estiver ativada e vendedor estiver online
+    if (rules?.byAvailability !== false && s.online) {
+      weight *= 1.35;
+    }
+
+    // Leads quentes (score alto) vão com prioridade extra para quem mais fecha
+    if (isHot && (s.sales >= 4 || s.conversion >= 18)) {
+      weight *= 2.4;
+    }
+
+    return { seller: s, weight };
+  });
+
+  const totalWeight = weighted.reduce((acc, curr) => acc + curr.weight, 0);
+  let randomVal = Math.random() * totalWeight;
+
+  for (const item of weighted) {
+    if (randomVal < item.weight) {
+      return item.seller;
+    }
+    randomVal -= item.weight;
+  }
+
+  return sellers[0]!;
+}
+
 interface Raw {
   n: string;
   p: string;
@@ -839,7 +880,14 @@ export function buildOpportunities(): Opportunity[] {
       deadline: r.d,
       score: r.s,
       scoreReasons: buildReasons(r),
-      sellerId: r.sel,
+      sellerId:
+        r.s >= 80
+          ? i % 3 === 0
+            ? "carlos"
+            : "juliana"
+          : ["juliana", "carlos", "juliana", "carlos", "juliana", "marcos", "carlos", "juliana", "marcos", "rafael"][
+              i % 10
+            ]!,
       status: r.st,
       lastContactAt: r.lc === null ? null : iso(-r.lc * HOUR),
       assignedAt: iso(-r.asg * MIN),

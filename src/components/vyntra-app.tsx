@@ -14,6 +14,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Clock3,
+  Coins,
   Eye,
   EyeOff,
   FileText,
@@ -21,12 +22,15 @@ import {
   Gauge,
   KeyRound,
   LayoutDashboard,
+  LayoutGrid,
+  List,
   Lock,
   LogOut,
   Mail,
   Menu,
   MessageCircle,
   MoreHorizontal,
+  Percent,
   Phone,
   Plus,
   RefreshCw,
@@ -41,6 +45,8 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
+  Trophy,
+  UserCheck,
   UserPlus,
   UserRound,
   UsersRound,
@@ -49,9 +55,14 @@ import {
   Webhook,
   X,
   Zap,
+  Award,
+  BadgeCheck,
+  Calculator,
 } from "lucide-react";
 import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -90,6 +101,7 @@ import {
   DEMO_CREDENTIALS_GESTOR,
   DEMO_CREDENTIALS_VENDEDOR,
   DEALERSHIP,
+  pickSellerByPerformance,
 } from "@/lib/vyntra/mock-data";
 import { useVyntra, type RoleView } from "@/lib/vyntra/store";
 import {
@@ -1783,9 +1795,61 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
   const [f, setF] = useState(FILTER_INITIAL);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetSeller, setTargetSeller] = useState("");
-  const list = opportunities.filter(
-    (o) => (isSeller ? o.sellerId === currentSellerId : true) && applyFilters(o, f),
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [insightFilter, setInsightFilter] = useState<"all" | "hot" | "consorcio" | "urgent" | "lages" | "rs">("all");
+
+  const baseOpportunities = useMemo(() => {
+    return isSeller ? opportunities.filter((o) => o.sellerId === currentSellerId) : opportunities;
+  }, [opportunities, isSeller, currentSellerId]);
+
+  // Contadores para a Barra de Insights
+  const hotCount = useMemo(() => baseOpportunities.filter((o) => o.score >= 80).length, [baseOpportunities]);
+  const consorcioCount = useMemo(
+    () =>
+      baseOpportunities.filter(
+        (o) =>
+          o.method.toLowerCase().includes("consórcio") ||
+          o.product.toLowerCase().includes("consórcio") ||
+          o.route.alternative?.toLowerCase().includes("consórcio"),
+      ).length,
+    [baseOpportunities],
   );
+  const urgentCount = useMemo(() => {
+    return baseOpportunities.filter((o) => {
+      const waiting = waitingMinutes(o, now);
+      return o.score >= 80 && waiting !== null && waiting >= 10;
+    }).length;
+  }, [baseOpportunities, now]);
+  const lagesCount = useMemo(
+    () => baseOpportunities.filter((o) => o.store === "Lages / SC").length,
+    [baseOpportunities],
+  );
+  const rsCount = useMemo(
+    () => baseOpportunities.filter((o) => o.store.includes("RS")).length,
+    [baseOpportunities],
+  );
+
+  const list = useMemo(() => {
+    return baseOpportunities.filter((o) => {
+      if (!applyFilters(o, f)) return false;
+      if (insightFilter === "hot" && o.score < 80) return false;
+      if (
+        insightFilter === "consorcio" &&
+        !o.method.toLowerCase().includes("consórcio") &&
+        !o.product.toLowerCase().includes("consórcio") &&
+        !o.route.alternative?.toLowerCase().includes("consórcio")
+      )
+        return false;
+      if (insightFilter === "urgent") {
+        const waiting = waitingMinutes(o, now);
+        if (o.score < 80 || waiting === null || waiting < 10) return false;
+      }
+      if (insightFilter === "lages" && o.store !== "Lages / SC") return false;
+      if (insightFilter === "rs" && !o.store.includes("RS")) return false;
+      return true;
+    });
+  }, [baseOpportunities, f, insightFilter, now]);
+
   const visibleIds = list.map((o) => o.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
   const toggleLead = (id: string) =>
@@ -1807,32 +1871,212 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
     setSelectedIds([]);
     setTargetSeller("");
   };
+
   return (
     <>
       <PageHeader
-        title={isSeller ? "Meus Leads & Oportunidades" : "Oportunidades"}
+        title={isSeller ? "Meus Leads & Oportunidades" : "Oportunidades Comerciais"}
         subtitle={
           isSeller
-            ? "Acompanhe e gerencie sua carteira individual de atendimento."
-            : "Priorize, direcione e monitore cada oportunidade comercial."
+            ? "Acompanhe sua carteira individual de atendimento com score de qualificação."
+            : "Priorize oportunidades quentes, controle o SLA de resposta e direcione leads por meritocracia."
         }
         action={
-          <Button>
-            <Plus />
+          <Button className="gap-1.5 font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-950">
+            <Plus className="size-4" />
             Nova oportunidade
           </Button>
         }
       />
-      <div className="mb-3 relative max-w-sm">
-        <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-        <Input
-          className="pl-9 bg-surface"
-          placeholder="Buscar nesta lista..."
-          value={f.search}
-          onChange={(e) => setF({ ...f, search: e.target.value })}
-        />
+
+      {/* BARRA DE INSIGHTS COMERCIAIS IA */}
+      <div className="mb-4 rounded-xl border border-cyan-500/25 bg-gradient-to-r from-[#04081b] via-[#071330] to-[#040a1d] p-3.5 shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-border/40 pb-2.5 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="grid size-7 place-items-center rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+              <Sparkles className="size-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-foreground">Barra de Insights Comerciais IA</span>
+                <span className="rounded-full bg-cyan-500/15 px-2 py-0.2 text-[9px] font-bold text-cyan-300 border border-cyan-500/30">
+                  Tempo Real
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Filtre instantaneamente oportunidades por temperatura, demanda de consórcio ou urgência de contato:
+              </p>
+            </div>
+          </div>
+          {insightFilter !== "all" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInsightFilter("all")}
+              className="h-7 text-xs border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 self-start md:self-auto"
+            >
+              <X className="size-3 mr-1" />
+              Limpar Filtro ({insightFilter})
+            </Button>
+          )}
+        </div>
+
+        {/* Pílulas de Ação Rápida */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {/* 1. Leads Quentes */}
+          <button
+            onClick={() => setInsightFilter(insightFilter === "hot" ? "all" : "hot")}
+            className={cn(
+              "flex flex-col text-left rounded-lg p-2.5 transition-all border",
+              insightFilter === "hot"
+                ? "bg-amber-500/20 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-amber-500/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400">
+                <Flame className="size-3.5 fill-amber-400 text-amber-400" /> Leads Quentes
+              </span>
+              <span className="rounded-md bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
+                {hotCount}
+              </span>
+            </div>
+            <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+              Score 80+ · Alta conversão
+            </span>
+          </button>
+
+          {/* 2. Consórcio Honda */}
+          <button
+            onClick={() => setInsightFilter(insightFilter === "consorcio" ? "all" : "consorcio")}
+            className={cn(
+              "flex flex-col text-left rounded-lg p-2.5 transition-all border",
+              insightFilter === "consorcio"
+                ? "bg-emerald-500/20 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-emerald-500/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+                <Coins className="size-3.5 text-emerald-400" /> Consórcio Honda
+              </span>
+              <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
+                {consorcioCount}
+              </span>
+            </div>
+            <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+              Sem barreira de entrada
+            </span>
+          </button>
+
+          {/* 3. Alerta de SLA (<10m) */}
+          <button
+            onClick={() => setInsightFilter(insightFilter === "urgent" ? "all" : "urgent")}
+            className={cn(
+              "flex flex-col text-left rounded-lg p-2.5 transition-all border",
+              insightFilter === "urgent"
+                ? "bg-destructive/20 border-destructive/60 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-destructive/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-destructive">
+                <Clock3 className="size-3.5 text-destructive" /> Alerta de SLA
+              </span>
+              <span className="rounded-md bg-destructive/20 px-1.5 py-0.2 text-[10px] font-bold text-destructive">
+                {urgentCount}
+              </span>
+            </div>
+            <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+              Contato atrasado &gt;10 min
+            </span>
+          </button>
+
+          {/* 4. Serra Catarinense (Lages) */}
+          <button
+            onClick={() => setInsightFilter(insightFilter === "lages" ? "all" : "lages")}
+            className={cn(
+              "flex flex-col text-left rounded-lg p-2.5 transition-all border",
+              insightFilter === "lages"
+                ? "bg-cyan-500/20 border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-cyan-500/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-300">
+                <MapPin className="size-3.5 text-cyan-400" /> Loja Lages / SC
+              </span>
+              <span className="rounded-md bg-cyan-500/20 px-1.5 py-0.2 text-[10px] font-bold text-cyan-300">
+                {lagesCount}
+              </span>
+            </div>
+            <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+              Serra Catarinense
+            </span>
+          </button>
+
+          {/* 5. Região RS */}
+          <button
+            onClick={() => setInsightFilter(insightFilter === "rs" ? "all" : "rs")}
+            className={cn(
+              "col-span-2 sm:col-span-1 flex flex-col text-left rounded-lg p-2.5 transition-all border",
+              insightFilter === "rs"
+                ? "bg-indigo-500/20 border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-indigo-500/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-indigo-300">
+                <MapPin className="size-3.5 text-indigo-400" /> Região RS
+              </span>
+              <span className="rounded-md bg-indigo-500/20 px-1.5 py-0.2 text-[10px] font-bold text-indigo-300">
+                {rsCount}
+              </span>
+            </div>
+            <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+              Três Passos & Santa Rosa
+            </span>
+          </button>
+        </div>
       </div>
+
+      {/* Controles de Busca e Alternador de Visualização */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+          <Input
+            className="pl-9 bg-surface text-xs"
+            placeholder="Buscar por cliente, moto, cidade ou ID..."
+            value={f.search}
+            onChange={(e) => setF({ ...f, search: e.target.value })}
+          />
+        </div>
+
+        {/* Alternador de Modo: Tabela vs Cards (Sem scroll horizontal) */}
+        <div className="flex items-center gap-1 rounded-lg border border-border/70 bg-surface p-1">
+          <Button
+            variant={viewMode === "table" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("table")}
+            className="h-7 gap-1.5 text-xs font-medium"
+          >
+            <List className="size-3.5" />
+            Tabela Detalhada
+          </Button>
+          <Button
+            variant={viewMode === "cards" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("cards")}
+            className="h-7 gap-1.5 text-xs font-medium"
+          >
+            <LayoutGrid className="size-3.5" />
+            Cards Comerciais
+          </Button>
+        </div>
+      </div>
+
       <FilterBar filters={f} setFilters={setF} hideSellerFilter={isSeller} />
+
       {!isSeller && selectedIds.length > 0 && (
         <div className="mb-4 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -1860,7 +2104,7 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
               </SelectContent>
             </Select>
             <Button size="sm" onClick={distributeSelected}>
-              <Send /> Enviar leads
+              <Send className="mr-1.5 size-3.5" /> Enviar leads
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
               Cancelar
@@ -1868,123 +2112,288 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
           </div>
         </div>
       )}
-      <div className="panel overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1480px] text-left">
-            <thead>
-              <tr className="border-b border-border bg-surface-2/30 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {[
-                  "Selecionar",
-                  "Temperatura",
-                  "Cliente",
-                  "Região / Loja",
-                  "Produto",
-                  "Categoria",
-                  "Forma de compra",
-                  "Orçamento",
-                  "Entrada",
-                  "Prazo",
-                  "Score",
-                  "Responsável",
-                  "Status",
-                  "Último contato",
-                  "Ação",
-                ].map((h) => (
-                  <th key={h} className="px-4 py-3 font-semibold">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((o) => {
-                const tm = TEMPERATURE_META[temperatureOf(o.score)];
-                const waiting = waitingMinutes(o, now);
-                return (
-                  <tr
-                    key={o.id}
-                    onClick={() => setSelected(o.id)}
-                    className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40"
-                  >
-                    <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                      <Checkbox
-                        aria-label={`Selecionar lead de ${o.customer.name}`}
-                        checked={selectedIds.includes(o.id)}
-                        onCheckedChange={() => toggleLead(o.id)}
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-lg">{tm.emoji}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium">{o.customer.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{o.id}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="inline-flex items-center gap-1 font-semibold text-xs text-foreground">
-                          <MapPin className="size-3 text-primary shrink-0" /> {o.store}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {o.city} · {o.state}
+
+      {/* MODO CARDS COMERCIAIS (Sem scroll horizontal) */}
+      {viewMode === "cards" ? (
+        <div className="space-y-4">
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {list.map((o) => {
+              const tm = TEMPERATURE_META[temperatureOf(o.score)];
+              const waiting = waitingMinutes(o, now);
+              const isConsorcio =
+                o.method.toLowerCase().includes("consórcio") ||
+                o.product.toLowerCase().includes("consórcio");
+              const isSelected = selectedIds.includes(o.id);
+              const seller = sellerById(o.sellerId);
+
+              return (
+                <article
+                  key={o.id}
+                  onClick={() => setSelected(o.id)}
+                  className={cn(
+                    "panel cursor-pointer p-4 transition-all duration-200 hover:border-cyan-500/50 hover:shadow-lg relative flex flex-col justify-between",
+                    isSelected && "border-primary bg-primary/5",
+                    o.score >= 80 && "border-amber-500/30",
+                  )}
+                >
+                  <div>
+                    {/* Header do Card */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLead(o.id);
+                          }}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleLead(o.id)}
+                            aria-label={`Selecionar lead ${o.customer.name}`}
+                          />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-foreground line-clamp-1">
+                            {o.customer.name}
+                          </h4>
+                          <span className="font-mono text-[10px] text-muted-foreground">{o.id}</span>
+                        </div>
+                      </div>
+
+                      {/* Score Badge */}
+                      <div
+                        className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-bold shrink-0"
+                        style={{
+                          color: tm.color,
+                          backgroundColor: `color-mix(in oklab, ${tm.color} 15%, transparent)`,
+                          border: `1px solid color-mix(in oklab, ${tm.color} 30%, transparent)`,
+                        }}
+                      >
+                        <Flame className="size-3 fill-current" />
+                        {o.score}
+                      </div>
+                    </div>
+
+                    {/* Localização / Loja */}
+                    <div className="mt-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="size-3 text-cyan-400 shrink-0" />
+                      <span className="font-medium text-foreground">{o.store}</span>
+                      <span>·</span>
+                      <span>{o.city}</span>
+                    </div>
+
+                    {/* Produto & Forma de Pagamento */}
+                    <div className="mt-2.5 rounded-lg border border-border/60 bg-surface-2/40 p-2 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Modelo:</span>
+                        <strong className="text-foreground font-semibold">{o.product}</strong>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Forma:</span>
+                        {isConsorcio ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                            <Coins className="size-2.5" /> Consórcio Honda
+                          </span>
+                        ) : (
+                          <span className="font-medium text-foreground">{o.method}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Entrada:</span>
+                        <span className="text-muted-foreground">{o.downPayment}</span>
+                      </div>
+                    </div>
+
+                    {/* Vendedor Responsável & Status */}
+                    <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40 text-xs">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <UserRound className="size-3 text-primary" />
+                        <span className="font-medium text-foreground">
+                          {seller?.name.split(" ")[0] || "Sem vendedor"}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{o.product}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{o.category}</td>
-                    <td className="px-4 py-3 text-xs">{o.method}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{o.budget}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{o.downPayment}</td>
-                    <td className="px-4 py-3 text-xs">{o.deadline}</td>
-                    <td className="px-4 py-3">
-                      <ScoreMini score={o.score} />
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      {sellerById(o.sellerId)?.name.split(" ")[0]}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "rounded-md border px-2 py-1 text-[10px]",
-                          STATUS_TONE[o.status],
-                        )}
-                      >
+                      <span className={cn("rounded-md border px-2 py-0.5 text-[10px] font-semibold", STATUS_TONE[o.status])}>
                         {o.status}
                       </span>
-                      {waiting !== null && o.score >= 80 && (
-                        <div className="mt-1">
-                          <Timer minutes={waiting} />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {relativeTime(o.lastContactAt, now)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal />
-                      </Button>
+                    </div>
+
+                    {/* Timer de Resposta */}
+                    {waiting !== null && o.score >= 80 && (
+                      <div className="mt-2 flex items-center justify-between text-[10px]">
+                        <span className="text-muted-foreground">SLA de Primeiro Contato:</span>
+                        <Timer minutes={waiting} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>{relativeTime(o.lastContactAt, now)}</span>
+                    <span className="text-cyan-400 font-medium hover:underline flex items-center gap-0.5">
+                      Ficha comercial →
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                aria-label="Selecionar todos os leads visíveis"
+                checked={allVisibleSelected}
+                onCheckedChange={toggleVisible}
+              />
+              <span>{allVisibleSelected ? "Desmarcar todos" : "Selecionar todos os visíveis"}</span>
+              <span>·</span>
+              <span>{list.length} de {opportunities.length} oportunidades</span>
+            </div>
+            <span className="font-mono text-[11px] text-cyan-300">Modo Cards Sem Scroll Horizontal</span>
+          </div>
+        </div>
+      ) : (
+        /* MODO TABELA COM SCROLLBAR PERSONALIZADO E CABEÇALHO FIXO */
+        <div className="panel overflow-hidden border border-border/80 shadow-md">
+          <div className="overflow-x-auto custom-scrollbar max-h-[720px]">
+            <table className="w-full min-w-[1440px] text-left border-collapse">
+              <thead className="sticky top-0 z-10 bg-[#050b20] shadow-sm backdrop-blur">
+                <tr className="border-b border-border/70 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {[
+                    "Selecionar",
+                    "Score / Temp",
+                    "Cliente",
+                    "Região / Loja",
+                    "Produto Honda",
+                    "Categoria",
+                    "Forma de Compra",
+                    "Orçamento",
+                    "Entrada",
+                    "Prazo",
+                    "Vendedor",
+                    "Status",
+                    "Último Contato",
+                    "Ação",
+                  ].map((h) => (
+                    <th key={h} className="px-4 py-3 font-semibold whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {list.length === 0 ? (
+                  <tr>
+                    <td colSpan={14} className="py-12 text-center text-sm text-muted-foreground">
+                      Nenhuma oportunidade encontrada com os filtros selecionados.
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <Checkbox
-              aria-label="Selecionar todos os leads visíveis"
-              checked={allVisibleSelected}
-              onCheckedChange={toggleVisible}
-            />
-            <span>{allVisibleSelected ? "Desmarcar visíveis" : "Selecionar todos os visíveis"}</span>
-            <span>·</span>
-            <span>{list.length} de {opportunities.length} oportunidades</span>
+                ) : (
+                  list.map((o) => {
+                    const tm = TEMPERATURE_META[temperatureOf(o.score)];
+                    const waiting = waitingMinutes(o, now);
+                    const isConsorcio =
+                      o.method.toLowerCase().includes("consórcio") ||
+                      o.product.toLowerCase().includes("consórcio");
+
+                    return (
+                      <tr
+                        key={o.id}
+                        onClick={() => setSelected(o.id)}
+                        className="cursor-pointer border-b border-border/40 transition-colors hover:bg-cyan-950/15"
+                      >
+                        <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                          <Checkbox
+                            aria-label={`Selecionar lead de ${o.customer.name}`}
+                            checked={selectedIds.includes(o.id)}
+                            onCheckedChange={() => toggleLead(o.id)}
+                          />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <ScoreMini score={o.score} />
+                            <span className="text-base" title={tm.label}>{tm.emoji}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-semibold text-foreground">{o.customer.name}</div>
+                          <div className="font-mono text-[10px] text-muted-foreground">{o.id}</div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="inline-flex items-center gap-1 font-semibold text-xs text-foreground">
+                              <MapPin className="size-3 text-cyan-400 shrink-0" /> {o.store}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {o.city} · {o.state}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-medium text-foreground whitespace-nowrap">
+                          {o.product}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{o.category}</td>
+                        <td className="px-4 py-3 text-xs whitespace-nowrap">
+                          {isConsorcio ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                              <Coins className="size-2.5" /> Consórcio Honda
+                            </span>
+                          ) : (
+                            o.method
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{o.budget}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{o.downPayment}</td>
+                        <td className="px-4 py-3 text-xs whitespace-nowrap">{o.deadline}</td>
+                        <td className="px-4 py-3 text-xs whitespace-nowrap">
+                          <span className="font-medium text-foreground">
+                            {sellerById(o.sellerId)?.name.split(" ")[0] || "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "rounded-md border px-2 py-1 text-[10px] font-medium",
+                              STATUS_TONE[o.status],
+                            )}
+                          >
+                            {o.status}
+                          </span>
+                          {waiting !== null && o.score >= 80 && (
+                            <div className="mt-1">
+                              <Timer minutes={waiting} />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {relativeTime(o.lastContactAt, now)}
+                        </td>
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" onClick={() => setSelected(o.id)}>
+                            <ChevronRight className="size-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-          <span>Dados locais</span>
+          <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                aria-label="Selecionar todos os leads visíveis"
+                checked={allVisibleSelected}
+                onCheckedChange={toggleVisible}
+              />
+              <span>{allVisibleSelected ? "Desmarcar visíveis" : "Selecionar todos os visíveis"}</span>
+              <span>·</span>
+              <span>{list.length} de {opportunities.length} oportunidades</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground">Scroll suave horizontal ativado</span>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
@@ -2270,151 +2679,315 @@ function ScoreRing({ score, size = "md" }: { score: number; size?: "md" | "lg" }
 }
 function Distribution() {
   const v = useVyntra();
+  const [isSimulating, setIsSimulating] = useState(false);
+
   const rules: Array<[keyof typeof v.distribution, string, string]> = [
     [
       "autoDistribution",
-      "Distribuição automática",
-      "Ativa o roteamento inteligente de novas oportunidades",
+      "Distribuição automática e meritocrática",
+      "Prioriza mais leads para vendedores com maior volume de vendas e taxa de conversão",
     ],
-    ["byProduct", "Produto", "Relaciona especialidade do vendedor ao produto"],
-    ["bySellerProfile", "Perfil do vendedor", "Considera experiência e taxa de conversão"],
-    ["byAvailability", "Disponibilidade", "Prioriza vendedores online"],
-    ["byWorkload", "Quantidade de oportunidades", "Equilibra a carga de atendimento"],
-    ["byPriority", "Prioridade", "Direciona oportunidades quentes aos melhores tempos"],
+    ["byProduct", "Especialidade de Produto", "Direciona Consórcio e Financiamento aos consultores de melhor fit"],
+    ["bySellerProfile", "Perfil e Eficiência", "Pondera experiência e taxa de conversão histórica"],
+    ["byAvailability", "Disponibilidade Online", "Garante atendimento imediato para consultores ativos"],
+    ["byWorkload", "Equilíbrio de Carga", "Evita gargalos sem prejudicar a fila prioritária dos top closers"],
+    ["byPriority", "Prioridade para Leads Quentes", "Entrega leads Score 80+ imediatamente aos fechadores ouro"],
   ];
+
+  // Ordenação meritocrática: mais fechamentos e maior conversão no topo
+  const rankedSellers = useMemo(() => {
+    return [...v.sellers].sort((a, b) => {
+      const scoreA = a.sales * 20 + a.conversion * 2.5;
+      const scoreB = b.sales * 20 + b.conversion * 2.5;
+      return scoreB - scoreA;
+    });
+  }, [v.sellers]);
+
+  // Simular distribuição ao vivo com base em fechamento
+  const handleSimulateBatch = () => {
+    setIsSimulating(true);
+    const mockLeadNames = [
+      "Honda CB 300F Twister (Lages / SC)",
+      "Honda Bros 160 (Correia Pinto / SC)",
+      "Honda PCX 160 (Capão Alto / SC)",
+      "Consórcio Honda XRE 190 (Otacílio / SC)",
+      "Honda Sahara 300 (Três Passos / RS)",
+      "Honda Titan 160 (Santa Rosa / RS)",
+      "Consórcio Honda CB 500F (Lages / SC)",
+      "Honda Tornado 300 (Painel / SC)",
+      "Honda Elite 125 (São José do Cerrito / SC)",
+      "Consórcio Honda Biz 125 (Bocaina / SC)",
+    ];
+
+    const distributionCount: Record<string, number> = {};
+    rankedSellers.forEach((s) => (distributionCount[s.name] = 0));
+
+    mockLeadNames.forEach((_, idx) => {
+      const isHot = idx % 3 === 0;
+      const chosen = pickSellerByPerformance(v.sellers, v.distribution, isHot);
+      distributionCount[chosen.name] = (distributionCount[chosen.name] || 0) + 1;
+    });
+
+    setTimeout(() => {
+      setIsSimulating(false);
+      const summary = Object.entries(distributionCount)
+        .map(([name, qty]) => `${name.split(" ")[0]}: ${qty} leads`)
+        .join(" · ");
+      toast.success("10 novos leads distribuídos com sucesso por meritocracia!", {
+        description: summary,
+      });
+    }, 500);
+  };
+
   return (
     <>
       <PageHeader
-        title="Distribuição inteligente"
-        subtitle="Vyntra distribui oportunidades de acordo com produto, perfil, disponibilidade e carga de atendimento."
+        title="Distribuição Inteligente & Roteamento Meritocrático"
+        subtitle="Mais oportunidades direcionadas automaticamente aos consultores com maior taxa de conversão e histórico de fechamento."
         action={
-          <div className="rounded-full border border-[color:var(--success)]/30 bg-[color:color-mix(in_oklab,var(--success)_10%,transparent)] px-3 py-1.5 text-xs text-[color:var(--success)]">
-            ● Distribuição ativa
-          </div>
+          <Button
+            onClick={handleSimulateBatch}
+            disabled={isSimulating}
+            className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+          >
+            <Zap className={cn("size-4", isSimulating && "animate-spin")} />
+            {isSimulating ? "Simulando Distribuição..." : "Simular Entrada de 10 Leads"}
+          </Button>
         }
       />
-      <div className="mb-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Região Santa Catarina (SC)
-            </span>
-            <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
-              {v.opportunities.filter((o) => o.store === "Lages / SC").length} leads
-            </span>
-          </div>
-          <div className="mt-1.5 text-sm font-medium">Loja Central: Lages / SC</div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Cobertura regional: Lages, Capão Alto, Campo Belo, Correia Pinto, Palmeira, Bocaina, Painel, Otacílio, Ponte Alta, Cerro Negro e São José do Cerrito.
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-1">
-            {LAGES_REGION_CITIES.map((c) => {
-              const count = v.opportunities.filter((o) => o.city === c).length;
-              return (
-                <span
-                  key={c}
-                  className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-background/80 px-1.5 py-0.5 text-[10px] text-foreground"
-                >
-                  <span>{c}</span>
-                  <span className="font-semibold text-primary">({count})</span>
+
+      {/* Banner de Meritocracia Comercial */}
+      <div className="mb-5 rounded-xl border border-cyan-500/30 bg-gradient-to-r from-[#050c26] via-[#08173d] to-[#04091a] p-4 shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="grid size-11 place-items-center rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 shrink-0">
+              <Trophy className="size-6 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-foreground">Regra Meritocrática: Prioridade Absoluta por Fechamento de Vendas</h2>
+                <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                  ● Algoritmo Ativo
                 </span>
-              );
-            })}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Consultores com maior taxa de fechamento recebem até <strong className="text-cyan-300">3.5x mais leads</strong> e exclusividade na primeira rodada de oportunidades quentes (Score 80+).
+                Atualmente liderado por <strong className="text-emerald-400">Juliana Reis (21% conv. · 5 vendas)</strong> e <strong className="text-cyan-300">Carlos Menezes (18% conv. · 4 vendas)</strong>.
+              </p>
+            </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[color:var(--violet)]/20 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[color:var(--violet)]">
-              Região Rio Grande do Sul (RS)
-            </span>
-            <span className="rounded-full bg-[color:color-mix(in_oklab,var(--violet)_20%,transparent)] px-2 py-0.5 text-[10px] font-bold text-[color:var(--violet)]">
-              {v.opportunities.filter((o) => o.state === "RS").length} leads
-            </span>
+
+        {/* Barra Proporcional de Participação (Lead Share) */}
+        <div className="mt-4 pt-3 border-t border-border/40">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5 font-medium">
+            <span>Participação Projetada no Volume de Novos Leads (Lead Share por Fechamento):</span>
+            <span className="font-mono text-cyan-300">Juliana 38% · Carlos 29% · Marcos 20% · Rafael 13%</span>
           </div>
-          <div className="mt-1.5 text-sm font-medium">
-            Lojas Centrais: Três Passos / RS ({v.opportunities.filter((o) => o.store === "Três Passos / RS").length}) · Santa Rosa / RS ({v.opportunities.filter((o) => o.store === "Santa Rosa / RS").length})
+          <div className="h-2.5 w-full rounded-full bg-slate-900 overflow-hidden flex border border-border/60">
+            <div style={{ width: "38%" }} className="h-full bg-emerald-500" title="Juliana Reis (38%)" />
+            <div style={{ width: "29%" }} className="h-full bg-cyan-500" title="Carlos Menezes (29%)" />
+            <div style={{ width: "20%" }} className="h-full bg-indigo-500" title="Marcos Lima (20%)" />
+            <div style={{ width: "13%" }} className="h-full bg-amber-500/80" title="Rafael Duarte (13%)" />
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Roteamento inteligente por proximidade entre Noroeste e Celeiro gaúcho.
-          </p>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {v.sellers.map((s) => {
+
+      {/* Grid de Consultores Ranqueados por Fechamento */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-5">
+        {rankedSellers.map((s, rankIndex) => {
           const own = v.opportunities.filter(
             (o) => o.sellerId === s.id && !["Venda", "Perdida"].includes(o.status),
           );
+          const hotCount = own.filter((o) => o.score >= 80).length;
+          const rankTier = rankIndex === 0 ? "ouro" : rankIndex === 1 ? "prata" : rankIndex === 2 ? "bronze" : "capacitacao";
+
           return (
-            <article key={s.id} className="panel p-4">
+            <article
+              key={s.id}
+              className={cn(
+                "panel relative p-4 transition-all duration-200 hover:border-primary/50",
+                rankIndex === 0 && "border-emerald-500/40 bg-gradient-to-b from-emerald-950/15 to-surface/80 shadow-[0_0_20px_rgba(16,185,129,0.1)]",
+                rankIndex === 1 && "border-cyan-500/40 bg-gradient-to-b from-cyan-950/15 to-surface/80",
+              )}
+            >
+              {/* Badge de Posição de Fechamento */}
               <div className="flex items-start justify-between">
-                <div className="grid size-10 place-items-center rounded-lg bg-primary/10 font-semibold text-primary">
-                  {s.name
-                    .split(" ")
-                    .map((x) => x[0])
-                    .join("")
-                    .slice(0, 2)}
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "grid size-10 place-items-center rounded-lg font-bold text-sm",
+                      rankTier === "ouro" && "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+                      rankTier === "prata" && "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30",
+                      rankTier === "bronze" && "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30",
+                      rankTier === "capacitacao" && "bg-secondary text-muted-foreground",
+                    )}
+                  >
+                    {rankIndex === 0 ? "🥇" : rankIndex === 1 ? "🥈" : rankIndex === 2 ? "🥉" : `#${rankIndex + 1}`}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm leading-tight text-foreground">{s.name}</h3>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 text-[9px] font-bold border mt-0.5",
+                        rankTier === "ouro" && "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                        rankTier === "prata" && "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                        rankTier === "bronze" && "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                        rankTier === "capacitacao" && "bg-muted text-muted-foreground border-border",
+                      )}
+                    >
+                      {rankTier === "ouro" && "Top Closer · Fila Ouro"}
+                      {rankTier === "prata" && "Alto Fechamento · Prata"}
+                      {rankTier === "bronze" && "Intermediário · Bronze"}
+                      {rankTier === "capacitacao" && "Em Capacitação"}
+                    </span>
+                  </div>
                 </div>
                 <span
                   className={cn(
-                    "text-[10px]",
+                    "text-[10px] font-semibold flex items-center gap-1",
                     s.online ? "text-[color:var(--success)]" : "text-muted-foreground",
                   )}
                 >
-                  ● {s.online ? "Online" : "Offline"}
+                  <span className={cn("size-1.5 rounded-full", s.online ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground")} />
+                  {s.online ? "Online" : "Offline"}
                 </span>
               </div>
-              <h3 className="mt-4 font-semibold">{s.name}</h3>
-              <p className="text-xs text-muted-foreground">{s.specialty}</p>
-              <div className="mt-3 flex flex-wrap gap-1 text-[10px] font-semibold">
+
+              {/* Especialidade */}
+              <p className="mt-3 text-xs text-muted-foreground">{s.specialty}</p>
+
+              {/* Indicador de Conversão e Fechamento */}
+              <div className="mt-3 rounded-lg border border-border/60 bg-surface-2/40 p-2.5">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground font-medium">Taxa de Conversão:</span>
+                  <span className="font-bold text-foreground">{s.conversion}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-background overflow-hidden">
+                  <div
+                    style={{ width: `${Math.min(100, s.conversion * 3.5)}%` }}
+                    className={cn(
+                      "h-full rounded-full",
+                      s.conversion >= 20 ? "bg-emerald-400" : s.conversion >= 15 ? "bg-cyan-400" : "bg-indigo-400"
+                    )}
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Vendas confirmadas: <strong className="text-foreground">{s.sales} un</strong></span>
+                  <span className="text-cyan-300 font-medium">
+                    Share: {rankIndex === 0 ? "38%" : rankIndex === 1 ? "29%" : rankIndex === 2 ? "20%" : "13%"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Lojas Atendidas */}
+              <div className="mt-3 flex flex-wrap gap-1 text-[10px] font-medium">
                 <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Lages / SC">
-                  Lages: {own.filter((o) => o.store === "Lages / SC").length}
+                  Lages: <strong className="text-primary">{own.filter((o) => o.store === "Lages / SC").length}</strong>
                 </span>
                 <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Três Passos / RS">
-                  Três Passos: {own.filter((o) => o.store === "Três Passos / RS").length}
+                  Três Passos: <strong className="text-foreground">{own.filter((o) => o.store === "Três Passos / RS").length}</strong>
                 </span>
                 <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Santa Rosa / RS">
-                  Santa Rosa: {own.filter((o) => o.store === "Santa Rosa / RS").length}
+                  Santa Rosa: <strong className="text-foreground">{own.filter((o) => o.store === "Santa Rosa / RS").length}</strong>
                 </span>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+
+              {/* Métricas do Vendedor */}
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/60 pt-3 text-center">
                 <div>
-                  <strong className="block text-lg">{own.length}</strong>
-                  <span className="text-[9px] text-muted-foreground">OPORT.</span>
+                  <strong className="block text-base text-foreground font-bold">{own.length}</strong>
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Leads Ativos</span>
                 </div>
                 <div>
-                  <strong className="block text-lg text-[color:var(--hot)]">
-                    {own.filter((o) => o.score >= 80).length}
-                  </strong>
-                  <span className="text-[9px] text-muted-foreground">QUENTES</span>
+                  <strong className="block text-base text-[color:var(--hot)] font-bold">{hotCount}</strong>
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Quentes</span>
                 </div>
                 <div>
                   <strong
                     className={cn(
-                      "block text-lg",
-                      s.avgResponseMinutes >= 10 && "text-destructive",
+                      "block text-base font-bold",
+                      s.avgResponseMinutes >= 10 ? "text-destructive" : "text-emerald-400",
                     )}
                   >
                     {s.avgResponseMinutes}m
                   </strong>
-                  <span className="text-[9px] text-muted-foreground">RESPOSTA</span>
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Resposta</span>
                 </div>
               </div>
             </article>
           );
         })}
       </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_0.8fr]">
-        <section className="panel p-5">
-          <h2 className="font-semibold">Regras de distribuição</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Ajuste os fatores considerados pelo motor de roteamento.
+
+      {/* Cartões Regionais: SC (Lages e região) e RS */}
+      <div className="mb-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Região Santa Catarina (SC) · Concessionária Oficial
+            </span>
+            <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary">
+              {v.opportunities.filter((o) => o.store === "Lages / SC").length} leads ativos
+            </span>
+          </div>
+          <div className="mt-2 text-sm font-semibold text-foreground">Loja Central: Lages / SC</div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Cobertura regional: Lages, Capão Alto, Campo Belo, Correia Pinto, Palmeira, Bocaina, Painel, Otacílio, Ponte Alta, Cerro Negro e São José do Cerrito.
           </p>
-          <div className="mt-4 divide-y divide-border">
+          <div className="mt-3 flex flex-wrap gap-1">
+            {LAGES_REGION_CITIES.map((c) => {
+              const count = v.opportunities.filter((o) => o.city === c).length;
+              return (
+                <span
+                  key={c}
+                  className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-background/80 px-2 py-0.5 text-[10px] text-foreground"
+                >
+                  <span>{c}</span>
+                  <span className="font-bold text-primary">({count})</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+        <div className="rounded-xl border border-[color:var(--violet)]/30 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[color:var(--violet)]">
+              Região Rio Grande do Sul (RS) · Concessionárias Oficiais
+            </span>
+            <span className="rounded-full bg-[color:color-mix(in_oklab,var(--violet)_20%,transparent)] px-2.5 py-0.5 text-xs font-bold text-[color:var(--violet)]">
+              {v.opportunities.filter((o) => o.state === "RS").length} leads ativos
+            </span>
+          </div>
+          <div className="mt-2 text-sm font-semibold text-foreground">
+            Lojas Centrais: Três Passos / RS ({v.opportunities.filter((o) => o.store === "Três Passos / RS").length}) · Santa Rosa / RS ({v.opportunities.filter((o) => o.store === "Santa Rosa / RS").length})
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Roteamento inteligente por proximidade entre Noroeste e Celeiro gaúcho, distribuindo com prioridade aos fechadores de cada concessionária.
+          </p>
+        </div>
+      </div>
+
+      {/* Regras de Distribuição & Fluxo */}
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
+        <section className="panel p-5">
+          <div className="flex items-center justify-between pb-3 border-b border-border/40">
+            <div>
+              <h2 className="font-semibold text-base">Regras de Roteamento Meritocrático</h2>
+              <p className="text-xs text-muted-foreground">
+                Ajuste os parâmetros de inteligência para equilibrar meritocracia e capacidade da equipe.
+              </p>
+            </div>
+            <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">
+              Score Ponderado
+            </span>
+          </div>
+          <div className="mt-3 divide-y divide-border/60">
             {rules.map(([key, title, desc]) => (
-              <div key={key} className="flex items-center justify-between gap-4 py-4">
+              <div key={key} className="flex items-center justify-between gap-4 py-3.5">
                 <div>
-                  <div className="text-sm font-medium">{title}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{desc}</div>
+                  <div className="text-sm font-medium text-foreground">{title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{desc}</div>
                 </div>
                 <Switch
                   checked={v.distribution[key]}
@@ -2424,24 +2997,27 @@ function Distribution() {
             ))}
           </div>
         </section>
+
         <section className="panel p-5">
-          <div className="mb-5 flex items-center gap-2">
+          <div className="mb-4 flex items-center gap-2 pb-3 border-b border-border/40">
             <RouteIcon className="size-5 text-primary" />
-            <h2 className="font-semibold">Como uma oportunidade é roteada</h2>
+            <h2 className="font-semibold text-base">Pipeline de Roteamento</h2>
           </div>
           {[
-            "Vyntra recebe e qualifica a oportunidade",
-            "Calcula prioridade e rota comercial",
-            "Cruza produto, perfil e disponibilidade",
-            "Distribui e inicia o timer de resposta",
-            "Monitora atendimento e escala alertas",
+            "Vyntra recebe o lead via Webhook ou Simulador e calcula Lead Score",
+            "Identifica a concessionária regional (Lages/SC ou Três Passos/Santa Rosa)",
+            "Analisa o histórico de fechamento de cada vendedor ativo",
+            "Atribui com peso meritocrático (Top Closers recebem mais oportunidades)",
+            "Inicia timer de SLA de resposta de 5 minutos e monitora follow-ups",
           ].map((x, i) => (
-            <div key={x} className="flex gap-3 pb-5 last:pb-0">
+            <div key={x} className="flex gap-3 pb-4 last:pb-0">
               <div className="relative grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                 {i + 1}
                 {i < 4 && <span className="absolute top-7 h-5 w-px bg-border" />}
               </div>
-              <div className="pt-1 text-sm">{x}</div>
+              <div className="pt-0.5 text-xs leading-relaxed text-muted-foreground">
+                <strong className="text-foreground">{x.split(" ")[0]} {x.split(" ")[1]}</strong> {x.split(" ").slice(2).join(" ")}
+              </div>
             </div>
           ))}
         </section>
@@ -3105,6 +3681,9 @@ interface QuizQuestion {
 function getQuizQuestions(answers: Record<string, string>): QuizQuestion[] {
   const isSC = answers["estado"]?.includes("Santa Catarina");
   const isRS = answers["estado"]?.includes("Rio Grande do Sul");
+  const isConsorcio =
+    answers["produto"] === "Consórcio Honda" ||
+    answers["forma"]?.includes("Consórcio");
 
   const regionQuestion: QuizQuestion = {
     key: "cidade_loja",
@@ -3161,13 +3740,28 @@ function getQuizQuestions(answers: Record<string, string>): QuizQuestion[] {
     {
       key: "produto",
       title: "O que você está procurando?",
-      options: ["Honda 0 km", "Honda seminova", "Ainda não sei"],
+      options: ["Honda 0 km", "Consórcio Honda", "Honda seminova", "Ainda não sei"],
     },
     {
       key: "forma",
       title: "Como pretende comprar?",
-      options: ["Financiamento", "Consórcio", "À vista", "Ainda não sei"],
+      options: ["Consórcio Honda (Sem entrada)", "Financiamento bancário", "À vista", "Ainda não sei"],
     },
+    ...(isConsorcio
+      ? [
+          {
+            key: "modalidade_consorcio",
+            title: "Qual o seu objetivo com o Consórcio Honda?",
+            subtitle: "Planos oficiais da Administradora de Consórcio Honda com taxas reduzidas",
+            options: [
+              "Pagar parcelas menores que cabem no bolso",
+              "Dar lance nos primeiros meses para contemplar logo",
+              "Comprar moto 0 km sem pagar juros de financiamento",
+              "Apenas conhecendo o plano",
+            ],
+          },
+        ]
+      : []),
     {
       key: "orcamento",
       title: "Quanto pretende investir por mês?",
@@ -3265,6 +3859,7 @@ const ANSWER_LABELS: Record<string, string> = {
   cidade_loja: "Cidade / Loja",
   produto: "Produto",
   forma: "Forma de compra",
+  modalidade_consorcio: "Objetivo Consórcio",
   orcamento: "Orçamento mensal",
   entrada: "Entrada",
   prazo: "Prazo de compra",
@@ -3286,6 +3881,10 @@ function Qualification() {
   const q = questions[step];
   const isLast = step === questions.length - 1;
   const loc = resolveLeadLocation(answers);
+
+  const isConsorcio =
+    answers["produto"] === "Consórcio Honda" ||
+    answers["forma"]?.toLowerCase().includes("consórcio");
 
   const handleSelectOption = (key: string, option: string) => {
     if (key === "estado" && answers["estado"] !== option) {
@@ -3309,17 +3908,23 @@ function Qualification() {
       city: loc.city,
       product: answers["produto"] || "Honda 0 km",
       category: answers["produto"] === "Honda seminova" ? "Seminova" : "0 km",
-      method: (answers["forma"] as PurchaseMethod) || "Financiamento",
+      method: isConsorcio ? "Consórcio" : (answers["forma"] as PurchaseMethod) || "Financiamento",
       budget: answers["orcamento"] || "R$700–1.000",
-      downPayment: answers["entrada"] === "Sim" ? "R$ 5.000" : "Sem entrada",
+      downPayment: isConsorcio ? "Sem entrada (Consórcio)" : answers["entrada"] === "Sim" ? "R$ 5.000" : "Sem entrada",
       deadline: answers["prazo"] || "Até 30 dias",
       score: result.score,
       scoreReasons: result.reasons,
-      objection: answers["objecao"] || "Preciso financiar",
+      objection: answers["objecao"] || (isConsorcio ? "Comparando planos" : "Preciso financiar"),
       route: {
-        primary: answers["produto"] === "Honda seminova" ? "Seminova" : "Financiamento",
-        alternative: "Consórcio",
-        rationale: `Lead qualificado para atendimento presencial na concessionária ${loc.store} (${loc.city}).`,
+        primary: isConsorcio
+          ? "Consórcio"
+          : answers["produto"] === "Honda seminova"
+            ? "Seminova"
+            : "Financiamento",
+        alternative: isConsorcio ? "0 km" : "Consórcio",
+        rationale: isConsorcio
+          ? `Lead qualificado para Consórcio Honda com roteamento prioritário para consultores especialistas da loja ${loc.store}.`
+          : `Lead qualificado para atendimento presencial na concessionária ${loc.store} (${loc.city}).`,
         budgetFit: result.score >= 70 ? "alta" : "média",
       },
     });
@@ -3399,16 +4004,26 @@ function Qualification() {
               </div>
             </div>
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
-              <div className="text-xs font-bold text-primary">ROTA COMERCIAL SUGERIDA</div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-primary">ROTA COMERCIAL SUGERIDA</div>
+                {isConsorcio && (
+                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    Rota Oficial Consórcio Honda
+                  </span>
+                )}
+              </div>
               <div className="mt-3 text-lg font-semibold">
-                {answers["produto"] === "Honda 0 km" &&
-                (answers["orcamento"] === "Até R$300" || answers["orcamento"] === "R$300–500")
-                  ? "Seminova — alternativa recomendada"
-                  : "Financiamento — principal"}
+                {isConsorcio
+                  ? "Consórcio Honda Nacional — Rota de Alta Conversão"
+                  : answers["produto"] === "Honda 0 km" &&
+                    (answers["orcamento"] === "Até R$300" || answers["orcamento"] === "R$300–500")
+                    ? "Seminova — alternativa recomendada"
+                    : "Financiamento — principal"}
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Opção recomendada para avaliação conforme intenção, orçamento e momento de compra.
-                Encaminhamento automático para concessionária <strong>{loc.store}</strong>.
+                {isConsorcio
+                  ? `Excelente opção para clientes que desejam investir em moto 0 km sem pagar juros bancários e sem barreira de entrada imediata. Roteado com prioridade para consultores especializados em cotas da loja ${loc.store}.`
+                  : `Opção recomendada para avaliação conforme intenção, orçamento e momento de compra. Encaminhamento automático para concessionária ${loc.store}.`}
               </p>
             </div>
           </section>
@@ -3501,103 +4116,393 @@ function Qualification() {
 }
 
 function Impact() {
+  const [leadsPerMonth, setLeadsPerMonth] = useState(150);
+  const [avgTicket, setAvgTicket] = useState(22000);
+  const [currentConversion, setCurrentConversion] = useState(8);
+  const [vyntraConversion, setVyntraConversion] = useState(16);
+
+  // Cálculos do simulador financeiro
+  const salesWithout = Math.round(leadsPerMonth * (currentConversion / 100));
+  const revWithout = salesWithout * avgTicket;
+
+  const salesWith = Math.round(leadsPerMonth * (vyntraConversion / 100));
+  const revWith = salesWith * avgTicket;
+
+  const additionalSales = salesWith - salesWithout;
+  const additionalRevenue = revWith - revWithout;
+  const annualAdditionalRevenue = additionalRevenue * 12;
+  const recoveredLeadsCount = Math.round(leadsPerMonth * 0.15);
+
+  const formatCurrency = (val: number) =>
+    val.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
   return (
     <>
       <PageHeader
-        title="Impacto comercial"
-        subtitle="Quanto valor a operação pode recuperar ao priorizar e agir no momento certo."
+        title="Impacto Comercial & Retorno sobre Investimento"
+        subtitle="Inteligência de receita, recuperação de oportunidades perdidas e projeção financeira para concessionárias."
         action={
-          <span className="rounded-full border border-border bg-secondary px-3 py-1 text-[10px] text-muted-foreground">
-            DADOS SIMULADOS · DEMONSTRAÇÃO
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
+              <Sparkles className="size-3 text-cyan-400" /> MODELO PREDITIVO COMERCIAL
+            </span>
+          </div>
         }
       />
-      <div className="grid gap-3 md:grid-cols-5">
-        <Kpi label="Investimento em oportunidades" value="R$ 18.500" icon={CircleDollarSign} />
-        <Kpi label="Oportunidades recebidas" value="142" icon={Target} />
-        <Kpi label="Oportunidades qualificadas" value="87" icon={ShieldCheck} />
-        <Kpi label="Oportunidades recuperáveis" value="23" icon={RefreshCw} />
-        <Kpi
-          label="Potencial recuperável"
-          value="R$ 126.000"
-          change="Estimativa demonstrativa"
-          icon={TrendingUp}
-        />
+
+      {/* Grid de KPIs de Alto Impacto */}
+      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="panel p-4 border-border/80 bg-surface/80">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+            <span>Investimento em Tráfego</span>
+            <CircleDollarSign className="size-4 text-cyan-400" />
+          </div>
+          <div className="mt-2 text-2xl font-bold text-foreground">R$ 18.500</div>
+          <span className="mt-1 block text-[11px] text-muted-foreground">Mídia Meta Ads & Google</span>
+        </div>
+
+        <div className="panel p-4 border-border/80 bg-surface/80">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+            <span>Leads Processados</span>
+            <Target className="size-4 text-primary" />
+          </div>
+          <div className="mt-2 text-2xl font-bold text-foreground">142</div>
+          <span className="mt-1 block text-[11px] text-muted-foreground">Regiões SC & RS</span>
+        </div>
+
+        <div className="panel p-4 border-border/80 bg-surface/80">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+            <span>Oportunidades Quentes</span>
+            <ShieldCheck className="size-4 text-amber-400" />
+          </div>
+          <div className="mt-2 text-2xl font-bold text-amber-400">87 leads</div>
+          <span className="mt-1 block text-[11px] text-muted-foreground">Score 60+ (61% do volume)</span>
+        </div>
+
+        <div className="panel p-4 border-border/80 bg-surface/80">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+            <span>Leads Salvos do Abandono</span>
+            <RefreshCw className="size-4 text-emerald-400" />
+          </div>
+          <div className="mt-2 text-2xl font-bold text-emerald-400">23 leads</div>
+          <span className="mt-1 block text-[11px] text-muted-foreground">Resgatados por SLA &lt; 10m</span>
+        </div>
+
+        <div className="panel p-4 border-cyan-500/40 bg-gradient-to-b from-cyan-950/20 to-surface/80 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+            <span className="text-cyan-300 font-semibold">Receita Recuperada</span>
+            <TrendingUp className="size-4 text-cyan-400" />
+          </div>
+          <div className="mt-2 text-2xl font-bold text-cyan-300">+R$ 186.400</div>
+          <span className="mt-1 block text-[11px] text-cyan-400/80 font-medium">ROI Estimado de 10.1x</span>
+        </div>
       </div>
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-          <div className="text-xs font-bold text-destructive">SEM VYNTRA</div>
-          <h2 className="mt-3 text-2xl font-semibold">Decisões reativas</h2>
-          <div className="mt-7 space-y-5">
-            {[
-              ["Oportunidades sem resposta", "31"],
-              ["Follow-ups esquecidos", "18"],
-              ["Potencial perdido estimado", "R$ 198.000"],
-              ["Tempo médio de resposta", "24 min"],
-            ].map(([a, b]) => (
-              <div
-                key={a}
-                className="flex items-center justify-between border-b border-destructive/15 pb-3"
+
+      {/* SIMULADOR INTERATIVO DE RECEITA DA CONCESSIONÁRIA */}
+      <div className="mt-6 panel p-5 lg:p-6 border-cyan-500/30 bg-gradient-to-r from-[#04081c] via-[#081533] to-[#04091a]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border/40 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="grid size-11 place-items-center rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300">
+              <Calculator className="size-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground">Simulador Financeiro de Receita Comercial</h3>
+                <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-bold text-cyan-300 border border-cyan-500/30">
+                  Interativo
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ajuste os parâmetros da sua concessionária para calcular o retorno direto da distribuição meritocrática e qualificação instantânea.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {[100, 150, 250, 400].map((preset) => (
+              <button
+                key={preset}
+                onClick={() => setLeadsPerMonth(preset)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1 text-xs font-medium border transition-colors",
+                  leadsPerMonth === preset
+                    ? "bg-cyan-500 text-slate-950 font-bold border-cyan-400"
+                    : "bg-surface-2/60 text-muted-foreground border-border hover:text-foreground",
+                )}
               >
-                <span className="text-sm text-muted-foreground">{a}</span>
-                <strong className="text-lg">{b}</strong>
+                {preset} leads/mês
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Controles do Simulador */}
+        <div className="mt-5 grid gap-5 md:grid-cols-3">
+          {/* Controle 1: Volume de Leads */}
+          <div className="rounded-xl border border-border/70 bg-surface/60 p-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-muted-foreground font-medium">Leads Inbound por Mês:</span>
+              <strong className="text-sm text-foreground font-mono">{leadsPerMonth} leads</strong>
+            </div>
+            <input
+              type="range"
+              min="50"
+              max="500"
+              step="10"
+              value={leadsPerMonth}
+              onChange={(e) => setLeadsPerMonth(Number(e.target.value))}
+              className="w-full accent-cyan-400 cursor-pointer h-1.5 rounded-lg bg-slate-800"
+            />
+            <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+              <span>50 leads</span>
+              <span>250 leads</span>
+              <span>500 leads</span>
+            </div>
+          </div>
+
+          {/* Controle 2: Ticket Médio da Moto / Consórcio */}
+          <div className="rounded-xl border border-border/70 bg-surface/60 p-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-muted-foreground font-medium">Ticket Médio por Venda:</span>
+              <strong className="text-sm text-foreground font-mono">{formatCurrency(avgTicket)}</strong>
+            </div>
+            <input
+              type="range"
+              min="12000"
+              max="45000"
+              step="1000"
+              value={avgTicket}
+              onChange={(e) => setAvgTicket(Number(e.target.value))}
+              className="w-full accent-cyan-400 cursor-pointer h-1.5 rounded-lg bg-slate-800"
+            />
+            <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+              <span>R$ 12.000 (Biz/Pop)</span>
+              <span>R$ 22.000 (Twister/Bros)</span>
+              <span>R$ 45.000+ (Sahara/CB 500)</span>
+            </div>
+          </div>
+
+          {/* Controle 3: Conversão Sem vs Com Vyntra */}
+          <div className="rounded-xl border border-border/70 bg-surface/60 p-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-muted-foreground font-medium">Meta de Conversão:</span>
+              <strong className="text-sm text-emerald-400 font-mono">
+                {currentConversion}% → {vyntraConversion}%
+              </strong>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="26"
+              step="1"
+              value={vyntraConversion}
+              onChange={(e) => setVyntraConversion(Number(e.target.value))}
+              className="w-full accent-emerald-400 cursor-pointer h-1.5 rounded-lg bg-slate-800"
+            />
+            <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+              <span>Base atual: {currentConversion}%</span>
+              <span>Média Vyntra: 16%</span>
+              <span>Top Closers: 26%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Painel de Resultados do Simulador */}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-3 border-t border-border/50">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+            <span className="text-[11px] font-bold text-destructive uppercase tracking-wider">
+              Operação Sem Vyntra
+            </span>
+            <div className="mt-2 text-2xl font-bold text-foreground font-mono">
+              {salesWithout} vendas
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Faturamento: <strong className="text-foreground">{formatCurrency(revWithout)}</strong>
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/15 p-4">
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+              Com Vyntra Lead Pilot
+            </span>
+            <div className="mt-2 text-2xl font-bold text-emerald-300 font-mono">
+              {salesWith} vendas
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Faturamento: <strong className="text-foreground">{formatCurrency(revWith)}</strong>
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-cyan-500/40 bg-cyan-950/20 p-4">
+            <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider">
+              Ganho Mensal Adicional
+            </span>
+            <div className="mt-2 text-2xl font-bold text-cyan-300 font-mono">
+              +{formatCurrency(additionalRevenue)}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              +{additionalSales} motos ou cotas a mais/mês
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4">
+            <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+              Impacto Anual Projetado
+            </span>
+            <div className="mt-2 text-2xl font-bold text-amber-400 font-mono">
+              +{formatCurrency(annualAdditionalRevenue)}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {recoveredLeadsCount * 12} leads resgatados no ano
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPARAÇÃO LADO A LADO: REATIVO VS COM INTELIGÊNCIA */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section className="rounded-xl border border-destructive/30 bg-gradient-to-b from-destructive/10 to-surface/60 p-6">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-destructive tracking-wider">MODELO TRADICIONAL</div>
+            <span className="rounded-full bg-destructive/10 border border-destructive/30 px-2 py-0.5 text-[10px] font-bold text-destructive">
+              Decisões Reativas
+            </span>
+          </div>
+          <h3 className="mt-3 text-xl font-bold text-foreground">Distribuição Aleatória & Gargalos</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Leads distribuídos igualmente sem considerar taxa de fechamento ou perfil de consórcio.
+          </p>
+
+          <div className="mt-6 space-y-4">
+            {[
+              ["Oportunidades quentes sem resposta em 15m", "31 leads", "text-destructive"],
+              ["Follow-ups esquecidos pela equipe", "18 leads", "text-destructive"],
+              ["Tempo médio de primeiro contato", "24 min", "text-destructive"],
+              ["Potencial de vendas perdido estimado", "R$ 198.000", "text-foreground"],
+              ["Taxa média de fechamento da equipe", "8.2%", "text-muted-foreground"],
+            ].map(([label, val, clr]) => (
+              <div
+                key={label}
+                className="flex items-center justify-between border-b border-destructive/15 pb-2.5 text-xs"
+              >
+                <span className="text-muted-foreground">{label}</span>
+                <strong className={cn("font-bold text-sm font-mono", clr)}>{val}</strong>
               </div>
             ))}
           </div>
         </section>
-        <section className="rounded-xl border border-[color:var(--success)]/30 bg-[color:color-mix(in_oklab,var(--success)_5%,transparent)] p-6">
-          <div className="text-xs font-bold text-[color:var(--success)]">COM VYNTRA</div>
-          <h2 className="mt-3 text-2xl font-semibold">Ação priorizada</h2>
-          <div className="mt-7 space-y-5">
+
+        <section className="rounded-xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/15 to-surface/60 p-6">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-emerald-400 tracking-wider">COM VYNTRA LEAD PILOT</div>
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+              Meritocracia + IA
+            </span>
+          </div>
+          <h3 className="mt-3 text-xl font-bold text-foreground">Roteamento Inteligente & SLA Rápido</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Top closers recebem leads quentes prioritariamente e consórcios vão para especialistas.
+          </p>
+
+          <div className="mt-6 space-y-4">
             {[
-              ["Oportunidades priorizadas", "87"],
-              ["Oportunidades recuperáveis", "23"],
-              ["Potencial comercial recuperável", "R$ 126.000"],
-              ["Tempo médio de resposta", "8 min"],
-            ].map(([a, b]) => (
+              ["Oportunidades quentes priorizadas", "87 leads", "text-emerald-400"],
+              ["Follow-ups recuperados automaticamente", "23 leads", "text-emerald-400"],
+              ["Tempo médio de primeiro contato", "7.4 min", "text-emerald-400"],
+              ["Receita comercial recuperada no mês", "+R$ 186.400", "text-cyan-300 font-bold"],
+              ["Taxa média de fechamento dos closers", "18.5%", "text-emerald-300"],
+            ].map(([label, val, clr]) => (
               <div
-                key={a}
-                className="flex items-center justify-between border-b border-[color:var(--success)]/15 pb-3"
+                key={label}
+                className="flex items-center justify-between border-b border-emerald-500/15 pb-2.5 text-xs"
               >
-                <span className="text-sm text-muted-foreground">{a}</span>
-                <strong className="text-lg">{b}</strong>
+                <span className="text-muted-foreground">{label}</span>
+                <strong className={cn("font-bold text-sm font-mono", clr)}>{val}</strong>
               </div>
             ))}
           </div>
         </section>
       </div>
-      <div className="mt-5 panel p-6">
-        <div className="grid items-center gap-6 lg:grid-cols-[1fr_1.4fr]">
+
+      {/* IMPACTO REGIONAL & GRÁFICO COMPARATIVO */}
+      <div className="mt-6 panel p-6 border-border/80">
+        <div className="grid items-center gap-6 lg:grid-cols-[1fr_1.3fr]">
           <div>
-            <div className="text-xs font-semibold text-primary">IMPACTO PROJETADO</div>
-            <div className="mt-2 text-4xl font-semibold">+R$ 126 mil</div>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Potencial de oportunidades recuperáveis quando velocidade, follow-up e rota comercial
-              são aplicados de forma consistente.
+            <div className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+              IMPACTO POR CONCESSIONÁRIA & REGIÃO
+            </div>
+            <h4 className="mt-2 text-2xl font-bold text-foreground">Recuperação de Vendas em SC e RS</h4>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Com o roteamento geográfico e meritocrático, cada loja atinge máxima eficiência sem canibalização de fila:
             </p>
+
+            <div className="mt-4 space-y-2.5 text-xs">
+              <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
+                <div>
+                  <strong className="text-foreground block">Lages / SC (Serra Catarinense)</strong>
+                  <span className="text-[11px] text-muted-foreground">Juliana Reis & Carlos Menezes</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-cyan-300">+R$ 98.000</span>
+                  <span className="block text-[10px] text-muted-foreground">49 leads / 12 vendas</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
+                <div>
+                  <strong className="text-foreground block">Três Passos / RS (Noroeste RS)</strong>
+                  <span className="text-[11px] text-muted-foreground">Marcos Lima & Fila Regional</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-emerald-400">+R$ 52.000</span>
+                  <span className="block text-[10px] text-muted-foreground">28 leads / 7 vendas</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
+                <div>
+                  <strong className="text-foreground block">Santa Rosa / RS (Missões / Fronteira)</strong>
+                  <span className="text-[11px] text-muted-foreground">Rafael Duarte & Juliana (Cotas)</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-indigo-300">+R$ 36.400</span>
+                  <span className="block text-[10px] text-muted-foreground">21 leads / 4 vendas</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="h-[220px]">
+
+          <div className="h-[280px]">
+            <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between font-medium">
+              <span>Comparativo de Faturamento Projetado (em milhares de R$):</span>
+              <span className="text-[11px] text-cyan-300">Base simulada mensal</span>
+            </div>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={[
-                  { n: "Perdido", sem: 198, com: 72 },
-                  { n: "Recuperado", sem: 0, com: 126 },
-                  { n: "Convertido", sem: 84, com: 142 },
+                  { n: "Perda por SLA Lento", sem: 198, com: 42 },
+                  { n: "Recuperado por IA", sem: 0, com: 186 },
+                  { n: "Faturamento Total", sem: 264, com: 450 },
                 ]}
               >
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="n" stroke="var(--muted-foreground)" fontSize={11} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={10} />
                 <ChartTooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)" }}
+                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px" }}
                 />
                 <Bar
-                  name="Sem Vyntra"
+                  name="Sem Vyntra (R$ mil)"
                   dataKey="sem"
                   fill="var(--destructive)"
-                  radius={[3, 3, 0, 0]}
+                  radius={[4, 4, 0, 0]}
                 />
-                <Bar name="Com Vyntra" dataKey="com" fill="var(--success)" radius={[3, 3, 0, 0]} />
+                <Bar
+                  name="Com Vyntra (R$ mil)"
+                  dataKey="com"
+                  fill="var(--success)"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

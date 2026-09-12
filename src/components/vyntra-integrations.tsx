@@ -30,6 +30,10 @@ import {
   Webhook,
   XCircle,
   Zap,
+  Info,
+  MapPin,
+  Coins,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -83,11 +87,14 @@ function JsonPayloadViewer({
   payload,
   isOpen,
   onClose,
+  log,
 }: {
   payload: Record<string, unknown>;
   isOpen: boolean;
   onClose: () => void;
+  log?: IntegrationLog | null;
 }) {
+  const [activeTab, setActiveTab] = useState<"amigavel" | "json">("amigavel");
   const [copied, setCopied] = useState(false);
   if (!isOpen) return null;
 
@@ -100,30 +107,160 @@ function JsonPayloadViewer({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const clientName = (payload.nome || payload.name || payload.customer_name || "Cliente sem nome informado") as string;
+  const phone = (payload.telefone || payload.whatsapp || payload.phone || "Não informado") as string;
+  const product = (payload.modelo_moto || payload.moto || payload.produto || "Honda 0 km") as string;
+  const method = (payload.forma_pagamento || payload.method || "Financiamento / Consórcio") as string;
+  const downPayment = (payload.valor_entrada || payload.downPayment || "Sem entrada especificada") as string;
+  const city = (payload.cidade || payload.city || "Detectada automaticamente") as string;
+  const state = (payload.estado || payload.state || "SC/RS") as string;
+  const message = (payload.mensagem || payload.message || "") as string;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-xl border border-border/80 bg-[#070e24] p-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl rounded-xl border border-cyan-500/40 bg-[#070e24] p-5 shadow-2xl">
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div className="flex items-center gap-2">
-            <Code2 className="size-5 text-cyan-400" />
-            <h3 className="font-semibold text-foreground">Payload Bruto Recebido (JSON)</h3>
+            <Sparkles className="size-5 text-cyan-400" />
+            <div>
+              <h3 className="font-bold text-sm text-foreground">Auditoria & Explicação do Lead</h3>
+              <span className="text-[11px] text-muted-foreground">
+                Origem: <strong className="text-cyan-300">{log?.source || "Webhook"}</strong> · Status HTTP {log?.httpCode || 201}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handleCopy} className="h-8 gap-1.5 text-xs">
-              {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-              {copied ? "Copiado" : "Copiar JSON"}
-            </Button>
+            <div className="flex rounded-lg border border-border/70 bg-surface p-0.5">
+              <button
+                onClick={() => setActiveTab("amigavel")}
+                className={cn(
+                  "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                  activeTab === "amigavel"
+                    ? "bg-cyan-500 text-slate-950 font-bold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Visão Autoexplicativa
+              </button>
+              <button
+                onClick={() => setActiveTab("json")}
+                className={cn(
+                  "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                  activeTab === "json"
+                    ? "bg-cyan-500 text-slate-950 font-bold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                JSON Técnico
+              </button>
+            </div>
             <Button size="sm" variant="ghost" onClick={onClose} className="h-8 px-2 text-muted-foreground hover:text-foreground">
               ✕
             </Button>
           </div>
         </div>
 
-        <div className="mt-4 max-h-[60vh] overflow-auto rounded-lg border border-border/40 bg-[#030712] p-4 font-mono text-xs text-cyan-200">
-          <pre>{jsonString}</pre>
-        </div>
+        {activeTab === "amigavel" ? (
+          <div className="mt-4 space-y-3.5">
+            {/* Status Explicativo */}
+            <div className={cn(
+              "rounded-xl border p-3.5 flex items-start gap-3",
+              log?.status === "success" && "border-emerald-500/30 bg-emerald-950/20 text-emerald-300",
+              log?.status === "duplicate" && "border-amber-500/30 bg-amber-950/20 text-amber-300",
+              (log?.status === "error" || log?.status === "rejected") && "border-destructive/30 bg-destructive/10 text-destructive",
+            )}>
+              {log?.status === "success" ? (
+                <CheckCircle2 className="size-5 text-emerald-400 shrink-0 mt-0.5" />
+              ) : log?.status === "duplicate" ? (
+                <AlertCircle className="size-5 text-amber-400 shrink-0 mt-0.5" />
+              ) : (
+                <XCircle className="size-5 text-destructive shrink-0 mt-0.5" />
+              )}
+              <div className="text-xs">
+                <strong className="block text-sm font-semibold text-foreground">
+                  {log?.status === "success"
+                    ? "Requisição aprovada e lead integrado com sucesso"
+                    : log?.status === "duplicate"
+                      ? "Lead existente atualizado (Anti-duplicação ativado)"
+                      : "Requisição barrada pela validação de integridade"}
+                </strong>
+                <p className="mt-0.5 text-muted-foreground leading-relaxed">
+                  {log?.errorMessage || (log?.status === "success"
+                    ? "O lead foi pontuado pela inteligência Vyntra, alocado na concessionária correspondente e direcionado ao consultor ideal."
+                    : log?.status === "duplicate"
+                      ? "O cliente já havia enviado proposta nas últimas 24 horas. O sistema atualizou seu interesse sem duplicar o cartão na fila."
+                      : "Falta de parâmetros obrigatórios ou telefone inválido. O CRM descartou para evitar poluição da base.")}
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-4 flex justify-end">
+            {/* Dados Decodificados do Cliente */}
+            <div className="rounded-xl border border-border/70 bg-[#030717] p-4 space-y-3">
+              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                DADOS EXTRAÍDOS DO LEAD
+              </span>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Nome do Cliente:</span>
+                  <strong className="text-foreground font-semibold">{clientName}</strong>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">WhatsApp / Telefone:</span>
+                  <strong className="text-foreground font-mono">{phone}</strong>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Moto de Interesse:</span>
+                  <strong className="text-cyan-300 font-semibold">{product}</strong>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Forma de Aquisição:</span>
+                  <strong className="text-foreground">{method}</strong>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Entrada Declarada:</span>
+                  <span className="text-foreground">{downPayment}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Localização:</span>
+                  <span className="text-foreground">{city} / {state}</span>
+                </div>
+              </div>
+
+              {message && (
+                <div className="pt-2 border-t border-border/40 text-xs">
+                  <span className="text-muted-foreground block text-[11px] mb-1">Mensagem enviada:</span>
+                  <p className="rounded bg-surface-2/60 p-2 text-foreground/90 italic text-[11px]">"{message}"</p>
+                </div>
+              )}
+            </div>
+
+            {/* Fluxo Realizado pela IA */}
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/10 p-3 text-xs text-muted-foreground">
+              <strong className="text-cyan-300 font-semibold block mb-1">Ações Automáticas da IA Vyntra:</strong>
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span className="rounded bg-cyan-500/15 px-2 py-0.5 text-cyan-300 font-medium">1. Score Calculado</span>
+                <span>➔</span>
+                <span className="rounded bg-cyan-500/15 px-2 py-0.5 text-cyan-300 font-medium">2. Loja Localizada</span>
+                <span>➔</span>
+                <span className="rounded bg-cyan-500/15 px-2 py-0.5 text-cyan-300 font-medium">3. Consultor Meritocrático Atribuído</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={handleCopy} className="h-7 gap-1.5 text-xs">
+                {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+                {copied ? "Copiado" : "Copiar JSON"}
+              </Button>
+            </div>
+            <div className="max-h-[50vh] overflow-auto rounded-lg border border-border/40 bg-[#030712] p-4 font-mono text-xs text-cyan-200">
+              <pre>{jsonString}</pre>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-5 flex justify-end">
           <Button size="sm" variant="secondary" onClick={onClose}>
             Fechar
           </Button>

@@ -1,6 +1,6 @@
 import { qualifyLead, type WebhookLeadPayload, type LeadScoreResult } from "./lead-scorer";
 import type { Opportunity } from "./types";
-import { SELLERS } from "./mock-data";
+import { SELLERS, pickSellerByPerformance } from "./mock-data";
 
 export interface Company {
   id: string;
@@ -431,8 +431,8 @@ export async function processLeadWebhook(
   // 9. Registrar os motivos da pontuação
   const qualification: LeadScoreResult = qualifyLead(payload);
 
-  // 10. Selecionar consultor/vendedor responsável de acordo com disponibilidade
-  const assignedSeller = SELLERS[Math.floor(Math.random() * SELLERS.length)] ?? SELLERS[0]!;
+  // 10. Selecionar consultor/vendedor responsável de acordo com meritocracia de fechamento
+  const assignedSeller = pickSellerByPerformance(SELLERS, undefined, qualification.score >= 80);
   const newLeadId = `OPP-${Math.floor(1000 + Math.random() * 9000)}`;
   const nowIso = new Date().toISOString();
 

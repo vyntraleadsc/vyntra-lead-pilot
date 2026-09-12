@@ -15,6 +15,7 @@ import {
   buildNotifications,
   buildOpportunities,
   buildProposals,
+  pickSellerByPerformance,
 } from "./mock-data";
 import {
   LAGES_REGION_CITIES,
@@ -33,19 +34,19 @@ import {
   Seller,
 } from "./types";
 import {
+  clearCompanyLogs,
   getCompany,
   getCompanyLogs,
-  toggleCompanyIntegration,
-  rotateCompanyToken,
-  clearCompanyLogs,
   processLeadWebhook,
+  rotateCompanyToken,
   subscribeToWebhookEvents,
+  toggleCompanyIntegration,
   type Company,
   type IntegrationLog,
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v3";
+const STORAGE_KEY = "vyntra-demo-state-v4";
 
 export type RoleView = "gestor" | "vendedor";
 
@@ -512,7 +513,7 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         })),
       addOpportunityFromQuiz: (payload) => {
         const id = `OPP-${Math.floor(1000 + Math.random() * 9000)}`;
-        const assignedSeller = SELLERS[Math.floor(Math.random() * SELLERS.length)] ?? SELLERS[0]!;
+        const assignedSeller = pickSellerByPerformance(SELLERS, state.distribution, payload.score >= 80);
         const nowIso = new Date().toISOString();
         const numericBudget = payload.budget ? parseInt(payload.budget.replace(/\D/g, "")) || 45000 : 45000;
         const newOpp: Opportunity = {

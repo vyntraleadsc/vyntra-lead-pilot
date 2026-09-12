@@ -78,10 +78,10 @@
   --border: oklch(0.32 0.028 266);
   --input: oklch(0.32 0.028 266);
   --ring: oklch(0.66 0.16 258);
-  --hot: oklch(0.68 0.19 32);
-  --warm: oklch(0.76 0.15 62);
-  --mild: oklch(0.83 0.14 95);
-  --cold: oklch(0.72 0.09 230);
+  --hot: oklch(0.72 0.19 148);
+  --warm: oklch(0.82 0.17 85);
+  --mild: oklch(0.86 0.17 95);
+  --cold: oklch(0.64 0.22 25);
   --success: oklch(0.72 0.15 158);
   --violet: oklch(0.65 0.17 295);
   --chart-1: oklch(0.66 0.16 258);

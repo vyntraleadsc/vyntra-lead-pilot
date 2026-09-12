@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Activity,
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
@@ -41,6 +42,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
+  Snowflake,
   Sparkles,
   Target,
   TrendingDown,
@@ -1680,10 +1682,25 @@ function Overview({
         </section>
 
         <section className="rounded-2xl border border-border/60 bg-gradient-to-b from-surface/80 to-surface-2/40 p-5 sm:p-6">
-          <h2 className="text-base font-semibold text-foreground">Temperatura das Oportunidades</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Priorização calculada pelo algoritmo Vyntra Score
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Temperatura das Oportunidades</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Classificação Vyntra Score: Quentes (Verde), Médios (Amarelo) e Frios (Vermelho)
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                🟢 Quentes
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                🟡 Médios
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                🔴 Frios
+              </span>
+            </div>
+          </div>
           <div className="mt-5 space-y-4">
             {temp.map((t) => {
               const m = TEMPERATURE_META[t.key];
@@ -1821,8 +1838,13 @@ function ScoreMini({ score }: { score: number }) {
   const m = TEMPERATURE_META[temperatureOf(score)];
   return (
     <div
-      className="grid size-9 shrink-0 place-items-center rounded-lg text-xs font-bold"
-      style={{ color: m.color, background: `color-mix(in oklab, ${m.color} 13%, transparent)` }}
+      className="grid size-9 shrink-0 place-items-center rounded-lg text-xs font-bold border transition-transform duration-150 hover:scale-105"
+      style={{
+        color: m.color,
+        background: `color-mix(in oklab, ${m.color} 14%, transparent)`,
+        borderColor: `color-mix(in oklab, ${m.color} 35%, transparent)`,
+      }}
+      title={`${m.label}: Score ${score}`}
     >
       {score}
     </div>
@@ -1981,11 +2003,11 @@ function FilterBar({
         ["À vista", "À vista"],
       ])}
       {select("temperature", "Temperatura", [
-        ["all", "Temperaturas"],
-        ["muito_quente", "Muito quente"],
-        ["potencial", "Potencial"],
-        ["morno", "Morno"],
-        ["baixo", "Baixo potencial"],
+        ["all", "Todas as temperaturas"],
+        ["muito_quente", "🟢 Quente (Score 80+)"],
+        ["potencial", "🟡 Médio / Potencial (60-79)"],
+        ["morno", "🟡 Médio / Morno (40-59)"],
+        ["baixo", "🔴 Frio (Score < 40)"],
       ])}
       {select("status", "Status", [
         ["all", "Todos os status"],
@@ -2165,15 +2187,15 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
             className={cn(
               "flex flex-col text-left rounded-lg p-2.5 transition-all border",
               insightFilter === "hot"
-                ? "bg-amber-500/20 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-amber-500/30",
+                ? "bg-emerald-500/20 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-emerald-500/30",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400">
-                <Flame className="size-3.5 fill-amber-400 text-amber-400" /> Leads Quentes
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+                <Flame className="size-3.5 fill-emerald-400 text-emerald-400" /> Leads Quentes
               </span>
-              <span className="rounded-md bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
+              <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
                 {hotCount}
               </span>
             </div>
@@ -2369,7 +2391,7 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                   className={cn(
                     "panel cursor-pointer p-4 transition-all duration-200 hover:border-cyan-500/50 hover:shadow-lg relative flex flex-col justify-between",
                     isSelected && "border-primary bg-primary/5",
-                    o.score >= 80 && "border-amber-500/30",
+                    o.score >= 80 && "border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.06)]",
                   )}
                 >
                   <div>
@@ -2404,8 +2426,15 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                           backgroundColor: `color-mix(in oklab, ${tm.color} 15%, transparent)`,
                           border: `1px solid color-mix(in oklab, ${tm.color} 30%, transparent)`,
                         }}
+                        title={`${tm.label}: Score ${o.score}`}
                       >
-                        <Flame className="size-3 fill-current" />
+                        {o.score >= 80 ? (
+                          <Flame className="size-3 fill-current" />
+                        ) : o.score >= 40 ? (
+                          <Activity className="size-3" />
+                        ) : (
+                          <Snowflake className="size-3" />
+                        )}
                         {o.score}
                       </div>
                     </div>
@@ -2662,22 +2691,20 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">
               <div
-                className="grid size-12 place-items-center rounded-xl text-lg font-bold"
+                className="grid size-12 place-items-center rounded-xl text-lg font-bold border"
                 style={{
                   color: temp.color,
-                  background: `color-mix(in oklab, ${temp.color} 13%, transparent)`,
+                  background: `color-mix(in oklab, ${temp.color} 14%, transparent)`,
+                  borderColor: `color-mix(in oklab, ${temp.color} 35%, transparent)`,
                 }}
+                title={`${temp.label}: Score ${o.score}`}
               >
                 {o.score}
               </div>
               <div>
                 <div className="text-xl">{o.customer.name}</div>
                 <SheetDescription>
-                  {temp.emoji}{" "}
-                  {o.score >= 80
-                    ? "Alta probabilidade de compra"
-                    : "Oportunidade em acompanhamento"}{" "}
-                  · {o.id}
+                  {temp.emoji} {temp.label} · {o.id}
                 </SheetDescription>
               </div>
             </SheetTitle>
@@ -2904,11 +2931,15 @@ function ScoreRing({ score, size = "md" }: { score: number; size?: "md" | "lg" }
     >
       <div className="absolute rounded-full bg-surface" style={{ width: d - 10, height: d - 10 }} />
       <div className="relative text-center">
-        <div className={cn("font-bold", size === "lg" ? "text-2xl" : "text-lg")}>
+        <div className={cn("font-bold", size === "lg" ? "text-2xl" : "text-lg")} style={{ color: m.color }}>
           {score}
-          <span className="text-[10px] text-muted-foreground">/100</span>
+          <span className="text-[10px] text-muted-foreground font-normal">/100</span>
         </div>
-        {size === "lg" && <div className="text-[9px] text-muted-foreground">VYNTRA SCORE</div>}
+        {size === "lg" && (
+          <div className="text-[9px] font-bold tracking-wider" style={{ color: m.color }}>
+            {m.label.toUpperCase()}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3273,7 +3304,7 @@ function FollowUps({ setSelected }: { setSelected: (id: string) => void }) {
   const buckets: Array<[FollowUpBucket, string, string]> = [
     ["atrasado", "Atrasados", "text-destructive"],
     ["hoje", "Hoje", "text-primary"],
-    ["amanha", "Amanhã", "text-[color:var(--cold)]"],
+    ["amanha", "Amanhã", "text-cyan-400"],
     ["proximos", "Próximos dias", "text-muted-foreground"],
   ];
   return (

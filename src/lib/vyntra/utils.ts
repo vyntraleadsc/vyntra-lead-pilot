@@ -104,8 +104,18 @@ export function computeScore(answers: Record<string, string>): {
   const reasons: string[] = [];
   const add = (points: number, reason: string) => {
     score += points;
-    if (points > 0) reasons.push(reason);
+    if (points > 0 && reason) reasons.push(reason);
   };
+
+  if (answers["estado"]) {
+    const isSC = answers["estado"].includes("Santa Catarina") || answers["estado"] === "SC";
+    add(4, isSC ? "Região confirmada: Santa Catarina (SC)" : "Região confirmada: Rio Grande do Sul (RS)");
+  }
+
+  if (answers["cidade_loja"]) {
+    const cleanCity = answers["cidade_loja"].split("(")[0]?.trim() || answers["cidade_loja"];
+    add(6, `Atendimento regional direcionado: ${cleanCity}`);
+  }
 
   switch (answers["prazo"]) {
     case "Próximos 7 dias":

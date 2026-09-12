@@ -4,6 +4,8 @@ export type Category = "0 km" | "Seminova";
 
 export type LeadState = "RS" | "SC";
 
+export type LeadStore = "Lages / SC" | "Três Passos / RS" | "Santa Rosa / RS";
+
 export type PurchaseMethod = "Financiamento" | "Consórcio" | "À vista";
 
 export type OpportunityStatus =
@@ -42,6 +44,9 @@ export interface Opportunity {
   id: string;
   customer: Customer;
   state: LeadState;
+  store: LeadStore;
+  city: string;
+  region: string;
   product: string;
   category: Category;
   method: PurchaseMethod;
@@ -131,6 +136,7 @@ export interface OpportunityFilters {
   search: string;
   period: string;
   state: string;
+  store: string;
   sellerId: string;
   product: string;
   category: string;

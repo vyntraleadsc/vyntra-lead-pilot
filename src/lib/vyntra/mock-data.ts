@@ -4,6 +4,7 @@ import type {
   CommercialRoute,
   FollowUp,
   LeadState,
+  LeadStore,
   Opportunity,
   OpportunityStatus,
   Proposal,
@@ -789,9 +790,35 @@ function buildReasons(r: Raw): string[] {
 }
 
 export function buildOpportunities(): Opportunity[] {
+  const scCities = ["Lages", "Correia Pinto", "São Joaquim", "Lages", "Urubici"];
+  const tpCities = ["Três Passos", "Tenente Portela", "Crissiumal", "Três Passos", "Esperança do Sul"];
+  const srCities = ["Santa Rosa", "Giruá", "Tuparendi", "Santa Rosa", "Santo Cristo"];
+
   return raw.map((r, i) => {
-    const state: LeadState = i % 2 === 0 ? "RS" : "SC";
-    const areaCode = state === "RS" ? "51" : "48";
+    const isSC = i % 3 === 0;
+    const state: LeadState = isSC ? "SC" : "RS";
+    let store: LeadStore;
+    let city: string;
+    let region: string;
+    let areaCode: string;
+
+    if (state === "SC") {
+      store = "Lages / SC";
+      city = scCities[i % scCities.length]!;
+      region = "Santa Catarina";
+      areaCode = "49";
+    } else if (i % 2 === 0) {
+      store = "Três Passos / RS";
+      city = tpCities[i % tpCities.length]!;
+      region = "Rio Grande do Sul";
+      areaCode = "55";
+    } else {
+      store = "Santa Rosa / RS";
+      city = srCities[i % srCities.length]!;
+      region = "Rio Grande do Sul";
+      areaCode = "55";
+    }
+
     return {
       id: `OPP-${String(1001 + i)}`,
       customer: {
@@ -800,6 +827,9 @@ export function buildOpportunities(): Opportunity[] {
         email: `${r.n.toLowerCase().split(" ")[0]}@email.com`,
       },
       state,
+      store,
+      city,
+      region,
       product: r.p,
       category: r.c,
       method: r.m,

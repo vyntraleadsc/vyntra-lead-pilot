@@ -18,13 +18,17 @@ import {
 } from "./mock-data";
 import type {
   AppNotification,
+  Category,
   CommercialRoute,
   DistributionRules,
   FollowUp,
+  LeadState,
+  LeadStore,
   Opportunity,
   OpportunityStatus,
   Proposal,
   ProposalStatus,
+  PurchaseMethod,
   Seller,
 } from "./types";
 
@@ -88,6 +92,27 @@ interface VyntraContextValue extends PersistedState {
   toggleDistributionRule: (key: keyof DistributionRules) => void;
   sellerById: (id: string) => Seller | undefined;
   opportunityById: (id: string) => Opportunity | undefined;
+  addOpportunityFromQuiz: (payload: {
+    customer: { name: string; whatsapp: string; email?: string };
+    state: LeadState;
+    store: LeadStore;
+    city: string;
+    product: string;
+    category: Category;
+    method: PurchaseMethod;
+    budget: string;
+    downPayment: string;
+    deadline: string;
+    score: number;
+    scoreReasons: string[];
+    objection: string;
+    route: {
+      primary: CommercialRoute;
+      alternative: CommercialRoute;
+      rationale: string;
+      budgetFit: "alta" | "média" | "baixa";
+    };
+  }) => string;
 }
 
 const VyntraContext = createContext<VyntraContextValue | null>(null);
@@ -104,10 +129,34 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as PersistedState;
         setState({
           ...parsed,
-          opportunities: parsed.opportunities.map((opportunity, index) => ({
-            ...opportunity,
-            state: opportunity.state ?? (index % 2 === 0 ? "RS" : "SC"),
-          })),
+          opportunities: parsed.opportunities.map((opportunity, index) => {
+            const isSC = index % 3 === 0;
+            const state: LeadState = opportunity.state ?? (isSC ? "SC" : "RS");
+            const store: LeadStore =
+              opportunity.store ??
+              (state === "SC"
+                ? "Lages / SC"
+                : index % 2 === 0
+                  ? "Três Passos / RS"
+                  : "Santa Rosa / RS");
+            const city =
+              opportunity.city ??
+              (store === "Lages / SC"
+                ? "Lages"
+                : store === "Três Passos / RS"
+                  ? "Três Passos"
+                  : "Santa Rosa");
+            const region =
+              opportunity.region ??
+              (state === "SC" ? "Santa Catarina" : "Rio Grande do Sul");
+            return {
+              ...opportunity,
+              state,
+              store,
+              city,
+              region,
+            };
+          }),
         });
       }
     } catch {
@@ -334,6 +383,56 @@ export function VyntraProvider({ children }: { children: ReactNode }) {
           ...s,
           distribution: { ...s.distribution, [key]: !s.distribution[key] },
         })),
+      addOpportunityFromQuiz: (payload) => {
+        const id = `OPP-${Math.floor(1000 + Math.random() * 9000)}`;
+        const assignedSeller = SELLERS[Math.floor(Math.random() * SELLERS.length)] ?? SELLERS[0]!;
+        const nowIso = new Date().toISOString();
+        const numericBudget = payload.budget ? parseInt(payload.budget.replace(/\D/g, "")) || 45000 : 45000;
+        const newOpp: Opportunity = {
+          id,
+          customer: {
+            name: payload.customer.name,
+            whatsapp: payload.customer.whatsapp,
+            email: payload.customer.email || `${payload.customer.name.toLowerCase().replace(/\s+/g, ".")}@email.com`,
+          },
+          state: payload.state,
+          store: payload.store,
+          city: payload.city,
+          region: payload.state === "SC" ? "Santa Catarina" : "Rio Grande do Sul",
+          product: payload.product,
+          category: payload.category,
+          method: payload.method,
+          budget: payload.budget,
+          downPayment: payload.downPayment,
+          deadline: payload.deadline,
+          score: payload.score,
+          scoreReasons: payload.scoreReasons,
+          objection: payload.objection,
+          route: payload.route,
+          status: "Novo",
+          sellerId: assignedSeller.id,
+          assignedAt: nowIso,
+          lastContactAt: null,
+          firstResponseAt: null,
+          potentialValue: numericBudget >= 1000 ? 55000 : numericBudget >= 700 ? 45000 : numericBudget >= 500 ? 32000 : 22000,
+          hasBike: false,
+          tradeIn: false,
+          simulated: true,
+          source: "Quiz de Qualificação",
+        };
+        setState((s) => ({
+          ...s,
+          opportunities: [newOpp, ...s.opportunities],
+        }));
+        pushNotification({
+          kind: payload.score >= 80 ? "hot" : "seller",
+          title: `Nova oportunidade qualificada — ${payload.customer.name}`,
+          description: `Loja ${payload.store} (${payload.city}) · Score ${payload.score} pts · Encaminhada para ${assignedSeller.name}.`,
+          opportunityId: id,
+        });
+        toast.success(`Oportunidade criada e direcionada para a loja ${payload.store}!`);
+        return id;
+      },
     };
   }, [state, hydrated, now, patchOpportunity]);
 

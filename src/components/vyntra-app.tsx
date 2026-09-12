@@ -80,9 +80,12 @@ import { useVyntra } from "@/lib/vyntra/store";
 import type {
   CommercialRoute,
   FollowUpBucket,
+  LeadState,
+  LeadStore,
   Opportunity,
   OpportunityFilters,
   OpportunityStatus,
+  PurchaseMethod,
 } from "@/lib/vyntra/types";
 import {
   BRL,
@@ -126,6 +129,7 @@ const FILTER_INITIAL: OpportunityFilters = {
   search: "",
   period: "30d",
   state: "all",
+  store: "all",
   sellerId: "all",
   product: "all",
   category: "all",
@@ -973,6 +977,35 @@ function FilterBar({
 }) {
   const { sellers, opportunities } = useVyntra();
   const products = [...new Set(opportunities.map((o) => o.product))];
+  const storeOptions: Array<[string, string]> =
+    filters.state === "SC"
+      ? [
+          ["all", "Todas as lojas (SC)"],
+          ["Lages / SC", "Lages / SC"],
+        ]
+      : filters.state === "RS"
+        ? [
+            ["all", "Todas as lojas (RS)"],
+            ["Três Passos / RS", "Três Passos / RS"],
+            ["Santa Rosa / RS", "Santa Rosa / RS"],
+          ]
+        : [
+            ["all", "Todas as lojas (RS e SC)"],
+            ["Lages / SC", "Lages / SC (SC)"],
+            ["Três Passos / RS", "Três Passos / RS (RS)"],
+            ["Santa Rosa / RS", "Santa Rosa / RS (RS)"],
+          ];
+
+  const handleStateChange = (newState: string) => {
+    let nextStore = filters.store;
+    if (newState === "SC" && (filters.store === "Três Passos / RS" || filters.store === "Santa Rosa / RS")) {
+      nextStore = "all";
+    } else if (newState === "RS" && filters.store === "Lages / SC") {
+      nextStore = "all";
+    }
+    setFilters({ ...filters, state: newState, store: nextStore });
+  };
+
   const select = (key: keyof OpportunityFilters, label: string, items: Array<[string, string]>) => (
     <Select value={filters[key]} onValueChange={(v) => setFilters({ ...filters, [key]: v })}>
       <SelectTrigger className="h-9 min-w-[130px] bg-surface">
@@ -1002,11 +1035,36 @@ function FilterBar({
         ["all", "Todos os vendedores"],
         ...sellers.map((s) => [s.id, s.name] as [string, string]),
       ])}
-      {select("state", "Estado", [
-        ["all", "RS e SC"],
-        ["RS", "Rio Grande do Sul"],
-        ["SC", "Santa Catarina"],
-      ])}
+      <Select value={filters.state} onValueChange={handleStateChange}>
+        <SelectTrigger className="h-9 min-w-[140px] bg-surface">
+          <SelectValue placeholder="Estado" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">RS e SC</SelectItem>
+          <SelectItem value="RS">Rio Grande do Sul</SelectItem>
+          <SelectItem value="SC">Santa Catarina</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={filters.store}
+        onValueChange={(v) => {
+          let nextState = filters.state;
+          if (v === "Lages / SC" && filters.state === "RS") nextState = "SC";
+          if ((v === "Três Passos / RS" || v === "Santa Rosa / RS") && filters.state === "SC") nextState = "RS";
+          setFilters({ ...filters, store: v, state: nextState });
+        }}
+      >
+        <SelectTrigger className="h-9 min-w-[160px] bg-surface">
+          <SelectValue placeholder="Loja" />
+        </SelectTrigger>
+        <SelectContent>
+          {storeOptions.map(([v, l]) => (
+            <SelectItem key={v} value={v}>
+              {l}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {select("product", "Produto", [
         ["all", "Todos os produtos"],
         ...products.map((p) => [p, p] as [string, string]),
@@ -1053,12 +1111,16 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
   return (
     (f.sellerId === "all" || o.sellerId === f.sellerId) &&
     (f.state === "all" || o.state === f.state) &&
+    (f.store === "all" || o.store === f.store) &&
     (f.product === "all" || o.product === f.product) &&
     (f.category === "all" || o.category === f.category) &&
     (f.method === "all" || o.method === f.method) &&
     (f.temperature === "all" || temperatureOf(o.score) === f.temperature) &&
     (f.status === "all" || o.status === f.status) &&
-    (!f.search || `${o.customer.name} ${o.product}`.toLowerCase().includes(f.search.toLowerCase()))
+    (!f.search ||
+      `${o.customer.name} ${o.product} ${o.city} ${o.store} ${o.state}`
+        .toLowerCase()
+        .includes(f.search.toLowerCase()))
   );
 }
 
@@ -1155,7 +1217,7 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                   "Selecionar",
                   "Temperatura",
                   "Cliente",
-                  "Estado",
+                  "Região / Loja",
                   "Produto",
                   "Categoria",
                   "Forma de compra",
@@ -1199,9 +1261,14 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
                       <div className="text-[10px] text-muted-foreground">{o.id}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2 px-2 py-1 text-[10px] font-semibold">
-                        <MapPin className="size-3 text-primary" /> {o.state}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="inline-flex items-center gap-1 font-semibold text-xs text-foreground">
+                          <MapPin className="size-3 text-primary shrink-0" /> {o.store}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {o.city} · {o.state}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm">{o.product}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{o.category}</td>
@@ -1365,7 +1432,9 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
                 ["Já fez simulação", o.simulated ? "Sim" : "Não"],
                 ["Principal objeção", o.objection],
                 ["Origem", o.source],
-                ["Estado", o.state === "RS" ? "Rio Grande do Sul" : "Santa Catarina"],
+                ["Região", o.region || (o.state === "RS" ? "Rio Grande do Sul" : "Santa Catarina")],
+                ["Loja de Atendimento", o.store],
+                ["Cidade do Lead", o.city],
               ].map(([a, b]) => (
                 <div key={a}>
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -1564,6 +1633,38 @@ function Distribution() {
           </div>
         }
       />
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Região Santa Catarina (SC)
+            </span>
+            <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
+              {v.opportunities.filter((o) => o.store === "Lages / SC").length} leads
+            </span>
+          </div>
+          <div className="mt-1.5 text-sm font-medium">Loja Central: Lages / SC</div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Atendimento para Lages, Correia Pinto, São Joaquim, Urubici e planalto catarinense.
+          </p>
+        </div>
+        <div className="rounded-xl border border-[color:var(--violet)]/20 bg-[color:color-mix(in_oklab,var(--violet)_5%,transparent)] p-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[color:var(--violet)]">
+              Região Rio Grande do Sul (RS)
+            </span>
+            <span className="rounded-full bg-[color:color-mix(in_oklab,var(--violet)_20%,transparent)] px-2 py-0.5 text-[10px] font-bold text-[color:var(--violet)]">
+              {v.opportunities.filter((o) => o.state === "RS").length} leads
+            </span>
+          </div>
+          <div className="mt-1.5 text-sm font-medium">
+            Lojas Centrais: Três Passos / RS ({v.opportunities.filter((o) => o.store === "Três Passos / RS").length}) · Santa Rosa / RS ({v.opportunities.filter((o) => o.store === "Santa Rosa / RS").length})
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Roteamento inteligente por proximidade entre Noroeste e Celeiro gaúcho.
+          </p>
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {v.sellers.map((s) => {
           const own = v.opportunities.filter(
@@ -1590,12 +1691,15 @@ function Distribution() {
               </div>
               <h3 className="mt-4 font-semibold">{s.name}</h3>
               <p className="text-xs text-muted-foreground">{s.specialty}</p>
-              <div className="mt-3 flex gap-2 text-[10px] font-semibold">
-                <span className="rounded-md border border-border bg-surface-2 px-2 py-1">
-                  RS · {own.filter((o) => o.state === "RS").length}
+              <div className="mt-3 flex flex-wrap gap-1 text-[10px] font-semibold">
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Lages / SC">
+                  Lages: {own.filter((o) => o.store === "Lages / SC").length}
                 </span>
-                <span className="rounded-md border border-border bg-surface-2 px-2 py-1">
-                  SC · {own.filter((o) => o.state === "SC").length}
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Três Passos / RS">
+                  Três Passos: {own.filter((o) => o.store === "Três Passos / RS").length}
+                </span>
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Santa Rosa / RS">
+                  Santa Rosa: {own.filter((o) => o.store === "Santa Rosa / RS").length}
                 </span>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
@@ -2128,68 +2232,216 @@ function Insights() {
   );
 }
 
-const QUESTIONS = [
-  {
-    key: "produto",
-    title: "O que você está procurando?",
-    options: ["Honda 0 km", "Honda seminova", "Ainda não sei"],
-  },
-  {
-    key: "forma",
-    title: "Como pretende comprar?",
-    options: ["Financiamento", "Consórcio", "À vista", "Ainda não sei"],
-  },
-  {
-    key: "orcamento",
-    title: "Quanto pretende investir por mês?",
-    options: ["Até R$300", "R$300–500", "R$500–700", "R$700–1.000", "R$1.000+"],
-  },
-  { key: "entrada", title: "Possui entrada?", options: ["Sim", "Não", "Ainda não"] },
-  {
-    key: "prazo",
-    title: "Quando pretende comprar?",
-    options: [
-      "Próximos 7 dias",
-      "Até 30 dias",
-      "1–3 meses",
-      "Mais de 3 meses",
-      "Apenas pesquisando",
-    ],
-  },
-  {
-    key: "simulacao",
-    title: "Já fez alguma simulação ou falou com uma loja?",
-    options: ["Já estou negociando", "Já simulei", "Apenas pesquisei", "Não"],
-  },
-  { key: "moto", title: "Possui uma moto atualmente?", options: ["Sim", "Não"] },
-  {
-    key: "objecao",
-    title: "O que está impedindo a compra hoje?",
-    options: [
-      "Preciso financiar",
-      "Não tenho entrada",
-      "Preciso de parcela menor",
-      "Questão de crédito",
-      "Estou comparando opções",
-      "Estou juntando dinheiro",
-      "Nada",
-      "Outro",
-    ],
-  },
-];
+interface QuizQuestion {
+  key: string;
+  title: string;
+  subtitle?: string;
+  options: string[];
+}
+
+function getQuizQuestions(answers: Record<string, string>): QuizQuestion[] {
+  const isSC = answers["estado"]?.includes("Santa Catarina");
+  const isRS = answers["estado"]?.includes("Rio Grande do Sul");
+
+  const regionQuestion: QuizQuestion = {
+    key: "cidade_loja",
+    title: isSC
+      ? "Qual a sua cidade ou loja mais próxima em Santa Catarina?"
+      : isRS
+        ? "Qual a sua cidade ou loja mais próxima no Rio Grande do Sul?"
+        : "Qual a sua cidade e loja de atendimento?",
+    subtitle: isSC
+      ? "Atendimento oficial pela concessionária de Lages / SC e municípios da Serra Catarinense"
+      : isRS
+        ? "Atendimento oficial pelas concessionárias de Três Passos / RS e Santa Rosa / RS"
+        : "Selecione o estado no passo anterior",
+    options: isSC
+      ? [
+          "Lages / SC (Loja Autorizada)",
+          "Correia Pinto (Região Lages)",
+          "São Joaquim (Região Lages)",
+          "Urubici (Região Lages)",
+          "Outra cidade de Santa Catarina (Atendimento Lages)",
+        ]
+      : isRS
+        ? [
+            "Três Passos / RS (Loja Autorizada)",
+            "Santa Rosa / RS (Loja Autorizada)",
+            "Tenente Portela (Região Três Passos)",
+            "Crissiumal (Região Três Passos)",
+            "Giruá (Região Santa Rosa)",
+            "Tuparendi (Região Santa Rosa)",
+            "Outra cidade do Rio Grande do Sul",
+          ]
+        : [
+            "Lages / SC",
+            "Três Passos / RS",
+            "Santa Rosa / RS",
+          ],
+  };
+
+  return [
+    {
+      key: "estado",
+      title: "Em qual estado/região você está localizado?",
+      subtitle: "Direcionamos você para o time comercial oficial da sua região",
+      options: ["Santa Catarina (SC)", "Rio Grande do Sul (RS)"],
+    },
+    regionQuestion,
+    {
+      key: "produto",
+      title: "O que você está procurando?",
+      options: ["Honda 0 km", "Honda seminova", "Ainda não sei"],
+    },
+    {
+      key: "forma",
+      title: "Como pretende comprar?",
+      options: ["Financiamento", "Consórcio", "À vista", "Ainda não sei"],
+    },
+    {
+      key: "orcamento",
+      title: "Quanto pretende investir por mês?",
+      options: ["Até R$300", "R$300–500", "R$500–700", "R$700–1.000", "R$1.000+"],
+    },
+    { key: "entrada", title: "Possui entrada?", options: ["Sim", "Não", "Ainda não"] },
+    {
+      key: "prazo",
+      title: "Quando pretende comprar?",
+      options: [
+        "Próximos 7 dias",
+        "Até 30 dias",
+        "1–3 meses",
+        "Mais de 3 meses",
+        "Apenas pesquisando",
+      ],
+    },
+    {
+      key: "simulacao",
+      title: "Já fez alguma simulação ou falou com uma loja?",
+      options: ["Já estou negociando", "Já simulei", "Apenas pesquisei", "Não"],
+    },
+    { key: "moto", title: "Possui uma moto atualmente?", options: ["Sim", "Não"] },
+    {
+      key: "objecao",
+      title: "O que está impedindo a compra hoje?",
+      options: [
+        "Preciso financiar",
+        "Não tenho entrada",
+        "Preciso de parcela menor",
+        "Questão de crédito",
+        "Estou comparando opções",
+        "Estou juntando dinheiro",
+        "Nada",
+        "Outro",
+      ],
+    },
+  ];
+}
+
+function resolveLeadLocation(answers: Record<string, string>): {
+  state: LeadState;
+  store: LeadStore;
+  city: string;
+  region: string;
+} {
+  const isSC = answers["estado"]?.includes("Santa Catarina") || answers["estado"] === "SC";
+  const cityRaw = answers["cidade_loja"] || (isSC ? "Lages" : "Três Passos");
+  const cleanCity = cityRaw.split("(")[0]?.split("/")[0]?.trim() || (isSC ? "Lages" : "Três Passos");
+
+  if (isSC) {
+    return {
+      state: "SC",
+      store: "Lages / SC",
+      city: cleanCity,
+      region: "Santa Catarina",
+    };
+  }
+
+  const isSantaRosa =
+    cityRaw.includes("Santa Rosa") ||
+    cityRaw.includes("Giruá") ||
+    cityRaw.includes("Tuparendi");
+
+  return {
+    state: "RS",
+    store: isSantaRosa ? "Santa Rosa / RS" : "Três Passos / RS",
+    city: cleanCity,
+    region: "Rio Grande do Sul",
+  };
+}
+
+const ANSWER_LABELS: Record<string, string> = {
+  estado: "Estado",
+  cidade_loja: "Cidade / Loja",
+  produto: "Produto",
+  forma: "Forma de compra",
+  orcamento: "Orçamento mensal",
+  entrada: "Entrada",
+  prazo: "Prazo de compra",
+  simulacao: "Simulação",
+  moto: "Possui moto",
+  objecao: "Objeção",
+};
+
 function Qualification() {
+  const { addOpportunityFromQuiz } = useVyntra();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const [createdLeadId, setCreatedLeadId] = useState<string | null>(null);
+
+  const questions = useMemo(() => getQuizQuestions(answers), [answers]);
   const result = computeScore(answers);
   const m = TEMPERATURE_META[temperatureOf(result.score)];
-  const q = QUESTIONS[step];
+  const q = questions[step];
+  const isLast = step === questions.length - 1;
+  const loc = resolveLeadLocation(answers);
+
+  const handleSelectOption = (key: string, option: string) => {
+    if (key === "estado" && answers["estado"] !== option) {
+      const next: Record<string, string> = { ...answers, [key]: option };
+      delete next["cidade_loja"];
+      setAnswers(next);
+    } else {
+      setAnswers({ ...answers, [key]: option });
+    }
+  };
+
+  const handleCreateLead = () => {
+    if (createdLeadId) return;
+    const newId = addOpportunityFromQuiz({
+      customer: {
+        name: `Lead Qualificado (${loc.city})`,
+        whatsapp: `(${loc.state === "SC" ? "49" : "55"}) 9${Math.floor(8000 + Math.random() * 1999)}-${Math.floor(1000 + Math.random() * 8999)}`,
+      },
+      state: loc.state,
+      store: loc.store,
+      city: loc.city,
+      product: answers["produto"] || "Honda 0 km",
+      category: answers["produto"] === "Honda seminova" ? "Seminova" : "0 km",
+      method: (answers["forma"] as PurchaseMethod) || "Financiamento",
+      budget: answers["orcamento"] || "R$700–1.000",
+      downPayment: answers["entrada"] === "Sim" ? "R$ 5.000" : "Sem entrada",
+      deadline: answers["prazo"] || "Até 30 dias",
+      score: result.score,
+      scoreReasons: result.reasons,
+      objection: answers["objecao"] || "Preciso financiar",
+      route: {
+        primary: answers["produto"] === "Honda seminova" ? "Seminova" : "Financiamento",
+        alternative: "Consórcio",
+        rationale: `Lead qualificado para atendimento presencial na concessionária ${loc.store} (${loc.city}).`,
+        budgetFit: result.score >= 70 ? "alta" : "média",
+      },
+    });
+    setCreatedLeadId(newId);
+  };
+
   if (done)
     return (
       <>
         <PageHeader
           title="Qualificação concluída"
-          subtitle="Demonstração do Vyntra Score e da rota comercial sugerida."
+          subtitle="Demonstração do Vyntra Score, direcionamento regional e rota comercial sugerida."
         />
         <div className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr]">
           <section className="panel flex flex-col items-center p-8 text-center">
@@ -2204,22 +2456,49 @@ function Qualification() {
                   ? "Bom potencial comercial"
                   : "Requer acompanhamento consultivo"}
             </p>
-            <Button
-              className="mt-6"
-              variant="outline"
-              onClick={() => {
-                setStep(0);
-                setAnswers({});
-                setDone(false);
-              }}
-            >
-              <RefreshCw />
-              Nova simulação
-            </Button>
+
+            <div className="mt-5 w-full rounded-xl border border-primary/30 bg-primary/5 p-4 text-left">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                Unidade Regional de Atendimento
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <MapPin className="size-4 text-primary shrink-0" />
+                {loc.store}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Cidade: <strong>{loc.city}</strong> · Região: <strong>{loc.region}</strong>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2 w-full">
+              {createdLeadId ? (
+                <div className="rounded-lg border border-[color:var(--success)]/40 bg-[color:color-mix(in_oklab,var(--success)_10%,transparent)] p-3 text-xs text-[color:var(--success)] font-medium">
+                  ✓ Lead <strong>{createdLeadId}</strong> direcionado para <strong>{loc.store}</strong>!
+                </div>
+              ) : (
+                <Button className="w-full" onClick={handleCreateLead}>
+                  <Send className="mr-1.5 size-4" />
+                  Salvar e enviar para {loc.store}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setStep(0);
+                  setAnswers({});
+                  setDone(false);
+                  setCreatedLeadId(null);
+                }}
+              >
+                <RefreshCw className="mr-1.5 size-4" />
+                Nova simulação
+              </Button>
+            </div>
           </section>
           <section className="space-y-5">
             <div className="panel p-5">
-              <h2 className="font-semibold">Razões do score</h2>
+              <h2 className="font-semibold">Razões do score & Região</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {result.reasons.map((r) => (
                   <div key={r} className="flex gap-2 text-sm text-muted-foreground">
@@ -2239,13 +2518,14 @@ function Qualification() {
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Opção recomendada para avaliação conforme intenção, orçamento e momento de compra.
-                Esta simulação não realiza análise de crédito nem indica pré-aprovação.
+                Encaminhamento automático para concessionária <strong>{loc.store}</strong>.
               </p>
             </div>
           </section>
         </div>
       </>
     );
+
   return (
     <>
       <PageHeader
@@ -2255,22 +2535,27 @@ function Qualification() {
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <section className="panel p-5 sm:p-8">
           <div className="mb-8 flex gap-1">
-            {QUESTIONS.map((_, i) => (
+            {questions.map((_, i) => (
               <div
                 key={i}
                 className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-secondary")}
               />
             ))}
           </div>
-          <div className="text-xs font-semibold text-primary">PERGUNTA {step + 1} DE 8</div>
+          <div className="text-xs font-semibold text-primary">
+            PERGUNTA {step + 1} DE {questions.length}
+          </div>
           <h2 className="mt-2 text-2xl font-semibold">{q?.title}</h2>
+          {q?.subtitle && (
+            <p className="mt-1 text-sm text-muted-foreground">{q.subtitle}</p>
+          )}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {q?.options.map((o) => (
               <Button
                 key={o}
                 variant={answers[q.key] === o ? "default" : "outline"}
                 className="h-auto min-h-12 justify-start whitespace-normal py-3 text-left"
-                onClick={() => setAnswers({ ...answers, [q.key]: o })}
+                onClick={() => handleSelectOption(q.key, o)}
               >
                 {answers[q.key] === o && <Check />}
                 {o}
@@ -2283,9 +2568,9 @@ function Qualification() {
             </Button>
             <Button
               disabled={!q || !answers[q.key]}
-              onClick={() => (step === 7 ? setDone(true) : setStep(step + 1))}
+              onClick={() => (isLast ? setDone(true) : setStep(step + 1))}
             >
-              {step === 7 ? "Calcular Vyntra Score" : "Continuar"}
+              {isLast ? "Calcular Vyntra Score" : "Continuar"}
               <ArrowRight />
             </Button>
           </div>
@@ -2301,11 +2586,17 @@ function Qualification() {
           <div className="mt-5 flex justify-center">
             <ScoreRing score={result.score} size="lg" />
           </div>
-          <div className="mt-5 space-y-2">
+          {answers["estado"] && (
+            <div className="mt-4 rounded-lg border border-primary/30 bg-primary/10 p-2.5 text-xs">
+              <span className="font-semibold text-primary">Unidade prevista:</span>
+              <div className="mt-0.5 font-medium text-foreground">{loc.store}</div>
+            </div>
+          )}
+          <div className="mt-4 space-y-2">
             {Object.entries(answers).map(([k, val]) => (
               <div key={k} className="rounded-md bg-secondary px-3 py-2 text-xs">
-                <span className="capitalize text-muted-foreground">{k}: </span>
-                {val}
+                <span className="text-muted-foreground">{ANSWER_LABELS[k] ?? k}: </span>
+                <span className="font-medium text-foreground">{val}</span>
               </div>
             ))}
           </div>

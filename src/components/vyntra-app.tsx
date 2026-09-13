@@ -4776,136 +4776,194 @@ function Insights({
   );
 }
 
+interface QuizOption {
+  value: string;
+  title: string;
+  desc: string;
+  badge?: string;
+  iconName?:
+    | "Bike"
+    | "Coins"
+    | "Sparkles"
+    | "MapPin"
+    | "Zap"
+    | "RefreshCw"
+    | "CircleDollarSign"
+    | "Flame"
+    | "Target"
+    | "CalendarClock"
+    | "Search";
+}
+
 interface QuizQuestion {
   key: string;
+  stepNumber: number;
   title: string;
-  subtitle?: string;
-  options: string[];
+  subtitle: string;
+  options: QuizOption[];
 }
 
-function getQuizQuestions(answers: Record<string, string>): QuizQuestion[] {
-  const isSC = answers["estado"]?.includes("Santa Catarina");
-  const isRS = answers["estado"]?.includes("Rio Grande do Sul");
-  const isConsorcio =
-    answers["produto"] === "Consórcio Honda" ||
-    answers["forma"]?.includes("Consórcio");
-
-  const regionQuestion: QuizQuestion = {
-    key: "cidade_loja",
-    title: isSC
-      ? "Qual a sua cidade ou loja mais próxima em Santa Catarina?"
-      : isRS
-        ? "Qual a sua cidade ou loja mais próxima no Rio Grande do Sul?"
-        : "Qual a sua cidade e loja de atendimento?",
-    subtitle: isSC
-      ? "Atendimento oficial pela concessionária de Lages / SC e municípios da Serra Catarinense"
-      : isRS
-        ? "Atendimento oficial pelas concessionárias de Três Passos / RS e Santa Rosa / RS"
-        : "Selecione o estado no passo anterior",
-    options: isSC
-      ? [
-          "Lages (Loja Central)",
-          "Capão Alto",
-          "Campo Belo",
-          "Correia Pinto",
-          "Palmeira",
-          "Bocaina",
-          "Painel",
-          "Otacílio",
-          "Ponte Alta",
-          "Cerro Negro",
-          "São José do Cerrito",
-          "Outra cidade da Região de Lages / SC",
-        ]
-      : isRS
-        ? [
-            "Três Passos / RS (Loja Autorizada)",
-            "Santa Rosa / RS (Loja Autorizada)",
-            "Tenente Portela (Região Três Passos)",
-            "Crissiumal (Região Três Passos)",
-            "Giruá (Região Santa Rosa)",
-            "Tuparendi (Região Santa Rosa)",
-            "Outra cidade do Rio Grande do Sul",
-          ]
-        : [
-            "Lages / SC",
-            "Três Passos / RS",
-            "Santa Rosa / RS",
-          ],
-  };
-
-  return [
-    {
-      key: "estado",
-      title: "Em qual estado/região você está localizado?",
-      subtitle: "Direcionamos você para o time comercial oficial da sua região",
-      options: ["Santa Catarina (SC)", "Rio Grande do Sul (RS)"],
-    },
-    regionQuestion,
-    {
-      key: "produto",
-      title: "O que você está procurando?",
-      options: ["Honda 0 km", "Consórcio Honda", "Honda seminova", "Ainda não sei"],
-    },
-    {
-      key: "forma",
-      title: "Como pretende comprar?",
-      options: ["Consórcio Honda (Sem entrada)", "Financiamento bancário", "À vista", "Ainda não sei"],
-    },
-    ...(isConsorcio
-      ? [
-          {
-            key: "modalidade_consorcio",
-            title: "Qual o seu objetivo com o Consórcio Honda?",
-            subtitle: "Planos oficiais da Administradora de Consórcio Honda com taxas reduzidas",
-            options: [
-              "Pagar parcelas menores que cabem no bolso",
-              "Dar lance nos primeiros meses para contemplar logo",
-              "Comprar moto 0 km sem pagar juros de financiamento",
-              "Apenas conhecendo o plano",
-            ],
-          },
-        ]
-      : []),
-    {
-      key: "orcamento",
-      title: "Quanto pretende investir por mês?",
-      options: ["Até R$300", "R$300–500", "R$500–700", "R$700–1.000", "R$1.000+"],
-    },
-    { key: "entrada", title: "Possui entrada?", options: ["Sim", "Não", "Ainda não"] },
-    {
-      key: "prazo",
-      title: "Quando pretende comprar?",
-      options: [
-        "Próximos 7 dias",
-        "Até 30 dias",
-        "1–3 meses",
-        "Mais de 3 meses",
-        "Apenas pesquisando",
-      ],
-    },
-    {
-      key: "simulacao",
-      title: "Já fez alguma simulação ou falou com uma loja?",
-      options: ["Já estou negociando", "Já simulei", "Apenas pesquisei", "Não"],
-    },
-    { key: "moto", title: "Possui uma moto atualmente?", options: ["Sim", "Não"] },
-    {
-      key: "objecao",
-      title: "O que está impedindo a compra hoje?",
-      options: [
-        "Preciso financiar",
-        "Não tenho entrada",
-        "Preciso de parcela menor",
-        "Questão de crédito",
-        "Estou comparando opções",
-        "Estou juntando dinheiro",
-        "Nada",
-        "Outro",
-      ],
-    },
-  ];
+function renderQuizOptionIcon(name?: string) {
+  switch (name) {
+    case "Bike":
+      return <Bike className="size-5 text-primary shrink-0" />;
+    case "Coins":
+      return <Coins className="size-5 text-amber-500 shrink-0" />;
+    case "Sparkles":
+      return <Sparkles className="size-5 text-emerald-500 shrink-0" />;
+    case "MapPin":
+      return <MapPin className="size-5 text-primary shrink-0" />;
+    case "Zap":
+      return <Zap className="size-5 text-yellow-500 shrink-0" />;
+    case "RefreshCw":
+      return <RefreshCw className="size-5 text-cyan-500 shrink-0" />;
+    case "CircleDollarSign":
+      return <CircleDollarSign className="size-5 text-emerald-500 shrink-0" />;
+    case "Flame":
+      return <Flame className="size-5 text-rose-500 shrink-0 animate-pulse" />;
+    case "Target":
+      return <Target className="size-5 text-primary shrink-0" />;
+    case "CalendarClock":
+      return <CalendarClock className="size-5 text-sky-500 shrink-0" />;
+    case "Search":
+      return <Search className="size-5 text-muted-foreground shrink-0" />;
+    default:
+      return <Sparkles className="size-5 text-primary shrink-0" />;
+  }
 }
+
+const QUIZ_QUESTIONS: QuizQuestion[] = [
+  {
+    key: "produto",
+    stepNumber: 1,
+    title: "Qual moto você quer acelerar?",
+    subtitle: "Selecione a categoria desejada para direcionarmos as melhores ofertas da concessionária",
+    options: [
+      {
+        value: "Honda 0 km",
+        title: "Honda 0 km Nova",
+        desc: "Motos novas direto de fábrica com garantia nacional Honda de 3 anos",
+        badge: "Mais Procurada",
+        iconName: "Bike",
+      },
+      {
+        value: "Consórcio Honda",
+        title: "Consórcio Nacional Honda",
+        desc: "Sem juros, parcelas que cabem no bolso e sem necessidade de entrada",
+        badge: "Sem Juros · Entrada Zero",
+        iconName: "Coins",
+      },
+      {
+        value: "Seminova revisada",
+        title: "Seminova com Garantia",
+        desc: "Motos revisadas com procedência atestada e pronta entrega imediata",
+        badge: "Pronta Entrega",
+        iconName: "Sparkles",
+      },
+    ],
+  },
+  {
+    key: "regiao",
+    stepNumber: 2,
+    title: "Onde você prefere ser atendido?",
+    subtitle: "Atendimento oficial pela concessionária autorizada mais próxima de você",
+    options: [
+      {
+        value: "Lages e Serra Catarinense (SC)",
+        title: "Lages & Serra Catarinense (SC)",
+        desc: "Concessionária autorizada em Lages / SC para toda a região serrana",
+        badge: "Santa Catarina",
+        iconName: "MapPin",
+      },
+      {
+        value: "Três Passos e Região Celeiro (RS)",
+        title: "Três Passos & Região Celeiro (RS)",
+        desc: "Concessionária autorizada em Três Passos / RS e cidades vizinhas",
+        badge: "Rio Grande do Sul",
+        iconName: "MapPin",
+      },
+      {
+        value: "Santa Rosa e Noroeste (RS)",
+        title: "Santa Rosa & Noroeste Gaúcho (RS)",
+        desc: "Concessionária autorizada em Santa Rosa / RS e região noroeste",
+        badge: "Rio Grande do Sul",
+        iconName: "MapPin",
+      },
+    ],
+  },
+  {
+    key: "forma",
+    stepNumber: 3,
+    title: "Qual condição fica melhor para o seu bolso?",
+    subtitle: "Montamos a melhor condição personalizada para o seu planejamento",
+    options: [
+      {
+        value: "Consórcio Honda (Sem juros e sem entrada)",
+        title: "Consórcio Honda",
+        desc: "Parcelas reduzidas sem juros bancários e sem entrada obrigatória",
+        badge: "Econômico · Sem Entrada",
+        iconName: "Coins",
+      },
+      {
+        value: "Financiamento com entrada facilitada",
+        title: "Financiamento Bancário",
+        desc: "Aprovação rápida e parcelas sob medida com entrada facilitada",
+        badge: "Aprovação Imediata",
+        iconName: "Zap",
+      },
+      {
+        value: "Usar minha moto atual como entrada/lance",
+        title: "Minha moto na troca",
+        desc: "Avaliação da sua moto atual como entrada ou lance contemplado",
+        badge: "Melhor Avaliação",
+        iconName: "RefreshCw",
+      },
+      {
+        value: "Pagamento à vista (com desconto)",
+        title: "Pagamento à vista",
+        desc: "Desconto especial exclusivo para pagamento à vista no fechamento",
+        badge: "Maior Desconto",
+        iconName: "CircleDollarSign",
+      },
+    ],
+  },
+  {
+    key: "prazo",
+    stepNumber: 4,
+    title: "Para quando você planeja estar acelerando?",
+    subtitle: "Selecione o momento da compra para priorizarmos o seu atendimento",
+    options: [
+      {
+        value: "Imediato (esta semana / até 7 dias)",
+        title: "Imediato (esta semana)",
+        desc: "Quero fechar negócio e retirar a moto nos próximos 7 dias",
+        badge: "Prioridade Máxima",
+        iconName: "Flame",
+      },
+      {
+        value: "Neste mês (próximos 30 dias)",
+        title: "Neste mês (até 30 dias)",
+        desc: "Previsão de fechar negócio durante o mês atual",
+        badge: "Alta Prioridade",
+        iconName: "Target",
+      },
+      {
+        value: "Nos próximos 2 a 3 meses",
+        title: "Próximos 2 a 3 meses",
+        desc: "Me planejando e acompanhando as melhores oportunidades",
+        badge: "Planejamento",
+        iconName: "CalendarClock",
+      },
+      {
+        value: "Apenas pesquisando valores no momento",
+        title: "Pesquisando valores",
+        desc: "Conhecendo valores de parcelas e condições sem pressa",
+        badge: "Cotação",
+        iconName: "Search",
+      },
+    ],
+  },
+];
 
 function resolveLeadLocation(answers: Record<string, string>): {
   state: LeadState;
@@ -4913,61 +4971,55 @@ function resolveLeadLocation(answers: Record<string, string>): {
   city: string;
   region: string;
 } {
-  const isSC = answers["estado"]?.includes("Santa Catarina") || answers["estado"] === "SC";
-  const cityRaw = answers["cidade_loja"] || (isSC ? "Lages" : "Três Passos");
-  const cleanCity = cityRaw.split("(")[0]?.split("/")[0]?.trim() || (isSC ? "Lages" : "Três Passos");
+  const regiao = answers["regiao"] || answers["cidade_loja"] || "";
+  const estado = answers["estado"] || "";
+  const isSC =
+    regiao.includes("Lages") ||
+    regiao.includes("Santa Catarina") ||
+    regiao.includes("(SC)") ||
+    estado.includes("Santa Catarina") ||
+    estado === "SC";
 
-  const lagesKeywords = [
-    "lages",
-    "capão alto",
-    "capao alto",
-    "campo belo",
-    "correia pinto",
-    "palmeira",
-    "bocaina",
-    "painel",
-    "otacílio",
-    "otacilio",
-    "ponte alta",
-    "cerro negro",
-    "são josé do cerrito",
-    "sao jose do cerrito",
-    "cerrito",
-  ];
+  const isSantaRosa =
+    regiao.includes("Santa Rosa") ||
+    answers["cidade_loja"]?.includes("Santa Rosa");
 
-  const matchesLages = lagesKeywords.some((kw) => cityRaw.toLowerCase().includes(kw));
-
-  if (isSC || matchesLages) {
+  if (isSC) {
     return {
       state: "SC",
       store: "Lages / SC",
-      city: cleanCity,
-      region: "Santa Catarina",
+      city: "Lages",
+      region: "Serra Catarinense (SC)",
     };
   }
 
-  const isSantaRosa =
-    cityRaw.includes("Santa Rosa") ||
-    cityRaw.includes("Giruá") ||
-    cityRaw.includes("Tuparendi");
+  if (isSantaRosa) {
+    return {
+      state: "RS",
+      store: "Santa Rosa / RS",
+      city: "Santa Rosa",
+      region: "Noroeste Gaúcho (RS)",
+    };
+  }
 
   return {
     state: "RS",
-    store: isSantaRosa ? "Santa Rosa / RS" : "Três Passos / RS",
-    city: cleanCity,
-    region: "Rio Grande do Sul",
+    store: "Três Passos / RS",
+    city: "Três Passos",
+    region: "Região Celeiro (RS)",
   };
 }
 
 const ANSWER_LABELS: Record<string, string> = {
+  produto: "Moto desejada",
+  regiao: "Concessionária / Região",
+  forma: "Condição de pagamento",
+  prazo: "Momento da compra",
   estado: "Estado",
   cidade_loja: "Cidade / Loja",
-  produto: "Produto",
-  forma: "Forma de compra",
   modalidade_consorcio: "Objetivo Consórcio",
   orcamento: "Orçamento mensal",
   entrada: "Entrada",
-  prazo: "Prazo de compra",
   simulacao: "Simulação",
   moto: "Possui moto",
   objecao: "Objeção",
@@ -4980,7 +5032,7 @@ function Qualification() {
   const [done, setDone] = useState(false);
   const [createdLeadId, setCreatedLeadId] = useState<string | null>(null);
 
-  const questions = useMemo(() => getQuizQuestions(answers), [answers]);
+  const questions = QUIZ_QUESTIONS;
   const result = computeScore(answers);
   const m = TEMPERATURE_META[temperatureOf(result.score)];
   const q = questions[step];
@@ -4991,18 +5043,43 @@ function Qualification() {
     answers["produto"] === "Consórcio Honda" ||
     answers["forma"]?.toLowerCase().includes("consórcio");
 
-  const handleSelectOption = (key: string, option: string) => {
-    if (key === "estado" && answers["estado"] !== option) {
-      const next: Record<string, string> = { ...answers, [key]: option };
-      delete next["cidade_loja"];
-      setAnswers(next);
+  const handleSelectOption = (key: string, optionValue: string) => {
+    const nextAnswers = { ...answers, [key]: optionValue };
+    setAnswers(nextAnswers);
+
+    // Auto-avanço suave (280ms) para qualificação fluida com 4 cliques rápidos
+    if (step < questions.length - 1) {
+      setTimeout(() => {
+        setStep((prev) => Math.min(prev + 1, questions.length - 1));
+      }, 280);
     } else {
-      setAnswers({ ...answers, [key]: option });
+      setTimeout(() => {
+        setDone(true);
+      }, 320);
     }
   };
 
   const handleCreateLead = () => {
     if (createdLeadId) return;
+    const category =
+      answers["produto"] === "Seminova revisada" || answers["produto"] === "Honda seminova"
+        ? "Seminova"
+        : "0 km";
+
+    const method: PurchaseMethod = isConsorcio
+      ? "Consórcio"
+      : answers["forma"]?.includes("à vista") || answers["forma"]?.includes("À vista")
+        ? "À vista"
+        : "Financiamento";
+
+    const downPayment = isConsorcio
+      ? "Sem entrada (Consórcio Honda)"
+      : answers["forma"]?.includes("troca") || answers["forma"]?.includes("moto atual")
+        ? "Moto usada na troca"
+        : answers["forma"]?.includes("Financiamento")
+          ? "Entrada facilitada"
+          : "À vista";
+
     const newId = addOpportunityFromQuiz({
       customer: {
         name: `Lead Qualificado (${loc.city})`,
@@ -5012,24 +5089,24 @@ function Qualification() {
       store: loc.store,
       city: loc.city,
       product: answers["produto"] || "Honda 0 km",
-      category: answers["produto"] === "Honda seminova" ? "Seminova" : "0 km",
-      method: isConsorcio ? "Consórcio" : (answers["forma"] as PurchaseMethod) || "Financiamento",
-      budget: answers["orcamento"] || "R$700–1.000",
-      downPayment: isConsorcio ? "Sem entrada (Consórcio)" : answers["entrada"] === "Sim" ? "R$ 5.000" : "Sem entrada",
+      category,
+      method,
+      budget: isConsorcio ? "Parcela reduzida sem juros" : "Conforme simulação",
+      downPayment,
       deadline: answers["prazo"] || "Até 30 dias",
       score: result.score,
       scoreReasons: result.reasons,
-      objection: answers["objecao"] || (isConsorcio ? "Comparando planos" : "Preciso financiar"),
+      objection: isConsorcio ? "Comparando cotas de consórcio" : "Simulando melhor taxa",
       route: {
         primary: isConsorcio
           ? "Consórcio"
-          : answers["produto"] === "Honda seminova"
+          : category === "Seminova"
             ? "Seminova"
             : "Financiamento",
         alternative: isConsorcio ? "0 km" : "Consórcio",
         rationale: isConsorcio
-          ? `Lead qualificado para Consórcio Honda com roteamento comercial para consultores da loja ${loc.store}.`
-          : `Lead qualificado para atendimento presencial na concessionária ${loc.store} (${loc.city}).`,
+          ? `Lead com perfil ideal para Consórcio Nacional Honda. Roteado imediatamente para consultores da concessionária ${loc.store}.`
+          : `Lead qualificado com alta intenção de compra para a concessionária ${loc.store} (${loc.city}).`,
         budgetFit: result.score >= 70 ? "alta" : "média",
       },
     });
@@ -5040,45 +5117,45 @@ function Qualification() {
     return (
       <>
         <PageHeader
-          title="Qualificação concluída"
-          subtitle="Demonstração do Vyntra Score, direcionamento regional e rota comercial sugerida."
+          title="Qualificação rápida concluída"
+          subtitle="Vyntra Score consolidado, concessionária definida e roteamento comercial automático."
         />
-        <div className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr]">
+        <div className="grid gap-5 lg:grid-cols-[0.75fr_1.25fr]">
           <section className="panel flex flex-col items-center p-8 text-center">
             <ScoreRing score={result.score} size="lg" />
             <div className="mt-4 text-xl font-semibold" style={{ color: m.color }}>
-              {m.emoji} {m.label}
+              {m.emoji} {m.label} ({result.score} pts)
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               {result.score >= 80
-                ? "Alta intenção de compra"
+                ? "Alta prioridade de atendimento com excelente aderência"
                 : result.score >= 60
-                  ? "Bom potencial comercial"
-                  : "Requer acompanhamento consultivo"}
+                  ? "Bom potencial comercial com interesse ativo"
+                  : "Lead em fase inicial de planejamento e cotação"}
             </p>
 
             <div className="mt-5 w-full rounded-xl border border-primary/30 bg-primary/5 p-4 text-left">
               <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                Unidade Regional de Atendimento
+                Concessionária Oficial de Atendimento
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
                 <MapPin className="size-4 text-primary shrink-0" />
                 {loc.store}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                Cidade: <strong>{loc.city}</strong> · Região: <strong>{loc.region}</strong>
+                Região atendida: <strong>{loc.region}</strong>
               </div>
             </div>
 
             <div className="mt-6 flex flex-col gap-2 w-full">
               {createdLeadId ? (
                 <div className="rounded-lg border border-[color:var(--success)]/40 bg-[color:color-mix(in_oklab,var(--success)_10%,transparent)] p-3 text-xs text-[color:var(--success)] font-medium">
-                  ✓ Lead <strong>{createdLeadId}</strong> direcionado para <strong>{loc.store}</strong>!
+                  ✓ Lead <strong>{createdLeadId}</strong> direcionado para consultores de <strong>{loc.store}</strong>!
                 </div>
               ) : (
                 <Button className="w-full" onClick={handleCreateLead}>
                   <Send className="mr-1.5 size-4" />
-                  Salvar e enviar para {loc.store}
+                  Salvar e direcionar para {loc.store}
                 </Button>
               )}
               <Button
@@ -5092,44 +5169,63 @@ function Qualification() {
                 }}
               >
                 <RefreshCw className="mr-1.5 size-4" />
-                Nova simulação
+                Nova qualificação rápida
               </Button>
             </div>
           </section>
+
           <section className="space-y-5">
             <div className="panel p-5">
-              <h2 className="font-semibold">Razões do score & Região</h2>
+              <h2 className="font-semibold text-base">Critérios avaliados pelo Vyntra Score</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {result.reasons.map((r) => (
-                  <div key={r} className="flex gap-2 text-sm text-muted-foreground">
+                  <div key={r} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <Check className="mt-0.5 size-4 shrink-0 text-[color:var(--success)]" />
-                    {r}
+                    <span>{r}</span>
                   </div>
                 ))}
               </div>
             </div>
+
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-primary">ROTA COMERCIAL SUGERIDA</div>
-                {isConsorcio && (
-                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                <div className="text-xs font-bold text-primary tracking-wider uppercase">ROTA COMERCIAL SUGERIDA</div>
+                {isConsorcio ? (
+                  <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300">
                     Rota Oficial Consórcio Honda
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    Venda Direta / Financiamento
                   </span>
                 )}
               </div>
               <div className="mt-3 text-lg font-semibold">
                 {isConsorcio
-                  ? "Consórcio Honda Nacional — Rota de Alta Conversão"
-                  : answers["produto"] === "Honda 0 km" &&
-                    (answers["orcamento"] === "Até R$300" || answers["orcamento"] === "R$300–500")
-                    ? "Seminova — alternativa recomendada"
-                    : "Financiamento — principal"}
+                  ? "Consórcio Nacional Honda — Rota de Alta Conversão"
+                  : answers["produto"] === "Seminova revisada"
+                    ? "Seminova com Procedência — Atendimento Imediato"
+                    : "Honda 0 km — Simulação Especial na Concessionária"}
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {isConsorcio
-                  ? `Excelente opção para clientes que desejam investir em moto 0 km sem pagar juros bancários e sem barreira de entrada imediata. Roteado com prioridade para consultores da loja ${loc.store}.`
-                  : `Opção recomendada para avaliação conforme intenção, orçamento e momento de compra. Encaminhamento automático para concessionária ${loc.store}.`}
+                  ? `Perfil excelente para aquisição programada sem cobrança de juros bancários. Direcionado imediatamente para especialistas em Consórcio Honda de ${loc.store}.`
+                  : `Cliente qualificado com interesse em ${answers["produto"] || "moto Honda"}. Contato preparado com simulação pronta para a equipe de vendas de ${loc.store}.`}
               </p>
+            </div>
+
+            <div className="panel p-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                Resumo das 4 Respostas do Lead
+              </h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Object.entries(answers).map(([k, val]) => (
+                  <div key={k} className="rounded-lg bg-secondary/60 p-3 text-xs">
+                    <div className="text-muted-foreground font-medium">{ANSWER_LABELS[k] ?? k}</div>
+                    <div className="mt-1 font-semibold text-foreground text-sm">{val}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         </div>
@@ -5139,80 +5235,186 @@ function Qualification() {
   return (
     <>
       <PageHeader
-        title="Como a Vyntra qualifica"
-        subtitle="Simule a jornada de qualificação e veja o score ser formado em tempo real."
+        title="Qualificação rápida de leads"
+        subtitle="Questionário ultra simples em 4 cliques com cálculo em tempo real do Vyntra Score."
       />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <section className="panel p-5 sm:p-8">
-          <div className="mb-8 flex gap-1">
-            {questions.map((_, i) => (
-              <div
-                key={i}
-                className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-secondary")}
-              />
-            ))}
+          {/* Barra de progresso dos 4 passos */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <span className="font-semibold text-primary uppercase tracking-wider">
+                Passo {step + 1} de {questions.length} · Qualificação rápida (4 cliques)
+              </span>
+              <span className="font-medium text-foreground">
+                {Math.round(((step + (answers[q?.key] ? 1 : 0)) / questions.length) * 100)}% concluído
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {questions.map((item, idx) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    if (idx <= step || answers[item.key]) setStep(idx);
+                  }}
+                  className={cn(
+                    "h-2 rounded-full transition-all text-left",
+                    idx === step
+                      ? "bg-primary ring-2 ring-primary/30"
+                      : idx < step || answers[item.key]
+                        ? "bg-primary/70"
+                        : "bg-secondary"
+                  )}
+                  title={`Passo ${idx + 1}: ${item.title}`}
+                />
+              ))}
+            </div>
           </div>
-          <div className="text-xs font-semibold text-primary">
-            PERGUNTA {step + 1} DE {questions.length}
+
+          <div className="text-xs font-bold text-primary tracking-wider uppercase">
+            Pergunta {step + 1} de {questions.length}
           </div>
-          <h2 className="mt-2 text-2xl font-semibold">{q?.title}</h2>
+          <h2 className="mt-1 text-2xl font-bold text-foreground">{q?.title}</h2>
           {q?.subtitle && (
             <p className="mt-1 text-sm text-muted-foreground">{q.subtitle}</p>
           )}
+
+          {/* Cards interativos com clique rápido */}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {q?.options.map((o) => (
-              <Button
-                key={o}
-                variant={answers[q.key] === o ? "default" : "outline"}
-                className="h-auto min-h-12 justify-start whitespace-normal py-3 text-left"
-                onClick={() => handleSelectOption(q.key, o)}
-              >
-                {answers[q.key] === o && <Check />}
-                {o}
-              </Button>
-            ))}
+            {q?.options.map((opt) => {
+              const isSelected = answers[q.key] === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleSelectOption(q.key, opt.value)}
+                  className={cn(
+                    "group relative flex flex-col justify-between rounded-xl border p-4 text-left transition-all duration-200 cursor-pointer",
+                    isSelected
+                      ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40"
+                      : "border-border/70 bg-card hover:border-primary/50 hover:bg-secondary/40 hover:shadow-sm"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex size-10 items-center justify-center rounded-xl transition-colors shrink-0",
+                          isSelected
+                            ? "bg-primary/20 text-primary"
+                            : "bg-secondary text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                        )}
+                      >
+                        {renderQuizOptionIcon(opt.iconName)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground text-sm sm:text-base leading-snug">
+                          {opt.title}
+                        </div>
+                        {opt.badge && (
+                          <span
+                            className={cn(
+                              "mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-muted-foreground group-hover:text-primary"
+                            )}
+                          >
+                            {opt.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="shrink-0 pt-0.5">
+                      <div
+                        className={cn(
+                          "flex size-5 items-center justify-center rounded-full border transition-colors",
+                          isSelected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-muted-foreground/30 bg-transparent group-hover:border-primary/50"
+                        )}
+                      >
+                        {isSelected && <Check className="size-3 stroke-[3]" />}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                    {opt.desc}
+                  </p>
+                </button>
+              );
+            })}
           </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>
+
+          <div className="mt-8 flex items-center justify-between pt-4 border-t border-border/40">
+            <Button
+              variant="ghost"
+              disabled={step === 0}
+              onClick={() => setStep(step - 1)}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <ArrowLeft className="size-4" />
               Voltar
             </Button>
-            <Button
-              disabled={!q || !answers[q.key]}
-              onClick={() => (isLast ? setDone(true) : setStep(step + 1))}
-            >
-              {isLast ? "Calcular Vyntra Score" : "Continuar"}
-              <ArrowRight />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={!q || !answers[q.key]}
+                onClick={() => (isLast ? setDone(true) : setStep(step + 1))}
+                className="gap-1.5"
+              >
+                {isLast ? "Ver Vyntra Score & Rota" : "Próximo passo"}
+                <ArrowRight className="size-4" />
+              </Button>
+            </div>
           </div>
         </section>
-        <aside className="panel p-5">
-          <div className="flex items-center gap-3">
-            <Gauge className="size-5 text-primary" />
+
+        {/* Sidebar com Vyntra Score em tempo real */}
+        <aside className="panel p-5 space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/40">
+            <Gauge className="size-5 text-primary shrink-0" />
             <div>
-              <h3 className="font-semibold">Score em construção</h3>
-              <p className="text-xs text-muted-foreground">Atualiza a cada resposta</p>
+              <h3 className="font-semibold text-sm">Vyntra Score dinâmico</h3>
+              <p className="text-xs text-muted-foreground">Atualiza a cada clique do lead</p>
             </div>
           </div>
-          <div className="mt-5 flex justify-center">
+
+          <div className="flex flex-col items-center justify-center py-2">
             <ScoreRing score={result.score} size="lg" />
-          </div>
-          {answers["estado"] && (
-            <div className="mt-4 rounded-lg border border-primary/30 bg-primary/10 p-2.5 text-xs">
-              <span className="font-semibold text-primary">Unidade prevista:</span>
-              <div className="mt-0.5 font-medium text-foreground">{loc.store}</div>
+            <div className="mt-2 text-xs font-semibold" style={{ color: m.color }}>
+              {m.emoji} {m.label} ({result.score} pts)
             </div>
-          )}
-          <div className="mt-4 space-y-2">
+          </div>
+
+          <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold text-primary">
+              <MapPin className="size-3.5 shrink-0" />
+              Concessionária prevista:
+            </div>
+            <div className="mt-1 font-bold text-foreground">{loc.store}</div>
+            <div className="text-[11px] text-muted-foreground">{loc.region}</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Resumo das respostas:
+            </div>
             {Object.entries(answers).map(([k, val]) => (
-              <div key={k} className="rounded-md bg-secondary px-3 py-2 text-xs">
-                <span className="text-muted-foreground">{ANSWER_LABELS[k] ?? k}: </span>
-                <span className="font-medium text-foreground">{val}</span>
+              <div key={k} className="rounded-md bg-secondary/80 px-3 py-2 text-xs flex justify-between gap-2">
+                <span className="text-muted-foreground shrink-0">{ANSWER_LABELS[k] ?? k}:</span>
+                <span className="font-medium text-foreground text-right truncate">{val}</span>
               </div>
             ))}
+            {Object.keys(answers).length === 0 && (
+              <div className="text-xs text-muted-foreground italic text-center py-2">
+                Selecione a primeira opção para iniciar o cálculo.
+              </div>
+            )}
           </div>
-          <div className="mt-5 border-t border-border pt-4 text-[10px] leading-4 text-muted-foreground">
-            Ao continuar, o cliente concorda com o uso dos dados para contato comercial. Nenhuma
-            consulta de CPF ou análise de crédito é realizada.
+
+          <div className="border-t border-border/50 pt-3 text-[10px] leading-relaxed text-muted-foreground">
+            Qualificação instantânea em 4 cliques com roteamento automatizado para o time comercial da concessionária mais próxima.
           </div>
         </aside>
       </div>

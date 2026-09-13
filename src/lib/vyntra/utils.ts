@@ -100,78 +100,61 @@ export function computeScore(answers: Record<string, string>): {
   score: number;
   reasons: string[];
 } {
-  let score = 20;
+  let score = 15;
   const reasons: string[] = [];
   const add = (points: number, reason: string) => {
     score += points;
     if (points > 0 && reason) reasons.push(reason);
   };
 
-  if (answers["estado"]) {
-    const isSC = answers["estado"].includes("Santa Catarina") || answers["estado"] === "SC";
-    add(4, isSC ? "Região confirmada: Santa Catarina (SC)" : "Região confirmada: Rio Grande do Sul (RS)");
+  // 1. Região / Concessionária
+  const regiao = answers["regiao"] || answers["cidade_loja"] || "";
+  if (regiao.includes("Lages") || regiao.includes("Santa Catarina") || answers["estado"]?.includes("Santa Catarina")) {
+    add(14, "Região confirmada: Concessionária Lages / SC");
+  } else if (regiao.includes("Três Passos")) {
+    add(14, "Região confirmada: Concessionária Três Passos / RS");
+  } else if (regiao.includes("Santa Rosa")) {
+    add(14, "Região confirmada: Concessionária Santa Rosa / RS");
+  } else if (answers["estado"]) {
+    add(8, `Região: ${answers["estado"]}`);
   }
 
-  if (answers["cidade_loja"]) {
-    const cleanCity = answers["cidade_loja"].split("(")[0]?.trim() || answers["cidade_loja"];
-    add(6, `Atendimento regional direcionado: ${cleanCity}`);
+  // 2. Modelo / Categoria
+  const produto = answers["produto"] || "";
+  if (produto.includes("0 km") || produto.includes("Nova")) {
+    add(18, "Interesse definido em moto nova Honda 0 km");
+  } else if (produto.includes("Consórcio")) {
+    add(20, "Perfil de alta aderência ao Consórcio Nacional Honda");
+  } else if (produto.includes("Seminova")) {
+    add(16, "Interesse em seminova revisada com garantia");
+  } else if (produto) {
+    add(10, `Interesse em ${produto}`);
   }
 
-  switch (answers["prazo"]) {
-    case "Próximos 7 dias":
-      add(22, "Compra em até 7 dias");
-      break;
-    case "Até 30 dias":
-      add(16, "Compra prevista em até 30 dias");
-      break;
-    case "1–3 meses":
-      add(8, "Compra planejada em 1–3 meses");
-      break;
-    case "Mais de 3 meses":
-      add(3, "Horizonte de compra longo");
-      break;
-    default:
-      add(0, "");
+  // 3. Forma de Pagamento
+  const forma = answers["forma"] || "";
+  if (forma.includes("à vista") || forma.includes("À vista")) {
+    add(25, "Pagamento à vista com alta probabilidade de fechamento rápido");
+  } else if (forma.includes("troca") || forma.includes("moto atual") || answers["moto"] === "Sim") {
+    add(22, "Possui moto usada na negociação para entrada ou lance");
+  } else if (forma.includes("Financiamento")) {
+    add(20, "Intenção de financiamento bancário com entrada facilitada");
+  } else if (forma.includes("Consórcio") || produto.includes("Consórcio")) {
+    add(18, "Consórcio Nacional Honda: parcelas reduzidas sem juros");
+  } else if (forma) {
+    add(12, `Forma de pagamento: ${forma}`);
   }
 
-  if (answers["produto"] === "Honda 0 km") add(12, "Produto definido (0 km)");
-  else if (answers["produto"] === "Honda seminova") add(10, "Produto definido (seminova)");
-  else if (answers["produto"]?.includes("Consórcio")) add(14, "Consórcio Honda — perfil de planejamento estruturado");
-
-  if (answers["forma"] === "Financiamento") add(10, "Forma de compra definida: financiamento");
-  else if (answers["forma"] === "À vista") add(14, "Pagamento à vista");
-  else if (answers["forma"]?.includes("Consórcio")) add(12, "Consórcio Honda: compra programada sem juros");
-
-  if (answers["consorcio_modalidade"]) {
-    add(8, `Modalidade Consórcio: ${answers["consorcio_modalidade"]}`);
-  }
-
-  const budget = answers["orcamento"];
-  if (budget === "R$1.000+") add(14, "Orçamento mensal elevado");
-  else if (budget === "R$700–1.000") add(11, "Orçamento mensal compatível");
-  else if (budget === "R$500–700") add(8, "Orçamento mensal intermediário");
-  else if (budget === "R$300–500") add(5, "Orçamento mensal compatível com parcelas de consórcio");
-  else if (budget === "Até R$300") add(3, "Ideal para cotas acessíveis de Consórcio Honda");
-
-  if (answers["entrada"] === "Sim") add(12, "Entrada disponível para lance ou financiamento");
-  else if (answers["entrada"] === "Ainda não") add(3, "");
-
-  if (answers["simulacao"] === "Já estou negociando") add(14, "Negociação já iniciada");
-  else if (answers["simulacao"] === "Já simulei") add(10, "Já realizou simulação");
-  else if (answers["simulacao"] === "Apenas pesquisei") add(4, "");
-
-  if (answers["moto"] === "Sim") add(8, "Possui moto para troca / lance");
-
-  const objection = answers["objecao"];
-  const isConsorcio = answers["forma"]?.includes("Consórcio") || answers["produto"]?.includes("Consórcio");
-  if (objection === "Nada") add(6, "Sem objeção declarada");
-  else if (objection === "Questão de crédito") add(isConsorcio ? 4 : -8, isConsorcio ? "Consórcio facilita adesão sem travas imediatas de financiamento" : "");
-  else if (objection === "Não tenho entrada") add(isConsorcio ? 6 : -6, isConsorcio ? "Consórcio Nacional Honda não exige entrada obrigatória" : "");
-  else if (objection === "Estou juntando dinheiro") add(isConsorcio ? 8 : -5, isConsorcio ? "Consórcio viabiliza poupança forçada inteligente" : "");
-
-  if (answers["produto"] === "Honda 0 km" && !isConsorcio && (budget === "Até R$300" || budget === "R$300–500")) {
-    add(-10, "");
-    reasons.push("Baixa compatibilidade entre produto 0 km financiado e orçamento — recomendada rota de Consórcio");
+  // 4. Prazo / Momento de Compra (Urgência)
+  const prazo = answers["prazo"] || "";
+  if (prazo.includes("Imediato") || prazo.includes("7 dias")) {
+    add(28, "Momento de compra imediato (fechamento em até 7 dias)");
+  } else if (prazo.includes("30 dias") || prazo.includes("Neste mês")) {
+    add(18, "Previsão de aquisição no mês corrente (até 30 dias)");
+  } else if (prazo.includes("2 a 3 meses") || prazo.includes("1–3 meses") || prazo.includes("60")) {
+    add(10, "Compra planejada para os próximos meses");
+  } else if (prazo.includes("pesquisando") || prazo.includes("Mais de 3 meses")) {
+    add(3, "Lead em estágio inicial de pesquisa e cotação de mercado");
   }
 
   return { score: Math.max(0, Math.min(100, Math.round(score))), reasons: reasons.filter(Boolean) };

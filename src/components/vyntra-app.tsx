@@ -28,6 +28,7 @@ import {
   Lock,
   LogOut,
   Mail,
+  Megaphone,
   Menu,
   MessageCircle,
   MoreHorizontal,
@@ -62,6 +63,7 @@ import {
   Calculator,
 } from "lucide-react";
 import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
+import { AdCampaignPage } from "./vyntra-ad-campaign";
 import {
   Area,
   AreaChart,
@@ -133,6 +135,7 @@ import {
 type View =
   | "overview"
   | "opportunities"
+  | "campaign"
   | "distribution"
   | "followups"
   | "proposals"
@@ -147,6 +150,7 @@ type View =
 const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: "overview", label: "Visão geral", icon: LayoutDashboard },
   { id: "opportunities", label: "Oportunidades", icon: Target },
+  { id: "campaign", label: "Campanha de Anúncio", icon: Megaphone },
   { id: "distribution", label: "Distribuição", icon: RouteIcon },
   { id: "followups", label: "Follow-ups", icon: CalendarClock },
   { id: "proposals", label: "Propostas", icon: FileText },
@@ -1370,6 +1374,7 @@ function ManagerView({
 }) {
   if (view === "overview") return <Overview setSelected={setSelected} setView={setView} />;
   if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
+  if (view === "campaign") return <AdCampaignPage setView={setView} />;
   if (view === "distribution") return <Distribution />;
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
@@ -1561,6 +1566,15 @@ function Overview({
             >
               <Sparkles className="mr-1.5 size-3.5 text-violet-400" />
               Distribuição de Leads
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setView?.("campaign")}
+              className="border-emerald-500/40 bg-emerald-950/30 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+            >
+              <Megaphone className="mr-1.5 size-3.5 text-emerald-400" />
+              Campanha de Anúncio
             </Button>
             <Button
               variant="outline"

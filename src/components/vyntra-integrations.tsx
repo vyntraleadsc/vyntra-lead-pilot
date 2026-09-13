@@ -254,7 +254,7 @@ function JsonPayloadViewer({
                 {copied ? "Copiado" : "Copiar JSON"}
               </Button>
             </div>
-            <div className="max-h-[50vh] overflow-auto rounded-lg border border-border/40 bg-[#030712] p-4 font-mono text-xs text-cyan-200">
+            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar rounded-lg border border-border/40 bg-[#030712] p-4 font-mono text-xs text-cyan-200">
               <pre>{jsonString}</pre>
             </div>
           </div>
@@ -490,7 +490,7 @@ export function IntegrationsPage({
 
             {/* Input da URL com botão de copiar */}
             <div className="mt-4 flex items-center gap-2">
-              <div className="flex-1 rounded-lg border border-cyan-500/30 bg-[#030612]/90 px-3.5 py-2.5 font-mono text-xs text-cyan-200 overflow-x-auto select-all">
+              <div className="flex-1 rounded-lg border border-cyan-500/30 bg-[#030612]/90 px-3.5 py-2.5 font-mono text-xs text-cyan-200 overflow-x-auto custom-scrollbar select-all">
                 {webhookUrl}
               </div>
               <Button
@@ -789,7 +789,7 @@ export function IntegrationsPage({
           </span>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-border/50 text-muted-foreground">
@@ -963,7 +963,7 @@ export function IntegrationLogsPage({
 
       {/* Tabela de Logs */}
       <div className="panel overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-border/50 bg-[#030614] text-muted-foreground">

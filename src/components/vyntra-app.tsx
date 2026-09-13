@@ -426,7 +426,7 @@ function Login() {
       </section>
 
       {/* Coluna Direita: Formulários Interativos com Efeitos de Entrada */}
-      <section className="relative flex items-center justify-center bg-gradient-to-b from-[#030611] to-[#060b1b] px-5 py-12 overflow-y-auto">
+      <section className="relative flex items-center justify-center bg-gradient-to-b from-[#030611] to-[#060b1b] px-5 py-12 overflow-y-auto custom-scrollbar">
         {/* Glow sutil no mobile e desktop */}
         <div className="pointer-events-none absolute top-0 right-0 size-80 rounded-full bg-cyan-500/10 blur-[100px]" />
         <div className="pointer-events-none absolute bottom-0 left-0 size-80 rounded-full bg-violet-600/10 blur-[100px]" />
@@ -1338,7 +1338,7 @@ function Topbar({
                 Marcar como lidos
               </Button>
             </div>
-            <div className="max-h-[480px] overflow-auto p-2">
+            <div className="max-h-[440px] overflow-y-auto custom-scrollbar p-2 pr-2.5 space-y-1">
               {notifications.map((n) => (
                 <button
                   key={n.id}
@@ -2786,7 +2786,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
         if (!x) onClose();
       }}
     >
-      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-[720px]">
+      <SheetContent className="w-full overflow-y-auto custom-scrollbar p-0 sm:max-w-[720px]">
         <div className="sticky top-0 z-10 border-b border-border bg-background/95 p-5 backdrop-blur">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">

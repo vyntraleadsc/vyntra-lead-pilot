@@ -1421,9 +1421,9 @@ function ManagerView({
   setSelected: (v: string | null) => void;
 }) {
   if (view === "overview") return <Overview setSelected={setSelected} setView={setView} />;
-  if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
+  if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} setView={setView} />;
   if (view === "campaign") return <AdCampaignPage setView={setView} />;
-  if (view === "distribution") return <Distribution />;
+  if (view === "distribution") return <Distribution setView={setView} />;
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
   if (view === "team") return <Team />;
@@ -2147,7 +2147,13 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
   );
 }
 
-function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }) {
+function OpportunitiesPage({
+  setSelected,
+  setView,
+}: {
+  setSelected: (v: string) => void;
+  setView?: ((v: View) => void) | undefined;
+}) {
   const { opportunities, sellers, sellerById, assignLeads, now, role, currentSellerId } = useVyntra();
   const isSeller = role === "vendedor";
   const [f, setF] = useState(FILTER_INITIAL);
@@ -2189,7 +2195,6 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
 
   const list = useMemo(() => {
     return baseOpportunities.filter((o) => {
-      if (!applyFilters(o, f)) return false;
       if (insightFilter === "hot" && o.score < 80) return false;
       if (
         insightFilter === "consorcio" &&
@@ -2204,9 +2209,10 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
       }
       if (insightFilter === "lages" && o.store !== "Lages / SC") return false;
       if (insightFilter === "rs" && !o.store.includes("RS")) return false;
-      return true;
+
+      return applyFilters(o, f);
     });
-  }, [baseOpportunities, f, insightFilter, now]);
+  }, [baseOpportunities, f, now, insightFilter]);
 
   const visibleIds = list.map((o) => o.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
@@ -2232,6 +2238,19 @@ function OpportunitiesPage({ setSelected }: { setSelected: (v: string) => void }
 
   return (
     <>
+      {!isSeller && setView && (
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setView("overview")}
+            className="gap-2 text-xs font-semibold border-cyan-500/30 bg-cyan-950/20 hover:bg-cyan-500/20 hover:border-cyan-400 text-cyan-300 shadow-sm"
+          >
+            <ArrowLeft className="size-3.5 text-cyan-400" />
+            Voltar para Visão Geral
+          </Button>
+        </div>
+      )}
       <PageHeader
         title={isSeller ? "Meus Leads & Oportunidades" : "Oportunidades Comerciais"}
         subtitle={
@@ -2787,11 +2806,28 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
       }}
     >
       <SheetContent className="w-full overflow-y-auto custom-scrollbar p-0 sm:max-w-[720px]">
-        <div className="sticky top-0 z-10 border-b border-border bg-background/95 p-5 backdrop-blur">
+        <div className="sticky top-0 z-20 border-b border-border bg-[#050b18]/95 p-4 sm:p-5 backdrop-blur-xl">
+          <div className="mb-3 flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="h-8 gap-2 px-3 text-xs font-semibold text-foreground border-cyan-500/40 bg-cyan-950/20 hover:bg-cyan-500/10 hover:border-cyan-400 transition-colors shadow-sm"
+            >
+              <ArrowLeft className="size-3.5 text-cyan-400" />
+              Voltar
+            </Button>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold text-rose-300 uppercase tracking-wider">
+                Prioridade Imediata
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground">ID: {o.id}</span>
+            </div>
+          </div>
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">
               <div
-                className="grid size-12 place-items-center rounded-xl text-lg font-bold border"
+                className="grid size-12 place-items-center rounded-xl text-lg font-bold border shrink-0"
                 style={{
                   color: temp.color,
                   background: `color-mix(in oklab, ${temp.color} 14%, transparent)`,
@@ -2801,10 +2837,14 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
               >
                 {o.score}
               </div>
-              <div>
-                <div className="text-xl">{o.customer.name}</div>
-                <SheetDescription>
-                  {temp.emoji} {temp.label} · {o.id}
+              <div className="min-w-0 flex-1">
+                <div className="text-xl font-bold truncate">{o.customer.name}</div>
+                <SheetDescription className="flex items-center gap-2">
+                  <span>{temp.emoji} {temp.label}</span>
+                  <span>·</span>
+                  <span>{o.product}</span>
+                  <span>·</span>
+                  <span>{o.store}</span>
                 </SheetDescription>
               </div>
             </SheetTitle>
@@ -2838,12 +2878,21 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
                   </div>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => v.notifySeller(o.id)}>
                   Notificar responsável
                 </Button>
                 <Button size="sm" variant="destructive" onClick={() => v.escalate(o.id)}>
                   Escalar para gestor
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onClose}
+                  className="gap-1.5 text-xs font-semibold border-border/80 hover:bg-surface-2"
+                >
+                  <ArrowLeft className="size-3.5 text-cyan-400" />
+                  Voltar
                 </Button>
               </div>
             </div>
@@ -3011,6 +3060,18 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
               Follow-up
             </Button>
           </div>
+          <div className="pt-4 flex items-center justify-between border-t border-border/60">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="gap-2 text-xs font-semibold border-cyan-500/40 bg-cyan-950/15 hover:bg-cyan-500/20 hover:border-cyan-400 text-cyan-300"
+            >
+              <ArrowLeft className="size-3.5 text-cyan-400" />
+              Voltar para o Painel do Gestor
+            </Button>
+            <span className="text-xs text-muted-foreground font-medium">Honda Via Passos</span>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
@@ -3044,7 +3105,7 @@ function ScoreRing({ score, size = "md" }: { score: number; size?: "md" | "lg" }
     </div>
   );
 }
-function Distribution() {
+function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }) {
   const v = useVyntra();
   const [isSimulating, setIsSimulating] = useState(false);
 
@@ -3108,6 +3169,19 @@ function Distribution() {
 
   return (
     <>
+      {setView && (
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setView("overview")}
+            className="gap-2 text-xs font-semibold border-cyan-500/30 bg-cyan-950/20 hover:bg-cyan-500/20 hover:border-cyan-400 text-cyan-300 shadow-sm"
+          >
+            <ArrowLeft className="size-3.5 text-cyan-400" />
+            Voltar para Visão Geral
+          </Button>
+        </div>
+      )}
       <PageHeader
         title="Distribuição Inteligente & Roteamento Meritocrático"
         subtitle="Mais oportunidades direcionadas automaticamente aos consultores com maior taxa de conversão e histórico de fechamento."

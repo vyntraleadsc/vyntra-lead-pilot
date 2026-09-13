@@ -5247,7 +5247,7 @@ function Qualification() {
                 Passo {step + 1} de {questions.length} · Qualificação rápida (4 cliques)
               </span>
               <span className="font-medium text-foreground">
-                {Math.round(((step + (answers[q?.key] ? 1 : 0)) / questions.length) * 100)}% concluído
+                {Math.round(((step + (q && answers[q.key] ? 1 : 0)) / questions.length) * 100)}% concluído
               </span>
             </div>
             <div className="grid grid-cols-4 gap-2">

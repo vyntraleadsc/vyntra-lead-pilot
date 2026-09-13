@@ -210,18 +210,38 @@ export function VyntraApp() {
   );
 }
 
-function Brand({ compact = false, className }: { compact?: boolean; className?: string }) {
+function Brand({
+  compact = false,
+  className,
+  onClick,
+}: {
+  compact?: boolean | undefined;
+  className?: string | undefined;
+  onClick?: (() => void) | undefined;
+}) {
   return (
-    <div className={cn("inline-flex items-center", className)}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      title={onClick ? "Voltar ao Início" : undefined}
+      aria-label={onClick ? "Voltar ao Início" : "VYNTRA"}
+      className={cn(
+        "inline-flex items-center text-left bg-transparent border-0 p-0 focus:outline-none",
+        onClick && "cursor-pointer group transition-transform active:scale-95",
+        !onClick && "cursor-default",
+        className,
+      )}
+    >
       <img
         src="/logo.png"
         alt="VYNTRA"
         className={cn(
-          "object-contain select-none transition-transform duration-300 hover:scale-105 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.35)]",
+          "object-contain select-none transition-all duration-300 group-hover:scale-105 group-hover:brightness-110 filter drop-shadow-[0_0_12px_rgba(6,182,212,0.35)]",
           compact ? "h-6 w-auto" : "h-7 sm:h-8 w-auto",
         )}
       />
-    </div>
+    </button>
   );
 }
 
@@ -939,6 +959,15 @@ function Workspace() {
     return () => clearTimeout(t);
   }, [view]);
 
+  const handleGoHome = () => {
+    setView("overview");
+    setSelected(null);
+    setMobileNav(false);
+    setSearchOpen(false);
+    setAlertsOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar
@@ -949,6 +978,7 @@ function Workspace() {
         }}
         mobileOpen={mobileNav}
         setMobileOpen={setMobileNav}
+        onGoHome={handleGoHome}
       />
       <div className="lg:pl-[244px]">
         <Topbar
@@ -960,6 +990,7 @@ function Workspace() {
           setSelected={setSelected}
           alertsOpen={alertsOpen}
           setAlertsOpen={setAlertsOpen}
+          onGoHome={handleGoHome}
         />
         <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           {role === "vendedor" ? (
@@ -1012,11 +1043,13 @@ function Sidebar({
   setView,
   mobileOpen,
   setMobileOpen,
+  onGoHome,
 }: {
   view: View;
   setView: (v: View) => void;
   mobileOpen: boolean;
   setMobileOpen: (v: boolean) => void;
+  onGoHome?: (() => void) | undefined;
 }) {
   const { logout, role, setRole, currentSellerId, setCurrentSellerId, sellers, sellerById } =
     useVyntra();
@@ -1033,10 +1066,20 @@ function Sidebar({
         ]
       : NAV;
 
+  const handleHomeNavigation = () => {
+    if (onGoHome) {
+      onGoHome();
+    } else {
+      setView("overview");
+      setMobileOpen(false);
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+  };
+
   const body = (
     <div className="flex h-full flex-col bg-sidebar px-3 py-4">
       <div className="shrink-0 px-3 pb-4">
-        <Brand />
+        <Brand onClick={handleHomeNavigation} />
       </div>
       <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2.5 custom-scrollbar">
         <div className="mb-2.5 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -1183,6 +1226,7 @@ function Topbar({
   setSelected,
   alertsOpen,
   setAlertsOpen,
+  onGoHome,
 }: {
   onMenu: () => void;
   globalSearch: string;
@@ -1192,6 +1236,7 @@ function Topbar({
   setSelected: (v: string | null) => void;
   alertsOpen: boolean;
   setAlertsOpen: (v: boolean) => void;
+  onGoHome?: (() => void) | undefined;
 }) {
   const {
     opportunities,
@@ -1215,9 +1260,12 @@ function Topbar({
   const unread = notifications.filter((n) => !n.read).length;
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-      <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenu}>
-        <Menu />
-      </Button>
+      <div className="flex items-center gap-2 lg:hidden">
+        <Button variant="ghost" size="icon" onClick={onMenu}>
+          <Menu />
+        </Button>
+        <Brand compact onClick={onGoHome} />
+      </div>
       <div className="relative flex-1 max-w-xl">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input

@@ -954,6 +954,9 @@ function Workspace() {
     currentSellerId,
     sellers,
     sellerById,
+    setRole,
+    setCurrentPlan,
+    setCurrentSellerId,
     logout,
   } = useVyntra();
   const [view, setView] = useState<View>("overview");

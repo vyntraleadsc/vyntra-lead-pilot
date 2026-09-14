@@ -305,7 +305,7 @@ function Login() {
     document.body.scrollTop = 0;
     const name =
       role === "gestor"
-        ? "Airton Lindão"
+        ? "Gestor"
         : sellers.find((s) => s.id === (sellerId || selectedSellerId))?.name || "Francine";
     setWelcomeUser({ name, role });
     setTimeout(() => {
@@ -651,7 +651,7 @@ function Login() {
                       Entrar como Gestor
                     </div>
                     <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
-                    <div className="text-[10px] text-muted-foreground">Airton Lindão · Lojas RS/SC</div>
+                    <div className="text-[10px] text-muted-foreground">Gestor · Lojas RS/SC</div>
                   </button>
                   <button
                     type="button"
@@ -953,12 +953,12 @@ function Workspace() {
 
   // Garante que a tela aberta pertença ao plano atualmente demonstrado
   useEffect(() => {
-    if (view === "plans") return;
-
-    if (role === "vendedor" && view === "qualification") {
+    if (role === "vendedor" && (view === "qualification" || view === "plans")) {
       setView("overview");
       return;
     }
+
+    if (view === "plans") return;
 
     const allowedInEssencial: View[] = [
       "overview",
@@ -1056,7 +1056,6 @@ function SellerWorkspace({
   if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
-  if (view === "plans") return <PlansPage setView={setView} />;
 
   return (
     <div className="panel mx-auto mt-12 max-w-lg p-8 text-center">
@@ -1109,7 +1108,6 @@ function Sidebar({
         { id: "opportunities" as View, label: "Meus leads", icon: Target },
         { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
         { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
-        { id: "plans" as View, label: "Planos", icon: Trophy },
       ];
     }
 
@@ -1205,43 +1203,45 @@ function Sidebar({
         </nav>
       </ScrollArea>
       <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
-        {/* Card do Modo Demonstração Comercial */}
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
-              <Trophy className="size-3" />
-              Plano Demo
-            </span>
-            <button
-              type="button"
-              onClick={() => setView("plans")}
-              className="text-[10px] font-semibold text-primary hover:underline"
-            >
-              Ver todos
-            </button>
+        {/* Card do Modo Demonstração Comercial (exclusivo para perfil executivo/gestor) */}
+        {role === "gestor" && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
+                <Trophy className="size-3" />
+                Plano Demo
+              </span>
+              <button
+                type="button"
+                onClick={() => setView("plans")}
+                className="text-[10px] font-semibold text-primary hover:underline"
+              >
+                Ver todos
+              </button>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-foreground capitalize">
+                {currentPlan || "performance"}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextPlan: PlanTier =
+                    currentPlan === "essencial"
+                      ? "performance"
+                      : currentPlan === "performance"
+                        ? "enterprise"
+                        : "essencial";
+                  setCurrentPlan(nextPlan);
+                }}
+                className="text-[10px] font-bold text-primary bg-primary/15 hover:bg-primary/25 px-2 py-0.5 rounded transition-colors"
+                title="Clique para alternar o plano da demonstração"
+              >
+                Alterar plano
+              </button>
+            </div>
           </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-foreground capitalize">
-              {currentPlan || "performance"}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const nextPlan: PlanTier =
-                  currentPlan === "essencial"
-                    ? "performance"
-                    : currentPlan === "performance"
-                      ? "enterprise"
-                      : "essencial";
-                setCurrentPlan(nextPlan);
-              }}
-              className="text-[10px] font-bold text-primary bg-primary/15 hover:bg-primary/25 px-2 py-0.5 rounded transition-colors"
-              title="Clique para alternar o plano da demonstração"
-            >
-              Alterar plano
-            </button>
-          </div>
-        </div>
+        )}
 
         <div className="rounded-lg border border-border bg-surface/60 p-2.5">
           <div className="mb-1.5 flex items-center justify-between">
@@ -1304,7 +1304,7 @@ function Sidebar({
         <div className="flex items-center gap-3 border-t border-border pt-3">
           <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-sm font-bold text-primary">
             {role === "gestor"
-              ? "AL"
+              ? "G"
               : currentSeller.name
                   .split(" ")
                   .map((x) => x[0])
@@ -1313,7 +1313,7 @@ function Sidebar({
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">
-              {role === "gestor" ? "Airton Lindão" : currentSeller.name}
+              {role === "gestor" ? "Gestor" : currentSeller.name}
             </div>
             <div className="truncate text-[11px] text-muted-foreground">
               {role === "gestor" ? "gestor@vyntra.com" : `${currentSeller.id}@vyntra.com`}
@@ -1451,65 +1451,67 @@ function Topbar({
         {DEALERSHIP}
       </div>
 
-      {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado */}
-      <div className="relative hidden sm:block">
-        <button
-          type="button"
-          onClick={() => setDemoMenuOpen(!demoMenuOpen)}
-          className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition-all shadow-xs"
-        >
-          <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
-          <span className="font-bold uppercase text-foreground">{currentPlan}</span>
-          <ChevronRight className={cn("size-3 transition-transform text-muted-foreground", demoMenuOpen && "rotate-90")} />
-        </button>
+      {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado (exclusivo para o gestor) */}
+      {role === "gestor" && (
+        <div className="relative hidden sm:block">
+          <button
+            type="button"
+            onClick={() => setDemoMenuOpen(!demoMenuOpen)}
+            className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition-all shadow-xs"
+          >
+            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
+            <span className="font-bold uppercase text-foreground">{currentPlan}</span>
+            <ChevronRight className={cn("size-3 transition-transform text-muted-foreground", demoMenuOpen && "rotate-90")} />
+          </button>
 
-        {demoMenuOpen && (
-          <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-              Alternar Plano da Demonstração
+          {demoMenuOpen && (
+            <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
+                Alternar Plano da Demonstração
+              </div>
+              <div className="space-y-1">
+                {(["essencial", "performance", "enterprise"] as const).map((p) => {
+                  const isSelected = currentPlan === p;
+                  const priceLabel = p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setCurrentPlan(p);
+                        setDemoMenuOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                        isSelected
+                          ? "bg-primary text-primary-foreground font-bold"
+                          : "text-foreground hover:bg-secondary",
+                      )}
+                    >
+                      <span className="capitalize">{p}</span>
+                      <span className="text-[10px] opacity-80">{priceLabel}/mês</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="border-t border-border/60 pt-2 px-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setView) setView("plans");
+                    setDemoMenuOpen(false);
+                  }}
+                  className="w-full text-left text-xs font-semibold text-primary hover:underline flex items-center justify-between"
+                >
+                  Ver comparação de planos
+                  <ChevronRight className="size-3" />
+                </button>
+              </div>
             </div>
-            <div className="space-y-1">
-              {(["essencial", "performance", "enterprise"] as const).map((p) => {
-                const isSelected = currentPlan === p;
-                const priceLabel = p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      setCurrentPlan(p);
-                      setDemoMenuOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
-                      isSelected
-                        ? "bg-primary text-primary-foreground font-bold"
-                        : "text-foreground hover:bg-secondary",
-                    )}
-                  >
-                    <span className="capitalize">{p}</span>
-                    <span className="text-[10px] opacity-80">{priceLabel}/mês</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="border-t border-border/60 pt-2 px-1">
-              <button
-                type="button"
-                onClick={() => {
-                  if (setView) setView("plans");
-                  setDemoMenuOpen(false);
-                }}
-                className="w-full text-left text-xs font-semibold text-primary hover:underline flex items-center justify-between"
-              >
-                Ver comparação de planos
-                <ChevronRight className="size-3" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
       <div className="relative">
         <Button
           variant="ghost"
@@ -1569,7 +1571,7 @@ function Topbar({
       <div className="hidden h-8 items-center gap-2 border-l border-border pl-3 sm:flex">
         <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
           {role === "gestor"
-            ? "AL"
+            ? "G"
             : (currentSeller?.name || "VD")
                 .split(" ")
                 .map((n) => n[0])
@@ -1579,7 +1581,7 @@ function Topbar({
         </div>
         <div className="hidden xl:block">
           <div className="text-xs font-semibold">
-            {role === "gestor" ? "Airton Lindão" : currentSeller?.name || "Consultor"}
+            {role === "gestor" ? "Gestor" : currentSeller?.name || "Consultor"}
           </div>
           <div className="text-[10px] text-muted-foreground">
             {role === "gestor" ? "Gerência & Supervisão" : "Consultor Comercial"}
@@ -1767,7 +1769,7 @@ function Overview({
         <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <div className="relative grid size-14 shrink-0 place-items-center rounded-2xl border border-cyan-400/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/25 text-xl font-bold text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.3)]">
-              AL
+              G
               <span className="absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-[#050b1a] bg-emerald-500" title="Gestor Online" />
             </div>
             <div>
@@ -1785,7 +1787,7 @@ function Overview({
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                Olá, Airton Lindão!
+                Olá, Gestor!
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
                 Central executiva de comando · Monitoramento consolidado das concessionárias em <strong className="text-cyan-300">Lages/SC</strong>, <strong className="text-cyan-300">Três Passos/RS</strong> e <strong className="text-cyan-300">Santa Rosa/RS</strong>.

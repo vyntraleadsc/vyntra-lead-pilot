@@ -1034,7 +1034,7 @@ export const DEMO_CREDENTIALS = { email: "gestor@vyntra.com", password: "123456"
 export const DEMO_CREDENTIALS_GESTOR = {
   email: "gestor@vyntra.com",
   password: "123456",
-  name: "Airton Lindão",
+  name: "Gestor",
   role: "gestor" as const,
   title: "Gerência Geral de Vendas",
 };

@@ -153,14 +153,14 @@ type View =
 const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: "overview", label: "Visão geral", icon: LayoutDashboard },
   { id: "opportunities", label: "Oportunidades", icon: Target },
-  { id: "campaign", label: "Campanha de Anúncio", icon: Megaphone },
-  { id: "distribution", label: "Distribuição", icon: RouteIcon },
+  { id: "qualification", label: "Qualificação", icon: Bot },
   { id: "followups", label: "Follow-ups", icon: CalendarClock },
   { id: "proposals", label: "Propostas", icon: FileText },
-  { id: "team", label: "Equipe", icon: UsersRound },
+  { id: "campaign", label: "Campanha de Anúncio", icon: Megaphone },
+  { id: "distribution", label: "Distribuição", icon: RouteIcon },
   { id: "insights", label: "Insights", icon: Sparkles },
-  { id: "qualification", label: "Qualificação", icon: Bot },
   { id: "impact", label: "Impacto comercial", icon: CircleDollarSign },
+  { id: "team", label: "Equipe", icon: UsersRound },
   { id: "plans", label: "Planos", icon: Trophy },
   { id: "integrations", label: "Integrações", icon: Webhook },
   { id: "integration-logs", label: "Logs de integração", icon: Terminal },
@@ -943,13 +943,41 @@ function Login() {
 }
 
 function Workspace() {
-  const { role } = useVyntra();
+  const { role, currentPlan = "performance" } = useVyntra();
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [globalSearch, setGlobalSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+
+  // Garante que a tela aberta pertença ao plano atualmente demonstrado
+  useEffect(() => {
+    if (role === "gestor" && view !== "plans") {
+      const allowedInEssencial = [
+        "overview",
+        "opportunities",
+        "qualification",
+        "followups",
+        "proposals",
+        "campaign",
+        "plans",
+      ];
+      const allowedInPerformance = [
+        ...allowedInEssencial,
+        "distribution",
+        "insights",
+        "impact",
+        "team",
+      ];
+
+      if (currentPlan === "essencial" && !allowedInEssencial.includes(view)) {
+        setView("overview");
+      } else if (currentPlan === "performance" && !allowedInPerformance.includes(view)) {
+        setView("overview");
+      }
+    }
+  }, [currentPlan, view, role]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -1070,17 +1098,55 @@ function Sidebar({
   } = useVyntra();
   const currentSeller = sellerById(currentSellerId || "francine") ?? sellers[0]!;
 
-  const navItems =
-    role === "vendedor"
-      ? [
-          { id: "overview" as View, label: "Fila de atendimento", icon: Zap },
-          { id: "opportunities" as View, label: "Meus leads", icon: Target },
-          { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
-          { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
-          { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
-          { id: "plans" as View, label: "Planos", icon: Trophy },
-        ]
-      : NAV;
+  const navItems = useMemo(() => {
+    if (role === "vendedor") {
+      return [
+        { id: "overview" as View, label: "Fila de atendimento", icon: Zap },
+        { id: "opportunities" as View, label: "Meus leads", icon: Target },
+        { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
+        { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
+        { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
+        { id: "plans" as View, label: "Planos", icon: Trophy },
+      ];
+    }
+
+    // Gestão Comercial filtrada de acordo com o plano ativo no Modo Demonstração:
+    // ESSENCIAL: Visão Geral, Oportunidades, Qualificação, Follow-ups, Propostas, Campanha de Anúncio e Planos
+    // PERFORMANCE: Tudo do Essencial + Distribuição, Insights, Impacto Comercial e Equipe
+    // ENTERPRISE: Tudo do Performance + Integrações, Logs de integração e Configurações
+    return NAV.filter((item) => {
+      if (item.id === "plans") return true;
+
+      if (currentPlan === "essencial") {
+        return (
+          item.id === "overview" ||
+          item.id === "opportunities" ||
+          item.id === "qualification" ||
+          item.id === "followups" ||
+          item.id === "proposals" ||
+          item.id === "campaign"
+        );
+      }
+
+      if (currentPlan === "performance") {
+        return (
+          item.id === "overview" ||
+          item.id === "opportunities" ||
+          item.id === "qualification" ||
+          item.id === "followups" ||
+          item.id === "proposals" ||
+          item.id === "campaign" ||
+          item.id === "distribution" ||
+          item.id === "insights" ||
+          item.id === "impact" ||
+          item.id === "team"
+        );
+      }
+
+      // Enterprise: experiência completa da Vyntra
+      return true;
+    });
+  }, [role, currentPlan]);
 
   const handleHomeNavigation = () => {
     if (onGoHome) {
@@ -1098,8 +1164,22 @@ function Sidebar({
         <Brand onClick={handleHomeNavigation} />
       </div>
       <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2.5 custom-scrollbar">
-        <div className="mb-2.5 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          {role === "gestor" ? "Gestão Comercial" : "Painel do Vendedor"}
+        <div className="mb-2.5 px-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          <span>{role === "gestor" ? "Gestão Comercial" : "Painel do Vendedor"}</span>
+          {role === "gestor" && (
+            <span
+              className={cn(
+                "rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase",
+                currentPlan === "essencial"
+                  ? "bg-secondary text-muted-foreground border border-border"
+                  : currentPlan === "performance"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+              )}
+            >
+              {currentPlan}
+            </span>
+          )}
         </div>
         <nav className="space-y-1 pb-4">
           {navItems.map((item) => {

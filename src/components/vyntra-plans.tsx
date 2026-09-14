@@ -55,41 +55,37 @@ export const PLANS_DATA: PlanDetail[] = [
     price: "R$ 797",
     priceValue: 797,
     period: "/mês",
-    headline: "Fundação comercial sólida para concessionárias e lojas",
+    headline: "Recursos fundamentais para iniciar a gestão de leads",
     description:
-      "Ideal para operações que buscam estruturar a qualificação de leads, fila de atendimento e rotina ágil dos vendedores.",
+      "Pacote enxuto e essencial para estruturar o atendimento e a qualificação de novos contatos.",
     features: [
-      "Dashboard",
+      "Visão Geral",
       "Oportunidades",
       "Qualificação",
-      "Score e priorização",
-      "Distribuição básica",
       "Follow-ups",
       "Propostas",
-      "Campanhas básicas",
-      "Insights básicos",
-      "Impacto comercial básico",
+      "Campanha de Anúncio",
     ],
     exclusiveFeatures: [
       {
-        name: "Dashboard & Gestão",
-        description: "Visão consolidada de oportunidades, vendedores e metas",
+        name: "Visão Geral & Fila",
+        description: "Acompanhamento em tempo real dos leads e fila de atendimento",
       },
       {
         name: "Oportunidades & Pipeline",
-        description: "Kanban e fila de atendimento organizada por score",
+        description: "Gestão do funil de vendas e status dos clientes",
       },
       {
         name: "Qualificação & Vyntra Score",
-        description: "Pontuação de 0 a 100 com cálculo de temperatura do lead",
+        description: "Quiz simplificado em 4 cliques e pontuação automática",
       },
       {
         name: "Follow-ups & Propostas",
-        description: "Agendamentos comerciais e propostas com simulador",
+        description: "Agendamento de contatos e envio de propostas comerciais",
       },
       {
-        name: "Campanhas & Insights Básicos",
-        description: "Métricas essenciais de captação e conversão",
+        name: "Campanha de Anúncio",
+        description: "Captação de leads e campanhas promocionais de entrada",
       },
     ],
   },
@@ -101,46 +97,45 @@ export const PLANS_DATA: PlanDetail[] = [
     period: "/mês",
     highlight: true,
     badge: "MAIS ESCOLHIDO",
-    headline: "Máxima conversão, automações inteligentes e escala comercial",
+    headline: "Operação comercial completa com automações e escala",
     description:
-      "A solução completa para equipes que desejam automação de disparos, distribuição avançada e inteligência comercial ativa.",
+      "A operação comercial definitiva com inteligência ativa, distribuição por regras e métricas financeiras.",
     features: [
       "Tudo do Essencial",
+      "Distribuição",
+      "Insights",
+      "Impacto Comercial",
       "Campanhas avançadas",
       "Disparos personalizados",
-      "Gestão avançada da equipe",
-      "Insights avançados",
-      "Impacto comercial avançado",
+      "Gestão de equipe",
       "Automações",
       "Qualificação avançada",
-      "Distribuição avançada",
-      "Follow-ups avançados",
     ],
     exclusiveFeatures: [
       {
-        name: "Automações Comerciais",
+        name: "Distribuição Inteligente",
         lockedIn: ["essencial"],
-        description: "Disparos automáticos e reengajamento inteligente de leads parados",
+        description: "Roteamento automático por perfil de vendedor, disponibilidade e carga",
       },
       {
-        name: "Campanhas Avançadas",
+        name: "Insights Comerciais",
         lockedIn: ["essencial"],
-        description: "Segmentação por temperatura, modelo e intenção de compra",
+        description: "Inteligência preditiva, horários de pico e gargalos de conversão",
       },
       {
-        name: "Disparos Personalizados",
+        name: "Impacto Comercial & ROI",
         lockedIn: ["essencial"],
-        description: "Templates sob medida com roteamento por filial e vendedor",
+        description: "Simulador financeiro de receita adicional e conversão",
       },
       {
-        name: "Gestão Avançada da Equipe",
+        name: "Gestão de Equipe & Vendedores",
         lockedIn: ["essencial"],
-        description: "SLA por vendedor, metas dinâmicas e ranking de produtividade",
+        description: "Monitoramento individual de vendedores, metas e tempo de resposta",
       },
       {
-        name: "Distribuição Inteligente Avançada",
+        name: "Automações & Disparos",
         lockedIn: ["essencial"],
-        description: "Balanceamento por carga horária, especialidade e taxa de fechamento",
+        description: "Ações automáticas e réguas de relacionamento programadas",
       },
     ],
   },
@@ -151,9 +146,9 @@ export const PLANS_DATA: PlanDetail[] = [
     priceValue: 1997,
     period: "/mês",
     priceNote: "A partir de",
-    headline: "Governança multiunidade, auditoria e customização total",
+    headline: "A experiência completa da Vyntra para grandes operações",
     description:
-      "Projetado para grandes grupos concessionários com múltiplas lojas, controle rigoroso de permissões e suporte dedicado.",
+      "Governança corporativa, controle multiunidade, integrações completas e acompanhamento estratégico.",
     features: [
       "Tudo do Performance",
       "Permissões avançadas",
@@ -513,74 +508,74 @@ export function PlansPage({ setView }: PlansPageProps) {
 
         {/* Grade de Recursos com Status de Acesso */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Dashboard */}
+          {/* Essencial 1 */}
           <FeatureAccessCard
-            title="Dashboard & Pipeline"
-            description="Visão executiva de leads, fila rápida de atendimento e SLA comercial."
+            title="Visão Geral & Oportunidades"
+            description="Fila de atendimento de novos contatos e kanban de oportunidades."
             planRequired="essencial"
             currentPlan={currentPlan}
           />
 
-          {/* Qualificação */}
+          {/* Essencial 2 */}
           <FeatureAccessCard
             title="Qualificação & Vyntra Score"
-            description="Algoritmo de pontuação em tempo real para orientar o foco do time."
+            description="Algoritmo de pontuação e perguntas rápidas em 4 cliques."
             planRequired="essencial"
             currentPlan={currentPlan}
           />
 
-          {/* Automações */}
+          {/* Essencial 3 */}
           <FeatureAccessCard
-            title="Automações & Disparos"
-            description="Disparo automático para novos leads e réguas de follow-up ativas."
+            title="Follow-ups, Propostas & Anúncios"
+            description="Agendamento comercial de retorno, propostas com simulação e campanhas de captação."
+            planRequired="essencial"
+            currentPlan={currentPlan}
+          />
+
+          {/* Performance 1 */}
+          <FeatureAccessCard
+            title="Distribuição Avançada"
+            description="Regras dinâmicas por carga horária, especialidade do vendedor e taxa de fechamento."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
-          {/* Campanhas Avançadas */}
+          {/* Performance 2 */}
           <FeatureAccessCard
-            title="Campanhas Avançadas"
-            description="Segmentação por perfil financeiro, entrada facilitada e consórcio."
+            title="Insights Comerciais"
+            description="Métricas de conversão, canais de captação mais rentáveis e diagnóstico da operação."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
-          {/* Distribuição Avançada */}
+          {/* Performance 3 */}
           <FeatureAccessCard
-            title="Distribuição Inteligente"
-            description="Balanceamento dinâmico por perfil de vendedor, metas e velocidade."
+            title="Impacto Comercial & ROI"
+            description="Simulador financeiro de receita incremental e projeção de faturamento."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
-          {/* Multiunidade */}
+          {/* Performance 4 */}
           <FeatureAccessCard
-            title="Gestão Multiunidade"
-            description="Centralização das lojas de Lages, Três Passos e Santa Rosa no mesmo painel."
+            title="Gestão Avançada da Equipe"
+            description="Acompanhamento individual de cada vendedor, tempo de resposta e produtividade."
+            planRequired="performance"
+            currentPlan={currentPlan}
+          />
+
+          {/* Enterprise 1 */}
+          <FeatureAccessCard
+            title="Multiunidade & Integrações"
+            description="Gestão unificada de matriz e filiais com webhooks de captação integrados."
             planRequired="enterprise"
             currentPlan={currentPlan}
           />
 
-          {/* Permissões Avançadas */}
+          {/* Enterprise 2 */}
           <FeatureAccessCard
-            title="Permissões Granulares"
-            description="Controle avançado de acessos para diretores, gerentes e consultores."
-            planRequired="enterprise"
-            currentPlan={currentPlan}
-          />
-
-          {/* Administração & Auditoria */}
-          <FeatureAccessCard
-            title="Auditoria & Logs Executivos"
-            description="Rastreabilidade completa de todas as ações e propostas emitidas."
-            planRequired="enterprise"
-            currentPlan={currentPlan}
-          />
-
-          {/* Suporte Dedicado */}
-          <FeatureAccessCard
-            title="Suporte Prioritário VIP"
-            description="Acompanhamento semanal de conversão e implantação assistida."
+            title="Permissões, Auditoria & Configurações"
+            description="Níveis hierárquicos de acesso, logs detalhados e suporte executivo prioritário."
             planRequired="enterprise"
             currentPlan={currentPlan}
           />

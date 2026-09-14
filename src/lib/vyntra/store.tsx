@@ -246,7 +246,9 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
               !opportunity.city.includes("Santa Rosa")
                 ? opportunity.city
                 : store === "Nova Serra / SC"
-                  ? NOVA_SERRA_REGION_CITIES[Math.floor(index / 3) % NOVA_SERRA_REGION_CITIES.length]
+                  ? (NOVA_SERRA_REGION_CITIES[
+                      Math.floor(index / 3) % NOVA_SERRA_REGION_CITIES.length
+                    ] ?? "Nova Serra")
                   : store === "Vale Azul / RS"
                     ? "Vale Azul"
                     : "Santa Aurora") || "Nova Serra";

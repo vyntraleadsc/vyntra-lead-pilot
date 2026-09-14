@@ -109,7 +109,7 @@ function JsonPayloadViewer({
 
   const clientName = (payload["nome"] || payload["name"] || payload["customer_name"] || "Cliente sem nome informado") as string;
   const phone = (payload["telefone"] || payload["whatsapp"] || payload["phone"] || "Não informado") as string;
-  const product = (payload["modelo_moto"] || payload["moto"] || payload["produto"] || "Honda 0 km") as string;
+  const product = (payload["modelo_moto"] || payload["moto"] || payload["produto"] || "Modelo 0 km") as string;
   const method = (payload["forma_pagamento"] || payload["method"] || "Financiamento / Consórcio") as string;
   const downPayment = (payload["valor_entrada"] || payload["downPayment"] || "Sem entrada especificada") as string;
   const city = (payload["cidade"] || payload["city"] || "Detectada automaticamente") as string;
@@ -352,7 +352,7 @@ export function IntegrationsPage({
         email: "eduardo.dorneles@fazenda.com.br",
         interest: "Toyota Hilux SRX Plus 0km",
         budget: 290000,
-        city: "Lages",
+        city: "Nova Serra",
         message: "Tenho pressa para retirar o veículo nesta semana. Pago à vista com faturamento imediato.",
         source: "Meta Ads - Campanha Agro SC",
         campaign: "Campanha Força Bruta 2026",

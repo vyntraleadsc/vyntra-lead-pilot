@@ -22,16 +22,16 @@ const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
 export const SELLERS: Seller[] = [
   {
     id: "francine",
-    name: "Francine",
+    name: "Lucas Mendes",
     online: true,
     avgResponseMinutes: 4,
     conversion: 21,
     sales: 5,
-    specialty: "Consultora Comercial",
+    specialty: "Consultor Comercial",
   },
   {
     id: "guilherme",
-    name: "Guilherme",
+    name: "Rafael Costa",
     online: true,
     avgResponseMinutes: 6,
     conversion: 18,
@@ -40,7 +40,7 @@ export const SELLERS: Seller[] = [
   },
   {
     id: "vitor",
-    name: "Vitor",
+    name: "Bruno Martins",
     online: true,
     avgResponseMinutes: 8,
     conversion: 14,
@@ -49,7 +49,7 @@ export const SELLERS: Seller[] = [
   },
   {
     id: "gabriel",
-    name: "Gabriel",
+    name: "Felipe Oliveira",
     online: false,
     avgResponseMinutes: 13,
     conversion: 9,
@@ -148,7 +148,7 @@ const raw: Raw[] = [
     resp: null,
     o: "Valor da parcela",
     v: 27000,
-    bike: "Honda CB 250F 2019",
+    bike: "Street 250F 2019",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -197,7 +197,7 @@ const raw: Raw[] = [
     resp: 22,
     o: "Estou comparando opções",
     v: 17500,
-    bike: "Honda Biz 125 2016",
+    bike: "Scooter 125 2016",
     trade: true,
     sim: false,
     rp: "Seminova",
@@ -270,7 +270,7 @@ const raw: Raw[] = [
     resp: 3,
     o: "Prazo de entrega",
     v: 32900,
-    bike: "Honda PCX 2021",
+    bike: "Urban 160 2021",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -464,7 +464,7 @@ const raw: Raw[] = [
     resp: 7,
     o: "Estou comparando opções",
     v: 25600,
-    bike: "Honda CG 160 2017",
+    bike: "City 160 2017",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -513,7 +513,7 @@ const raw: Raw[] = [
     resp: 2,
     o: "Nada",
     v: 29900,
-    bike: "Honda Twister 250 2020",
+    bike: "Sport 250 2020",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -610,7 +610,7 @@ const raw: Raw[] = [
     resp: null,
     o: "Valor da parcela",
     v: 28400,
-    bike: "Honda XRE 190 2019",
+    bike: "Trail 190 2019",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -707,7 +707,7 @@ const raw: Raw[] = [
     resp: null,
     o: "Preciso financiar",
     v: 24300,
-    bike: "Honda Fan 160 2018",
+    bike: "Start 160 2018",
     trade: true,
     sim: true,
     rp: "Financiamento",
@@ -804,7 +804,7 @@ const raw: Raw[] = [
     resp: 12,
     o: "Valor da avaliação da troca",
     v: 21900,
-    bike: "Honda CB 500 2015",
+    bike: "Road 500 2015",
     trade: true,
     sim: false,
     rp: "Avaliação de troca",
@@ -833,8 +833,8 @@ function buildReasons(r: Raw): string[] {
 
 export function buildOpportunities(): Opportunity[] {
   const scCities = [...LAGES_REGION_CITIES];
-  const tpCities = ["Três Passos", "Tenente Portela", "Crissiumal", "Três Passos", "Esperança do Sul"];
-  const srCities = ["Santa Rosa", "Giruá", "Tuparendi", "Santa Rosa", "Santo Cristo"];
+  const tpCities = ["Vale Azul", "Jardim Norte", "Vila Central", "Alto da Serra", "Porto Belo"];
+  const srCities = ["Santa Aurora", "Bela Vista", "Monte Alto", "Rio Claro", "Pinhal Novo"];
 
   return raw.map((r, i) => {
     const isSC = i % 3 === 0;
@@ -845,17 +845,17 @@ export function buildOpportunities(): Opportunity[] {
     let areaCode: string;
 
     if (state === "SC") {
-      store = "Lages / SC";
+      store = "Nova Serra / SC";
       city = scCities[Math.floor(i / 3) % scCities.length]!;
       region = "Santa Catarina";
       areaCode = "49";
     } else if (i % 2 === 0) {
-      store = "Três Passos / RS";
+      store = "Vale Azul / RS";
       city = tpCities[i % tpCities.length]!;
       region = "Rio Grande do Sul";
       areaCode = "55";
     } else {
-      store = "Santa Rosa / RS";
+      store = "Santa Aurora / RS";
       city = srCities[i % srCities.length]!;
       region = "Rio Grande do Sul";
       areaCode = "55";
@@ -1028,21 +1028,21 @@ export function buildNotifications(opps: Opportunity[]): AppNotification[] {
   return list;
 }
 
-export const DEALERSHIP = "Via Passos Honda — Demonstração";
+export const DEALERSHIP = "Grupo Nova Serra — Demonstração";
 
 export const DEMO_CREDENTIALS = { email: "gestor@vyntra.com", password: "123456" };
 export const DEMO_CREDENTIALS_GESTOR = {
   email: "gestor@vyntra.com",
   password: "123456",
-  name: "Gestor",
+  name: "Marcos Almeida",
   role: "gestor" as const,
   title: "Gerência Geral de Vendas",
 };
 export const DEMO_CREDENTIALS_VENDEDOR = {
   email: "francine@vyntra.com",
   password: "123456",
-  name: "Francine",
+  name: "Lucas Mendes",
   sellerId: "francine",
   role: "vendedor" as const,
-  title: "Consultora Comercial",
+  title: "Consultor Comercial",
 };

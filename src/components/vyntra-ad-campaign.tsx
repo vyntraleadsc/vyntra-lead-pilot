@@ -51,14 +51,14 @@ export interface CampaignClient {
 }
 
 export const DEMO_CLIENTS: CampaignClient[] = [
-  { id: "c1", name: "João Silva", phone: "(49) 99999-1001", avatar: "JS", location: "Lages / SC", interest: "Honda 0 km" },
-  { id: "c2", name: "Mariana Souza", phone: "(49) 99999-1002", avatar: "MS", location: "Três Passos / RS", interest: "Seminova revisada" },
-  { id: "c3", name: "Carlos Oliveira", phone: "(49) 99999-1003", avatar: "CO", location: "Santa Rosa / RS", interest: "Consórcio Honda" },
-  { id: "c4", name: "Ana Paula Santos", phone: "(49) 99999-1004", avatar: "AS", location: "Lages / SC", interest: "Bros 160 / NXR" },
-  { id: "c5", name: "Lucas Pereira", phone: "(49) 99999-1005", avatar: "LP", location: "Três Passos / RS", interest: "CG 160 Titan" },
-  { id: "c6", name: "Fernanda Costa", phone: "(49) 99999-1006", avatar: "FC", location: "Santa Rosa / RS", interest: "Biz 125 0 km" },
-  { id: "c7", name: "Rafael Martins", phone: "(49) 99999-1007", avatar: "RM", location: "Lages / SC", interest: "CB 300F Twister" },
-  { id: "c8", name: "Juliana Alves", phone: "(49) 99999-1008", avatar: "JA", location: "Três Passos / RS", interest: "XRE 300 Sahara" },
+  { id: "c1", name: "João Silva", phone: "(49) 99999-1001", avatar: "JS", location: "Nova Serra / SC", interest: "Modelo 0 km" },
+  { id: "c2", name: "Mariana Souza", phone: "(55) 99999-1002", avatar: "MS", location: "Vale Azul / RS", interest: "Seminova revisada" },
+  { id: "c3", name: "Carlos Oliveira", phone: "(55) 99999-1003", avatar: "CO", location: "Santa Aurora / RS", interest: "Consórcio Nacional" },
+  { id: "c4", name: "Ana Paula Santos", phone: "(49) 99999-1004", avatar: "AS", location: "Nova Serra / SC", interest: "Trail 160cc" },
+  { id: "c5", name: "Lucas Pereira", phone: "(55) 99999-1005", avatar: "LP", location: "Vale Azul / RS", interest: "Street 160cc" },
+  { id: "c6", name: "Fernanda Costa", phone: "(55) 99999-1006", avatar: "FC", location: "Santa Aurora / RS", interest: "Scooter 125cc" },
+  { id: "c7", name: "Rafael Martins", phone: "(49) 99999-1007", avatar: "RM", location: "Nova Serra / SC", interest: "Sport 300cc" },
+  { id: "c8", name: "Juliana Alves", phone: "(55) 99999-1008", avatar: "JA", location: "Vale Azul / RS", interest: "Adventure 300cc" },
 ];
 
 export interface ClientMessageDraft {
@@ -89,8 +89,8 @@ export interface CampaignRecord {
 
 const DEFAULT_DEMO_CAMPAIGN: CampaignRecord = {
   id: "camp-demo-1",
-  title: "FEIRÃO VIA PASSOS HONDA",
-  info: "Feirão Via Passos Honda neste fim de semana, com condições especiais em motos Honda novas e seminovas. Consulte as oportunidades disponíveis.",
+  title: "FEIRÃO GRUPO NOVA SERRA",
+  info: "Feirão Grupo Nova Serra neste fim de semana, com condições especiais em modelos novos e seminovos. Consulte as oportunidades disponíveis.",
   image: "/feirao-honda.jpg",
   totalClients: 8,
   sentCount: 8,
@@ -101,49 +101,49 @@ const DEFAULT_DEMO_CAMPAIGN: CampaignRecord = {
       clientName: "João Silva",
       phone: "(49) 99999-1001",
       message:
-        "Olá, João! Tudo bem?\n\nQuero te fazer um convite especial. Neste fim de semana teremos o Feirão Via Passos Honda, com condições especiais em motos Honda novas e seminovas.\n\nAchei que poderia ser uma boa oportunidade para você. Se quiser, posso te mostrar as condições disponíveis.",
+        "Olá, João! Tudo bem?\n\nQuero te fazer um convite especial. Neste fim de semana teremos o Feirão Grupo Nova Serra, com condições especiais em modelos novos e seminovos.\n\nAchei que poderia ser uma boa oportunidade para você. Se quiser, posso te mostrar as condições disponíveis.",
     },
     {
       clientName: "Mariana Souza",
-      phone: "(49) 99999-1002",
+      phone: "(55) 99999-1002",
       message:
-        "Olá, Mariana! Tudo bem?\n\nPassando para te avisar de uma oportunidade especial: neste fim de semana acontece o Feirão Via Passos Honda, com condições diferenciadas em motos Honda novas e seminovas.\n\nSeparei essa oportunidade porque acredito que você possa encontrar uma condição interessante por lá.\n\nQuer que eu te mostre as opções disponíveis?",
+        "Olá, Mariana! Tudo bem?\n\nPassando para te avisar de uma oportunidade especial: neste fim de semana acontece o Feirão Grupo Nova Serra, com condições diferenciadas em modelos novos e seminovos selecionados.\n\nSeparei essa oportunidade porque acredito que você possa encontrar uma condição interessante por lá.\n\nQuer que eu te mostre as opções disponíveis?",
     },
     {
       clientName: "Carlos Oliveira",
-      phone: "(49) 99999-1003",
+      phone: "(55) 99999-1003",
       message:
-        "Olá, Carlos! Tudo bem por aí?\n\nLembrei do seu interesse em motos Honda e queria compartilhar em primeira mão: teremos neste fim de semana o Feirão Via Passos Honda, com taxas exclusivas e condições facilitadas tanto para motos 0 km quanto seminovas.\n\nSe fizer sentido para o seu momento, posso te adiantar os modelos disponíveis.",
+        "Olá, Carlos! Tudo bem por aí?\n\nLembrei do seu interesse em modelos novos e queria compartilhar em primeira mão: teremos neste fim de semana o Feirão Grupo Nova Serra, com taxas exclusivas e condições facilitadas tanto para modelos 0 km quanto seminovos.\n\nSe fizer sentido para o seu momento, posso te adiantar os modelos disponíveis.",
     },
     {
       clientName: "Ana Paula Santos",
       phone: "(49) 99999-1004",
       message:
-        "Olá, Ana Paula! Como você está?\n\nEstou entrando em contato para te dar uma notícia excelente: neste fim de semana a Via Passos Honda fará um feirão especial com oportunidades diferenciadas em modelos novos e seminovos selecionados.\n\nPensei no seu perfil e achei que gostaria de conferir. Posso te enviar mais detalhes?",
+        "Olá, Ana Paula! Como você está?\n\nEstou entrando em contato para te dar uma notícia excelente: neste fim de semana o Grupo Nova Serra fará um feirão especial com oportunidades diferenciadas em modelos novos e seminovos selecionados.\n\nPensei no seu perfil e achei que gostaria de conferir. Posso te enviar mais detalhes?",
     },
     {
       clientName: "Lucas Pereira",
-      phone: "(49) 99999-1005",
+      phone: "(55) 99999-1005",
       message:
-        "Olá, Lucas! Tudo certo?\n\nPassando com uma oportunidade que vale a pena conferir: o Feirão Via Passos Honda acontece neste fim de semana, trazendo planos facilitados e condições sob medida em toda a linha Honda.\n\nComo você já estava acompanhando as novidades, quis te avisar com antecedência. Me avisa se quiser ver as opções!",
+        "Olá, Lucas! Tudo certo?\n\nPassando com uma oportunidade que vale a pena conferir: o Feirão Grupo Nova Serra acontece neste fim de semana, trazendo planos facilitados e condições sob medida em toda a linha.\n\nComo você já estava acompanhando as novidades, quis te avisar com antecedência. Me avisa se quiser ver as opções!",
     },
     {
       clientName: "Fernanda Costa",
-      phone: "(49) 99999-1006",
+      phone: "(55) 99999-1006",
       message:
-        "Olá, Fernanda! Tudo ótimo com você?\n\nQuero te convidar para o Feirão Via Passos Honda neste fim de semana. Teremos condições realmente diferenciadas em motos novas e seminovas revisadas com garantia de procedência.\n\nAcredito que tenha opções perfeitas para você. Quer que eu separe algumas propostas para você dar uma olhada?",
+        "Olá, Fernanda! Tudo ótimo com você?\n\nQuero te convidar para o Feirão Grupo Nova Serra neste fim de semana. Teremos condições realmente diferenciadas em modelos novos e seminovos revisados com garantia de procedência.\n\nAcredito que tenha opções perfeitas para você. Quer que eu separe algumas propostas para você dar uma olhada?",
     },
     {
       clientName: "Rafael Martins",
       phone: "(49) 99999-1007",
       message:
-        "Olá, Rafael! Como vão as coisas?\n\nUma novidade rápida: teremos neste fim de semana o Feirão Via Passos Honda com condições exclusivas de negociação em motos Honda novas e seminovas.\n\nSeparei o seu contato para garantir prioridade de atendimento. Gostaria que eu te enviasse as condições especiais disponíveis?",
+        "Olá, Rafael! Como vão as coisas?\n\nUma novidade rápida: teremos neste fim de semana o Feirão Grupo Nova Serra com condições exclusivas de negociação em modelos novos e seminovos.\n\nSeparei o seu contato para garantir prioridade de atendimento. Gostaria que eu te enviasse as condições especiais disponíveis?",
     },
     {
       clientName: "Juliana Alves",
-      phone: "(49) 99999-1008",
+      phone: "(55) 99999-1008",
       message:
-        "Olá, Juliana! Tudo bem?\n\nPassando para te fazer um convite exclusivo: neste fim de semana realizaremos o Feirão Via Passos Honda, com condições imperdíveis para quem quer conquistar sua moto nova ou seminova.\n\nLembrei da sua busca e quis garantir que você soubesse antes. Posso te adiantar o catálogo do feirão?",
+        "Olá, Juliana! Tudo bem?\n\nPassando para te fazer um convite exclusivo: neste fim de semana realizaremos o Feirão Grupo Nova Serra, com condições imperdíveis para quem quer conquistar seu veículo novo ou seminovo.\n\nLembrei da sua busca e quis garantir que você soubesse antes. Posso te adiantar o catálogo do feirão?",
     },
   ],
 };
@@ -155,25 +155,25 @@ function generateIndividualizedMessage(
   index: number,
 ): string {
   const firstName = clientName.split(" ")[0];
-  const t = title.trim() || "Feirão Via Passos Honda";
+  const t = title.trim() || "Feirão Grupo Nova Serra";
   const cleanInfo = info.trim();
 
   const variations = [
-    `Olá, ${firstName}! Tudo bem?\n\nQuero te fazer um convite especial. Neste fim de semana teremos o ${t}, com condições especiais em motos Honda novas e seminovas.\n\nAchei que poderia ser uma boa oportunidade para você. Se quiser, posso te mostrar as condições disponíveis.`,
+    `Olá, ${firstName}! Tudo bem?\n\nQuero te fazer um convite especial. Neste fim de semana teremos o ${t}, com condições especiais em modelos novos e seminovos.\n\nAchei que poderia ser uma boa oportunidade para você. Se quiser, posso te mostrar as condições disponíveis.`,
 
-    `Olá, ${firstName}! Tudo bem?\n\nPassando para te avisar de uma oportunidade especial: neste fim de semana acontece o ${t}, com condições diferenciadas em motos Honda novas e seminovas.\n\nSeparei essa oportunidade porque acredito que você possa encontrar uma condição interessante por lá.\n\nQuer que eu te mostre as opções disponíveis?`,
+    `Olá, ${firstName}! Tudo bem?\n\nPassando para te avisar de uma oportunidade especial: neste fim de semana acontece o ${t}, com condições diferenciadas em modelos novos e seminovos.\n\nSeparei essa oportunidade porque acredito que você possa encontrar uma condição interessante por lá.\n\nQuer que eu te mostre as opções disponíveis?`,
 
-    `Olá, ${firstName}! Tudo bem por aí?\n\nLembrei do seu interesse em motos Honda e queria compartilhar em primeira mão: teremos o ${t}, com taxas exclusivas e condições facilitadas tanto para motos 0 km quanto seminovas.\n\nSe fizer sentido para o seu momento, posso te adiantar os modelos disponíveis.`,
+    `Olá, ${firstName}! Tudo bem por aí?\n\nLembrei do seu interesse em modelos novos e queria compartilhar em primeira mão: teremos o ${t}, com taxas exclusivas e condições facilitadas tanto para modelos 0 km quanto seminovos.\n\nSe fizer sentido para o seu momento, posso te adiantar os modelos disponíveis.`,
 
-    `Olá, ${firstName}! Como você está?\n\nEstou entrando em contato para te dar uma notícia excelente: teremos o ${t} com oportunidades diferenciadas em modelos novos e seminovos selecionados na Via Passos Honda.\n\nPensei no seu perfil e achei que gostaria de conferir. Posso te enviar mais detalhes?`,
+    `Olá, ${firstName}! Como você está?\n\nEstou entrando em contato para te dar uma notícia excelente: teremos o ${t} com oportunidades diferenciadas em modelos novos e seminovos selecionados no Grupo Nova Serra.\n\nPensei no seu perfil e achei que gostaria de conferir. Posso te enviar mais detalhes?`,
 
-    `Olá, ${firstName}! Tudo certo?\n\nPassando com uma oportunidade que vale a pena conferir: o ${t} acontece com planos facilitados e condições sob medida em toda a linha Honda.\n\nComo você já estava acompanhando as novidades, quis te avisar com antecedência. Me avisa se quiser ver as opções!`,
+    `Olá, ${firstName}! Tudo certo?\n\nPassando com uma oportunidade que vale a pena conferir: o ${t} acontece com planos facilitados e condições sob medida em toda a linha.\n\nComo você já estava acompanhando as novidades, quis te avisar com antecedência. Me avisa se quiser ver as opções!`,
 
-    `Olá, ${firstName}! Tudo ótimo com você?\n\nQuero te convidar para o ${t}. Teremos condições realmente diferenciadas em motos novas e seminovas revisadas com garantia.\n\nAcredito que tenha opções perfeitas para você. Quer que eu separe algumas propostas para você dar uma olhada?`,
+    `Olá, ${firstName}! Tudo ótimo com você?\n\nQuero te convidar para o ${t}. Teremos condições realmente diferenciadas em modelos novos e seminovos revisados com garantia.\n\nAcredito que tenha opções perfeitas para você. Quer que eu separe algumas propostas para você dar uma olhada?`,
 
-    `Olá, ${firstName}! Como vão as coisas?\n\nUma novidade rápida: teremos o ${t} com condições exclusivas de negociação em motos Honda novas e seminovas.\n\nSeparei o seu contato para garantir prioridade de atendimento na rede Via Passos. Gostaria que eu te enviasse as condições especiais disponíveis?`,
+    `Olá, ${firstName}! Como vão as coisas?\n\nUma novidade rápida: teremos o ${t} com condições exclusivas de negociação em modelos novos e seminovos.\n\nSeparei o seu contato para garantir prioridade de atendimento na rede Grupo Nova Serra. Gostaria que eu te enviasse as condições especiais disponíveis?`,
 
-    `Olá, ${firstName}! Tudo bem?\n\nPassando para te fazer um convite exclusivo: realizaremos o ${t}, com condições imperdíveis para quem quer conquistar sua moto nova ou seminova.\n\nLembrei da sua busca e quis garantir que você soubesse antes. Posso te adiantar o catálogo do feirão?`,
+    `Olá, ${firstName}! Tudo bem?\n\nPassando para te fazer um convite exclusivo: realizaremos o ${t}, com condições imperdíveis para quem quer conquistar seu veículo novo ou seminovo.\n\nLembrei da sua busca e quis garantir que você soubesse antes. Posso te adiantar o catálogo do feirão?`,
   ];
 
   return variations[index % variations.length] ?? variations[0] ?? "";
@@ -214,12 +214,12 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
 
   // Load Demonstration Example
   const handleLoadDemo = () => {
-    setCampaignTitle("FEIRÃO VIA PASSOS HONDA");
+    setCampaignTitle("FEIRÃO GRUPO NOVA SERRA");
     setCampaignInfo(
-      "Feirão Via Passos Honda neste fim de semana, com condições especiais em motos Honda novas e seminovas. Consulte as oportunidades disponíveis.",
+      "Feirão Grupo Nova Serra neste fim de semana, com condições especiais em modelos novos e seminovos selecionados. Consulte as oportunidades disponíveis.",
     );
     setCampaignImage("/feirao-honda.jpg");
-    toast.success("Dados de demonstração do Feirão Honda carregados!");
+    toast.success("Dados de demonstração da campanha carregados!");
   };
 
   // Image Upload handler
@@ -337,7 +337,7 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
 
         const newRecord: CampaignRecord = {
           id: `camp-${Date.now()}`,
-          title: campaignTitle || "FEIRÃO VIA PASSOS HONDA",
+          title: campaignTitle || "FEIRÃO GRUPO NOVA SERRA",
           info: campaignInfo,
           image: campaignImage,
           totalClients: total,
@@ -664,7 +664,7 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
                       1. TÍTULO DO ANÚNCIO
                     </label>
                     <Input
-                      placeholder="Ex: FEIRÃO VIA PASSOS HONDA"
+                      placeholder="Ex: FEIRÃO GRUPO NOVA SERRA"
                       value={campaignTitle}
                       onChange={(e) => setCampaignTitle(e.target.value)}
                       className="h-11 bg-[#060b1b] border-border/70 text-sm focus-visible:border-cyan-500"
@@ -715,7 +715,7 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
                         variant="ghost"
                         onClick={() => {
                           setCampaignImage("/feirao-honda.jpg");
-                          toast.success("Imagem oficial do Feirão Honda selecionada.");
+                          toast.success("Banner oficial do Feirão selecionado.");
                         }}
                         className="h-10 text-xs text-muted-foreground hover:text-foreground"
                       >
@@ -988,7 +988,7 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
                       CAMPANHA
                     </span>
                     <strong className="mt-1 text-base font-bold text-foreground block">
-                      {campaignTitle || "FEIRÃO VIA PASSOS HONDA"}
+                      {campaignTitle || "FEIRÃO GRUPO NOVA SERRA"}
                     </strong>
                   </div>
 
@@ -1024,7 +1024,7 @@ export function AdCampaignPage({ setView }: { setView?: (v: any) => void }) {
                 {/* Caixa de Aviso de Demonstração */}
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-slate-200">
                   <strong className="text-amber-300 font-semibold">Aviso de Protótipo:</strong>{" "}
-                  Nenhum envio real por WhatsApp será realizado neste momento. O sistema simulará o processamento e a distribuição das abordagens personalizadas para validação executiva com a Via Passos Honda.
+                  Nenhum envio real por WhatsApp será realizado neste momento. O sistema simulará o processamento e a distribuição das abordagens personalizadas para validação executiva com o Grupo Nova Serra.
                 </div>
 
                 {/* ÁREA DE SIMULAÇÃO DE DISPARO */}

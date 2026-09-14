@@ -145,48 +145,43 @@ export function qualifyLead(payload: WebhookLeadPayload): LeadScoreResult {
 
   // Direcionamento regional e de loja (RS e SC)
   const cityLower = (payload.city || "").toLowerCase();
-  let suggestedStore: LeadStore = "Três Passos / RS";
+  let suggestedStore: LeadStore = "Vale Azul / RS";
   let suggestedState: LeadState = "RS";
 
   if (
+    cityLower.includes("nova serra") ||
     cityLower.includes("lages") ||
-    cityLower.includes("capão alto") ||
-    cityLower.includes("capao alto") ||
-    cityLower.includes("campo belo") ||
-    cityLower.includes("correia pinto") ||
-    cityLower.includes("palmeira") ||
-    cityLower.includes("bocaina") ||
-    cityLower.includes("painel") ||
-    cityLower.includes("otacílio") ||
-    cityLower.includes("otacilio") ||
-    cityLower.includes("ponte alta") ||
-    cityLower.includes("cerro negro") ||
-    cityLower.includes("são josé do cerrito") ||
-    cityLower.includes("sao jose do cerrito") ||
+    cityLower.includes("jardim norte") ||
+    cityLower.includes("vila central") ||
+    cityLower.includes("alto da serra") ||
+    cityLower.includes("bela vista") ||
+    cityLower.includes("porto belo") ||
+    cityLower.includes("monte alto") ||
+    cityLower.includes("rio claro") ||
+    cityLower.includes("pinhal novo") ||
     cityLower.includes("sc") ||
     cityLower.includes("santa catarina") ||
     cityLower.includes("florianópolis") ||
     cityLower.includes("florianopolis") ||
     cityLower.includes("chapecó") ||
     cityLower.includes("chapeco") ||
-    cityLower.includes("criciúma") ||
-    cityLower.includes("criciuma") ||
     cityLower.includes("blumenau") ||
     cityLower.includes("joinville")
   ) {
-    suggestedStore = "Lages / SC";
+    suggestedStore = "Nova Serra / SC";
     suggestedState = "SC";
   } else if (
+    cityLower.includes("santa aurora") ||
     cityLower.includes("santa rosa") ||
     cityLower.includes("santo ângelo") ||
     cityLower.includes("santo angelo") ||
     cityLower.includes("ijui") ||
     cityLower.includes("ijuí")
   ) {
-    suggestedStore = "Santa Rosa / RS";
+    suggestedStore = "Santa Aurora / RS";
     suggestedState = "RS";
   } else {
-    suggestedStore = "Três Passos / RS";
+    suggestedStore = "Vale Azul / RS";
     suggestedState = "RS";
   }
 

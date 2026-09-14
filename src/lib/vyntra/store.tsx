@@ -47,7 +47,7 @@ import {
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v6";
+const STORAGE_KEY = "vyntra-demo-state-v7";
 
 export type RoleView = "gestor" | "vendedor";
 
@@ -220,20 +220,30 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
           opportunities: parsed.opportunities.map((opportunity, index) => {
             const isSC = index % 3 === 0;
             const state: LeadState = opportunity.state ?? (isSC ? "SC" : "RS");
-            const store: LeadStore =
-              opportunity.store ??
-              (state === "SC"
-                ? "Lages / SC"
+            let store: LeadStore =
+              state === "SC"
+                ? "Nova Serra / SC"
                 : index % 2 === 0
-                  ? "Três Passos / RS"
-                  : "Santa Rosa / RS");
+                  ? "Vale Azul / RS"
+                  : "Santa Aurora / RS";
+            if (opportunity.store === "Nova Serra / SC" || (opportunity.store as unknown as string) === "Lages / SC") {
+              store = "Nova Serra / SC";
+            } else if (opportunity.store === "Vale Azul / RS" || (opportunity.store as unknown as string) === "Três Passos / RS") {
+              store = "Vale Azul / RS";
+            } else if (opportunity.store === "Santa Aurora / RS" || (opportunity.store as unknown as string) === "Santa Rosa / RS") {
+              store = "Santa Aurora / RS";
+            }
             const city =
-              opportunity.city ??
-              (store === "Lages / SC"
-                ? LAGES_REGION_CITIES[Math.floor(index / 3) % LAGES_REGION_CITIES.length]
-                : store === "Três Passos / RS"
-                  ? "Três Passos"
-                  : "Santa Rosa");
+              opportunity.city &&
+              !opportunity.city.includes("Lages") &&
+              !opportunity.city.includes("Três Passos") &&
+              !opportunity.city.includes("Santa Rosa")
+                ? opportunity.city
+                : store === "Nova Serra / SC"
+                  ? LAGES_REGION_CITIES[Math.floor(index / 3) % LAGES_REGION_CITIES.length]
+                  : store === "Vale Azul / RS"
+                    ? "Vale Azul"
+                    : "Santa Aurora";
             const region =
               opportunity.region ??
               (state === "SC" ? "Santa Catarina" : "Rio Grande do Sul");
@@ -311,28 +321,30 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
         let targetRole: RoleView =
           roleHint ??
           (clean.includes("vendedor") ||
+          clean.includes("lucas") ||
+          clean.includes("rafael") ||
+          clean.includes("bruno") ||
+          clean.includes("felipe") ||
           clean.includes("francine") ||
           clean.includes("guilherme") ||
           clean.includes("vitor") ||
-          clean.includes("gabriel") ||
-          clean.includes("carlos") ||
-          clean.includes("juliana")
+          clean.includes("gabriel")
             ? "vendedor"
             : "gestor");
         let targetSellerId = sellerIdHint ?? (state.currentSellerId || "francine");
 
-        if (clean === "gestor@vyntra.com") {
+        if (clean === "gestor@vyntra.com" || clean.includes("gestor") || clean.includes("marcos")) {
           targetRole = "gestor";
-        } else if (clean === "vendedor@vyntra.com" || clean.includes("francine") || clean.includes("juliana")) {
+        } else if (clean === "vendedor@vyntra.com" || clean.includes("lucas") || clean.includes("francine")) {
           targetRole = "vendedor";
           targetSellerId = "francine";
-        } else if (clean.includes("guilherme") || clean.includes("carlos")) {
+        } else if (clean.includes("rafael") || clean.includes("guilherme")) {
           targetRole = "vendedor";
           targetSellerId = "guilherme";
-        } else if (clean.includes("vitor") || clean.includes("marcos")) {
+        } else if (clean.includes("bruno") || clean.includes("vitor")) {
           targetRole = "vendedor";
           targetSellerId = "vitor";
-        } else if (clean.includes("gabriel") || clean.includes("rafael")) {
+        } else if (clean.includes("felipe") || clean.includes("gabriel")) {
           targetRole = "vendedor";
           targetSellerId = "gabriel";
         }

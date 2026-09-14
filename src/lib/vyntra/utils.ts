@@ -122,9 +122,9 @@ export function computeScore(answers: Record<string, string>): {
   // 2. Modelo / Categoria
   const produto = answers["produto"] || "";
   if (produto.includes("0 km") || produto.includes("Nova")) {
-    add(18, "Interesse definido em moto nova Honda 0 km");
+    add(18, "Interesse definido em modelo 0 km");
   } else if (produto.includes("Consórcio")) {
-    add(20, "Perfil de alta aderência ao Consórcio Nacional Honda");
+    add(20, "Perfil de alta aderência ao Consórcio Nacional");
   } else if (produto.includes("Seminova")) {
     add(16, "Interesse em seminova revisada com garantia");
   } else if (produto) {
@@ -136,11 +136,11 @@ export function computeScore(answers: Record<string, string>): {
   if (forma.includes("à vista") || forma.includes("À vista")) {
     add(25, "Pagamento à vista com alta probabilidade de fechamento rápido");
   } else if (forma.includes("troca") || forma.includes("moto atual") || answers["moto"] === "Sim") {
-    add(22, "Possui moto usada na negociação para entrada ou lance");
+    add(22, "Possui veículo usado na negociação para entrada ou lance");
   } else if (forma.includes("Financiamento")) {
     add(20, "Intenção de financiamento bancário com entrada facilitada");
   } else if (forma.includes("Consórcio") || produto.includes("Consórcio")) {
-    add(18, "Consórcio Nacional Honda: parcelas reduzidas sem juros");
+    add(18, "Consórcio Nacional: parcelas reduzidas sem juros");
   } else if (forma) {
     add(12, `Forma de pagamento: ${forma}`);
   }

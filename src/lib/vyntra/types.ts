@@ -4,7 +4,7 @@ export type Category = "0 km" | "Seminova";
 
 export type LeadState = "RS" | "SC";
 
-export type LeadStore = "Lages / SC" | "Três Passos / RS" | "Santa Rosa / RS";
+export type LeadStore = "Nova Serra / SC" | "Vale Azul / RS" | "Santa Aurora / RS";
 
 export type PurchaseMethod = "Financiamento" | "Consórcio" | "À vista";
 
@@ -132,19 +132,21 @@ export interface DistributionRules {
   byPriority: boolean;
 }
 
-export const LAGES_REGION_CITIES = [
-  "Lages",
-  "Capão Alto",
-  "Campo Belo",
-  "Correia Pinto",
-  "Palmeira",
-  "Bocaina",
-  "Painel",
-  "Otacílio",
-  "Ponte Alta",
-  "Cerro Negro",
-  "São José do Cerrito",
+export const NOVA_SERRA_REGION_CITIES = [
+  "Nova Serra",
+  "Vale Azul",
+  "Santa Aurora",
+  "Jardim Norte",
+  "Vila Central",
+  "Alto da Serra",
+  "Bela Vista",
+  "Porto Belo",
+  "Monte Alto",
+  "Rio Claro",
+  "Pinhal Novo",
 ] as const;
+
+export const LAGES_REGION_CITIES = NOVA_SERRA_REGION_CITIES;
 
 export type LagesRegionCity = (typeof LAGES_REGION_CITIES)[number];
 

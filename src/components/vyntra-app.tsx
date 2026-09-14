@@ -421,7 +421,7 @@ function Login() {
 
         {/* Rodapé: Concessionárias e Status */}
         <div className="relative z-10 flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
-          <span className="font-medium">VYNTRA · Unidades Lages, Três Passos e Santa Rosa</span>
+          <span className="font-medium">VYNTRA · Unidades Nova Serra, Vale Azul e Santa Aurora</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
             <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
             Ambiente operacional ativo
@@ -500,7 +500,7 @@ function Login() {
                       <ShieldCheck className="size-3.5" />
                       Visão Gerencial e Supervisão:
                     </div>
-                    Controle consolidado das unidades (Lages, Três Passos e Santa Rosa), funil
+                    Controle consolidado das unidades (Nova Serra, Vale Azul e Santa Aurora), funil
                     geral, regras de distribuição e desempenho da equipe.
                   </>
                 ) : (
@@ -651,7 +651,7 @@ function Login() {
                       Entrar como Gestor
                     </div>
                     <div className="text-[11px] text-foreground font-medium">gestor@vyntra.com</div>
-                    <div className="text-[10px] text-muted-foreground">Gestor · Lojas RS/SC</div>
+                    <div className="text-[10px] text-muted-foreground">Marcos Almeida · Gestor</div>
                   </button>
                   <button
                     type="button"
@@ -662,8 +662,8 @@ function Login() {
                       <UserRound className="size-3.5" />
                       Entrar como Vendedor
                     </div>
-                    <div className="text-[11px] text-foreground font-medium">francine@vyntra.com</div>
-                    <div className="text-[10px] text-muted-foreground">Fila de ação e consultora</div>
+                    <div className="text-[11px] text-foreground font-medium">vendedor@vyntra.com</div>
+                    <div className="text-[10px] text-muted-foreground">Lucas Mendes · Consultor</div>
                   </button>
                 </div>
               </div>
@@ -1783,14 +1783,14 @@ function Overview({
                   Operação em Tempo Real
                 </span>
                 <span className="hidden sm:inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/50 px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                  Via Passos Honda
+                  Grupo Nova Serra
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
                 Olá, Gestor!
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
-                Central executiva de comando · Monitoramento consolidado das concessionárias em <strong className="text-cyan-300">Lages/SC</strong>, <strong className="text-cyan-300">Três Passos/RS</strong> e <strong className="text-cyan-300">Santa Rosa/RS</strong>.
+                Central executiva de comando · Monitoramento consolidado das concessionárias em <strong className="text-cyan-300">Nova Serra/SC</strong>, <strong className="text-cyan-300">Vale Azul/RS</strong> e <strong className="text-cyan-300">Santa Aurora/RS</strong>.
               </p>
             </div>
           </div>
@@ -2033,7 +2033,7 @@ function Overview({
             })}
           </div>
           <p className="mt-6 border-t border-border/40 pt-4 text-[11px] leading-relaxed text-muted-foreground">
-            Critérios multivariáveis: intenção imediata, orçamento vs. modelo Honda, prazo de compra, entrada em dinheiro ou moto seminova.
+            Critérios multivariáveis: intenção imediata, orçamento vs. modelo desejado, prazo de compra, entrada em dinheiro ou veículo seminovo.
           </p>
         </section>
       </div>
@@ -2170,26 +2170,26 @@ function FilterBar({
     filters.state === "SC"
       ? [
           ["all", "Todas as lojas (SC)"],
-          ["Lages / SC", "Lages / SC"],
+          ["Nova Serra / SC", "Nova Serra / SC"],
         ]
       : filters.state === "RS"
         ? [
             ["all", "Todas as lojas (RS)"],
-            ["Três Passos / RS", "Três Passos / RS"],
-            ["Santa Rosa / RS", "Santa Rosa / RS"],
+            ["Vale Azul / RS", "Vale Azul / RS"],
+            ["Santa Aurora / RS", "Santa Aurora / RS"],
           ]
         : [
             ["all", "Todas as lojas (RS e SC)"],
-            ["Lages / SC", "Lages / SC (SC)"],
-            ["Três Passos / RS", "Três Passos / RS (RS)"],
-            ["Santa Rosa / RS", "Santa Rosa / RS (RS)"],
+            ["Nova Serra / SC", "Nova Serra / SC (SC)"],
+            ["Vale Azul / RS", "Vale Azul / RS (RS)"],
+            ["Santa Aurora / RS", "Santa Aurora / RS (RS)"],
           ];
 
   const handleStateChange = (newState: string) => {
     let nextStore = filters.store;
-    if (newState === "SC" && (filters.store === "Três Passos / RS" || filters.store === "Santa Rosa / RS")) {
+    if (newState === "SC" && (filters.store === "Vale Azul / RS" || filters.store === "Santa Aurora / RS")) {
       nextStore = "all";
-    } else if (newState === "RS" && filters.store === "Lages / SC") {
+    } else if (newState === "RS" && filters.store === "Nova Serra / SC") {
       nextStore = "all";
     }
     setFilters({ ...filters, state: newState, store: nextStore, city: "all" });
@@ -2212,7 +2212,7 @@ function FilterBar({
 
   // Lista de cidades disponíveis com base nos filtros regionais
   const availableCities: Array<[string, string]> = [["all", "Todas as cidades"]];
-  if (filters.state === "SC" || filters.store === "Lages / SC") {
+  if (filters.state === "SC" || filters.store === "Nova Serra / SC") {
     LAGES_REGION_CITIES.forEach((c) => availableCities.push([c, c]));
   } else if (filters.state === "RS") {
     const rsCities = Array.from(new Set(opportunities.filter((o) => o.state === "RS").map((o) => o.city))).sort();
@@ -2252,8 +2252,8 @@ function FilterBar({
         value={filters.store}
         onValueChange={(v) => {
           let nextState = filters.state;
-          if (v === "Lages / SC" && filters.state === "RS") nextState = "SC";
-          if ((v === "Três Passos / RS" || v === "Santa Rosa / RS") && filters.state === "SC") nextState = "RS";
+          if (v === "Nova Serra / SC" && filters.state === "RS") nextState = "SC";
+          if ((v === "Vale Azul / RS" || v === "Santa Aurora / RS") && filters.state === "SC") nextState = "RS";
           setFilters({ ...filters, store: v, state: nextState, city: "all" });
         }}
       >
@@ -2275,7 +2275,7 @@ function FilterBar({
           let nextStore = filters.store;
           if (LAGES_REGION_CITIES.includes(v as (typeof LAGES_REGION_CITIES)[number])) {
             nextState = "SC";
-            nextStore = "Lages / SC";
+            nextStore = "Nova Serra / SC";
           }
           setFilters({ ...filters, city: v, state: nextState, store: nextStore });
         }}
@@ -2364,7 +2364,7 @@ function OpportunitiesPage({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [targetSeller, setTargetSeller] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
-  const [insightFilter, setInsightFilter] = useState<"all" | "hot" | "consorcio" | "urgent" | "lages" | "rs">("all");
+  const [insightFilter, setInsightFilter] = useState<"all" | "hot" | "consorcio" | "urgent" | "novaserra" | "rs">("all");
 
   const baseOpportunities = useMemo(() => {
     return isSeller ? opportunities.filter((o) => o.sellerId === currentSellerId) : opportunities;
@@ -2388,8 +2388,8 @@ function OpportunitiesPage({
       return o.score >= 80 && waiting !== null && waiting >= 10;
     }).length;
   }, [baseOpportunities, now]);
-  const lagesCount = useMemo(
-    () => baseOpportunities.filter((o) => o.store === "Lages / SC").length,
+  const novaSerraCount = useMemo(
+    () => baseOpportunities.filter((o) => o.store === "Nova Serra / SC").length,
     [baseOpportunities],
   );
   const rsCount = useMemo(
@@ -2411,7 +2411,7 @@ function OpportunitiesPage({
         const waiting = waitingMinutes(o, now);
         if (o.score < 80 || waiting === null || waiting < 10) return false;
       }
-      if (insightFilter === "lages" && o.store !== "Lages / SC") return false;
+      if (insightFilter === "novaserra" && o.store !== "Nova Serra / SC") return false;
       if (insightFilter === "rs" && !o.store.includes("RS")) return false;
 
       return applyFilters(o, f);
@@ -2527,7 +2527,7 @@ function OpportunitiesPage({
             </span>
           </button>
 
-          {/* 2. Consórcio Honda */}
+          {/* 2. Consórcio */}
           <button
             onClick={() => setInsightFilter(insightFilter === "consorcio" ? "all" : "consorcio")}
             className={cn(
@@ -2539,7 +2539,7 @@ function OpportunitiesPage({
           >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
-                <Coins className="size-3.5 text-emerald-400" /> Consórcio Honda
+                <Coins className="size-3.5 text-emerald-400" /> Consórcio
               </span>
               <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
                 {consorcioCount}
@@ -2561,10 +2561,10 @@ function OpportunitiesPage({
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-destructive">
-                <Clock3 className="size-3.5 text-destructive" /> Alerta de SLA
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-400">
+                <Clock className="size-3.5 text-rose-400" /> SLA Atrasado
               </span>
-              <span className="rounded-md bg-destructive/20 px-1.5 py-0.2 text-[10px] font-bold text-destructive">
+              <span className="rounded-md bg-destructive/20 px-1.5 py-0.2 text-[10px] font-bold text-rose-300">
                 {urgentCount}
               </span>
             </div>
@@ -2573,26 +2573,26 @@ function OpportunitiesPage({
             </span>
           </button>
 
-          {/* 4. Serra Catarinense (Lages) */}
+          {/* 4. Região Central (Nova Serra) */}
           <button
-            onClick={() => setInsightFilter(insightFilter === "lages" ? "all" : "lages")}
+            onClick={() => setInsightFilter(insightFilter === "novaserra" ? "all" : "novaserra")}
             className={cn(
               "flex flex-col text-left rounded-lg p-2.5 transition-all border",
-              insightFilter === "lages"
+              insightFilter === "novaserra"
                 ? "bg-cyan-500/20 border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                 : "bg-surface-2/40 border-border/60 hover:bg-surface-2 hover:border-cyan-500/30",
             )}
           >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-300">
-                <MapPin className="size-3.5 text-cyan-400" /> Loja Lages / SC
+                <MapPin className="size-3.5 text-cyan-400" /> Loja Nova Serra / SC
               </span>
               <span className="rounded-md bg-cyan-500/20 px-1.5 py-0.2 text-[10px] font-bold text-cyan-300">
-                {lagesCount}
+                {novaSerraCount}
               </span>
             </div>
             <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
-              Serra Catarinense
+              Região Central (SC)
             </span>
           </button>
 
@@ -2780,7 +2780,7 @@ function OpportunitiesPage({
                         <span className="text-muted-foreground">Forma:</span>
                         {isConsorcio ? (
                           <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
-                            <Coins className="size-2.5" /> Consórcio Honda
+                            <Coins className="size-2.5" /> Consórcio
                           </span>
                         ) : (
                           <span className="font-medium text-foreground">{o.method}</span>
@@ -2851,7 +2851,7 @@ function OpportunitiesPage({
                     "Score / Temp",
                     "Cliente",
                     "Região / Loja",
-                    "Produto Honda",
+                    "Produto",
                     "Categoria",
                     "Forma de Compra",
                     "Orçamento",
@@ -2923,7 +2923,7 @@ function OpportunitiesPage({
                         <td className="px-4 py-3 text-xs whitespace-nowrap">
                           {isConsorcio ? (
                             <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
-                              <Coins className="size-2.5" /> Consórcio Honda
+                              <Coins className="size-2.5" /> Consórcio
                             </span>
                           ) : (
                             o.method
@@ -3105,7 +3105,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
             <h3 className="mb-4 text-sm font-semibold">Perfil da oportunidade</h3>
             <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
               {[
-                ["Produto desejado", `Honda ${o.product}`],
+                ["Produto desejado", o.product],
                 ["Categoria", o.category],
                 ["Forma de compra", o.method],
                 ["Prazo", o.deadline],
@@ -3274,7 +3274,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
               <ArrowLeft className="size-3.5 text-cyan-400" />
               Voltar para o Painel do Gestor
             </Button>
-            <span className="text-xs text-muted-foreground font-medium">Honda Via Passos</span>
+            <span className="text-xs text-muted-foreground font-medium">Grupo Nova Serra</span>
           </div>
         </div>
       </SheetContent>
@@ -3339,16 +3339,16 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
   const handleSimulateBatch = () => {
     setIsSimulating(true);
     const mockLeadNames = [
-      "Honda CB 300F Twister (Lages / SC)",
-      "Honda Bros 160 (Correia Pinto / SC)",
-      "Honda PCX 160 (Capão Alto / SC)",
-      "Consórcio Honda XRE 190 (Otacílio / SC)",
-      "Honda Sahara 300 (Três Passos / RS)",
-      "Honda Titan 160 (Santa Rosa / RS)",
-      "Consórcio Honda CB 500F (Lages / SC)",
-      "Honda Tornado 300 (Painel / SC)",
-      "Honda Elite 125 (São José do Cerrito / SC)",
-      "Consórcio Honda Biz 125 (Bocaina / SC)",
+      "Sport 300F (Nova Serra / SC)",
+      "Trail 160 (Vale Azul / SC)",
+      "Urban 160 (Santa Aurora / SC)",
+      "Consórcio Trail 190 (Jardim Norte / SC)",
+      "Adventure 300 (Vale Azul / RS)",
+      "City 160 (Santa Aurora / RS)",
+      "Consórcio Sport 500F (Nova Serra / SC)",
+      "Touring 300 (Vila Central / SC)",
+      "Scooter 125 (Alto da Serra / SC)",
+      "Consórcio Scooter 125 (Bela Vista / SC)",
     ];
 
     const distributionCount: Record<string, number> = {};
@@ -3524,14 +3524,14 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
 
               {/* Lojas Atendidas */}
               <div className="mt-3 flex flex-wrap gap-1 text-[10px] font-medium">
-                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Lages / SC">
-                  Lages: <strong className="text-primary">{own.filter((o) => o.store === "Lages / SC").length}</strong>
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Nova Serra / SC">
+                  Nova Serra: <strong className="text-primary">{own.filter((o) => o.store === "Nova Serra / SC").length}</strong>
                 </span>
-                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Três Passos / RS">
-                  Três Passos: <strong className="text-foreground">{own.filter((o) => o.store === "Três Passos / RS").length}</strong>
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Vale Azul / RS">
+                  Vale Azul: <strong className="text-foreground">{own.filter((o) => o.store === "Vale Azul / RS").length}</strong>
                 </span>
-                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Santa Rosa / RS">
-                  Santa Rosa: <strong className="text-foreground">{own.filter((o) => o.store === "Santa Rosa / RS").length}</strong>
+                <span className="rounded-md border border-border bg-surface-2 px-1.5 py-0.5" title="Loja Santa Aurora / RS">
+                  Santa Aurora: <strong className="text-foreground">{own.filter((o) => o.store === "Santa Aurora / RS").length}</strong>
                 </span>
               </div>
 
@@ -3570,12 +3570,12 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
               Região Santa Catarina (SC) · Concessionária Oficial
             </span>
             <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary">
-              {v.opportunities.filter((o) => o.store === "Lages / SC").length} leads ativos
+              {v.opportunities.filter((o) => o.store === "Nova Serra / SC").length} leads ativos
             </span>
           </div>
-          <div className="mt-2 text-sm font-semibold text-foreground">Loja Central: Lages / SC</div>
+          <div className="mt-2 text-sm font-semibold text-foreground">Loja Central: Nova Serra / SC</div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Cobertura regional: Lages, Capão Alto, Campo Belo, Correia Pinto, Palmeira, Bocaina, Painel, Otacílio, Ponte Alta, Cerro Negro e São José do Cerrito.
+            Cobertura regional: Nova Serra, Vale Azul, Santa Aurora, Jardim Norte, Vila Central, Alto da Serra, Bela Vista, Porto Belo, Monte Alto, Rio Claro e Pinhal Novo.
           </p>
           <div className="mt-3 flex flex-wrap gap-1">
             {LAGES_REGION_CITIES.map((c) => {
@@ -3602,10 +3602,10 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
             </span>
           </div>
           <div className="mt-2 text-sm font-semibold text-foreground">
-            Lojas Centrais: Três Passos / RS ({v.opportunities.filter((o) => o.store === "Três Passos / RS").length}) · Santa Rosa / RS ({v.opportunities.filter((o) => o.store === "Santa Rosa / RS").length})
+            Lojas Centrais: Vale Azul / RS ({v.opportunities.filter((o) => o.store === "Vale Azul / RS").length}) · Santa Aurora / RS ({v.opportunities.filter((o) => o.store === "Santa Aurora / RS").length})
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Roteamento inteligente por proximidade entre Noroeste e Celeiro gaúcho, distribuindo com prioridade aos fechadores de cada concessionária.
+            Roteamento inteligente por proximidade entre as regiões Sul e Norte, distribuindo com prioridade aos fechadores de cada concessionária.
           </p>
         </div>
       </div>

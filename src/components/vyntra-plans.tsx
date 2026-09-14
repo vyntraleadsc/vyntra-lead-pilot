@@ -205,11 +205,11 @@ export function PlansPage({ setView }: PlansPageProps) {
   // Form mock
   const [formData, setFormData] = useState({
     name: "Ricardo Mendes Guimarães",
-    email: "diretoria@grupocatarinense.com.br",
+    email: "diretoria@gruponovaserra.com.br",
     phone: "(49) 99182-3400",
-    company: "Concessionária Catarinense Veículos e Motos Ltda",
+    company: "Grupo Nova Serra Veículos Ltda",
     cnpj: "82.491.204/0001-92",
-    city: "Lages",
+    city: "Nova Serra",
     state: "SC",
     cardNumber: "•••• •••• •••• 4289",
     cardExp: "12/29",

@@ -109,12 +109,12 @@ export function computeScore(answers: Record<string, string>): {
 
   // 1. Região / Concessionária
   const regiao = answers["regiao"] || answers["cidade_loja"] || "";
-  if (regiao.includes("Lages") || regiao.includes("Santa Catarina") || answers["estado"]?.includes("Santa Catarina")) {
-    add(14, "Região confirmada: Concessionária Lages / SC");
-  } else if (regiao.includes("Três Passos")) {
-    add(14, "Região confirmada: Concessionária Três Passos / RS");
-  } else if (regiao.includes("Santa Rosa")) {
-    add(14, "Região confirmada: Concessionária Santa Rosa / RS");
+  if (regiao.includes("Nova Serra") || regiao.includes("Lages") || regiao.includes("Santa Catarina") || answers["estado"]?.includes("Santa Catarina")) {
+    add(14, "Região confirmada: Concessionária Nova Serra / SC");
+  } else if (regiao.includes("Vale Azul") || regiao.includes("Três Passos")) {
+    add(14, "Região confirmada: Concessionária Vale Azul / RS");
+  } else if (regiao.includes("Santa Aurora") || regiao.includes("Santa Rosa")) {
+    add(14, "Região confirmada: Concessionária Santa Aurora / RS");
   } else if (answers["estado"]) {
     add(8, `Região: ${answers["estado"]}`);
   }

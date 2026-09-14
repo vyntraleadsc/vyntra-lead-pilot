@@ -365,7 +365,7 @@ export function IntegrationsPage({
         email: "mariana.bittencourt@gmail.com",
         interest: "Toyota Corolla Cross XRE",
         budget: 165000,
-        city: "Três Passos",
+        city: "Vale Azul",
         message: "Gostaria de simulação de financiamento com 30% de entrada.",
         source: "Google Ads",
         campaign: "Google Search - Corolla RS",

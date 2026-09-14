@@ -306,7 +306,7 @@ function Login() {
     const name =
       role === "gestor"
         ? "Gestor"
-        : sellers.find((s) => s.id === (sellerId || selectedSellerId))?.name || "Francine";
+        : sellers.find((s) => s.id === (sellerId || selectedSellerId))?.name || "Lucas Mendes";
     setWelcomeUser({ name, role });
     setTimeout(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -2615,7 +2615,7 @@ function OpportunitiesPage({
               </span>
             </div>
             <span className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
-              Três Passos & Santa Rosa
+              Vale Azul & Santa Aurora
             </span>
           </button>
         </div>
@@ -3417,7 +3417,7 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
               </div>
               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Consultores com maior taxa de fechamento recebem até <strong className="text-cyan-300">3.5x mais leads</strong> e exclusividade na primeira rodada de oportunidades quentes (Score 80+).
-                Atualmente liderado por <strong className="text-emerald-400">Francine (21% conv. · 5 vendas)</strong> e <strong className="text-cyan-300">Guilherme (18% conv. · 4 vendas)</strong>.
+                Atualmente liderado por <strong className="text-emerald-400">Lucas Mendes (21% conv. · 5 vendas)</strong> e <strong className="text-cyan-300">Rafael Costa (18% conv. · 4 vendas)</strong>.
               </p>
             </div>
           </div>
@@ -3427,13 +3427,13 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
         <div className="mt-4 pt-3 border-t border-border/40">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5 font-medium">
             <span>Participação Projetada no Volume de Novos Leads (Lead Share por Fechamento):</span>
-            <span className="font-mono text-cyan-300">Francine 38% · Guilherme 29% · Vitor 20% · Gabriel 13%</span>
+            <span className="font-mono text-cyan-300">Lucas 38% · Rafael 29% · Bruno 20% · Felipe 13%</span>
           </div>
           <div className="h-2.5 w-full rounded-full bg-slate-900 overflow-hidden flex border border-border/60">
-            <div style={{ width: "38%" }} className="h-full bg-emerald-500" title="Francine (38%)" />
-            <div style={{ width: "29%" }} className="h-full bg-cyan-500" title="Guilherme (29%)" />
-            <div style={{ width: "20%" }} className="h-full bg-indigo-500" title="Vitor (20%)" />
-            <div style={{ width: "13%" }} className="h-full bg-amber-500/80" title="Gabriel (13%)" />
+            <div style={{ width: "38%" }} className="h-full bg-emerald-500" title="Lucas Mendes (38%)" />
+            <div style={{ width: "29%" }} className="h-full bg-cyan-500" title="Rafael Costa (29%)" />
+            <div style={{ width: "20%" }} className="h-full bg-indigo-500" title="Bruno Martins (20%)" />
+            <div style={{ width: "13%" }} className="h-full bg-amber-500/80" title="Felipe Oliveira (13%)" />
           </div>
         </div>
       </div>
@@ -3562,7 +3562,7 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
         })}
       </div>
 
-      {/* Cartões Regionais: SC (Lages e região) e RS */}
+      {/* Cartões Regionais: SC (Nova Serra e região) e RS */}
       <div className="mb-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
           <div className="flex items-center justify-between">
@@ -3647,7 +3647,7 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
           </div>
           {[
             "Vyntra recebe o lead via Webhook ou Simulador e calcula Lead Score",
-            "Identifica a concessionária regional (Lages/SC ou Três Passos/Santa Rosa)",
+            "Identifica a concessionária regional (Nova Serra/SC, Vale Azul/RS ou Santa Aurora/RS)",
             "Analisa o histórico de fechamento de cada vendedor ativo",
             "Atribui com peso meritocrático (Top Closers recebem mais oportunidades)",
             "Inicia timer de SLA de resposta de 5 minutos e monitora follow-ups",
@@ -4213,7 +4213,7 @@ function Insights({
       v: 24,
       amount: 192000,
       color: "oklch(0.82 0.17 85)", // golden amber
-      badge: "Consórcio Honda",
+      badge: "Consórcio Nacional",
       action: "Ativação de cota de consórcio sem entrada e parcelas reduzidas.",
     },
     {
@@ -4230,10 +4230,10 @@ function Insights({
       amount: 96000,
       color: "oklch(0.65 0.17 295)", // violet
       badge: "Consórcio Nacional",
-      action: "Consórcio Honda não exige consulta prévia para adesão da cota.",
+      action: "Consórcio Nacional não exige consulta prévia para adesão da cota.",
     },
     {
-      n: "Comprou concorrente (Yamaha)",
+      n: "Comprou concorrente",
       v: 7,
       amount: 56000,
       color: "oklch(0.64 0.22 25)", // red
@@ -4295,19 +4295,19 @@ function Insights({
   // Regional Dealerships Performance
   const regionalStores = [
     {
-      name: "Passos Honda Lages / SC",
-      region: "Serra Catarinense",
+      name: "Grupo Nova Serra — Loja Central / SC",
+      region: "Região Central",
       sla: "7 min",
       conversion: "34%",
       sales: 42,
       leads: 124,
       health: "Excelente",
       healthTone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
-      topRoute: "Honda 0 km & Consórcio",
+      topRoute: "Modelos 0 km & Consórcio",
     },
     {
-      name: "Passos Honda Três Passos / RS",
-      region: "Noroeste Gaúcho",
+      name: "Grupo Nova Serra — Loja Vale Azul / RS",
+      region: "Região Sul",
       sla: "9 min",
       conversion: "29%",
       sales: 28,
@@ -4317,8 +4317,8 @@ function Insights({
       topRoute: "Seminovas & Financiamento",
     },
     {
-      name: "Passos Honda Santa Rosa / RS",
-      region: "Missões / Região Noroeste",
+      name: "Grupo Nova Serra — Loja Santa Aurora / RS",
+      region: "Região Norte",
       sla: "11 min",
       conversion: "25%",
       sales: 22,
@@ -4348,7 +4348,7 @@ function Insights({
                 Diagnóstico em Tempo Real
               </span>
               <span className="rounded-full border border-border/60 bg-surface-2/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-300">
-                Rede Passos Honda
+                Grupo Nova Serra
               </span>
             </div>
             <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
@@ -4467,7 +4467,7 @@ function Insights({
           <div className="mt-2 flex items-center justify-between text-[11px]">
             <span className="flex items-center gap-1 font-semibold text-amber-400">
               <CheckCircle2 className="size-3" />
-              Consórcio Honda
+              Consórcio Nacional
             </span>
             <span className="text-muted-foreground">sem barreira de entrada</span>
           </div>
@@ -4545,7 +4545,7 @@ function Insights({
                   Motivos de Perda & Rotas de Reversão
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Auditoria de 105 oportunidades perdidas nos últimos 30 dias na rede Via Passos
+                  Auditoria de 105 oportunidades perdidas nos últimos 30 dias no Grupo Nova Serra
                 </p>
               </div>
               <span className="rounded-lg bg-surface-2 px-2.5 py-1 font-mono text-xs font-bold text-cyan-300 border border-cyan-500/30">
@@ -4702,7 +4702,7 @@ function Insights({
                   Diagnóstico de Fricção no Funil de Conversão
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Acompanhe a taxa de avanço entre cada etapa e identifique onde a rede Passos perde volume
+                  Acompanhe a taxa de avanço entre cada etapa e identifique onde o Grupo Nova Serra perde volume
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -4789,10 +4789,10 @@ function Insights({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/50 pb-4">
             <div>
               <h2 className="text-base font-bold text-foreground">
-                Comparativo por Unidade da Rede Via Passos
+                Comparativo por Unidade do Grupo Nova Serra
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Eficiência operacional nas lojas de Lages/SC, Três Passos/RS e Santa Rosa/RS
+                Eficiência operacional nas lojas de Nova Serra/SC, Vale Azul/RS e Santa Aurora/RS
               </p>
             </div>
             <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
@@ -4891,10 +4891,10 @@ function Insights({
                 </span>
               </div>
               <h3 className="mt-4 font-bold text-base text-foreground">
-                Reversão via Consórcio Honda
+                Reversão via Consórcio Nacional
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                24% das perdas acontecem por falta de entrada imediata. O Consórcio Nacional Honda viabiliza a compra da 0 km com parcelas sem juros e lances embutidos.
+                24% das perdas acontecem por falta de entrada imediata. O Consórcio Nacional viabiliza a compra da 0 km com parcelas sem juros e lances embutidos.
               </p>
             </div>
             <div className="mt-5 pt-3 border-t border-border/40">
@@ -5044,15 +5044,15 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: "Selecione a categoria desejada para direcionarmos as melhores ofertas da concessionária",
     options: [
       {
-        value: "Honda 0 km",
-        title: "Honda 0 km Nova",
-        desc: "Motos novas direto de fábrica com garantia nacional Honda de 3 anos",
+        value: "Modelo 0 km",
+        title: "Modelo 0 km Novo",
+        desc: "Veículos novos direto de fábrica com garantia de fábrica de 3 anos",
         badge: "Mais Procurada",
         iconName: "Bike",
       },
       {
-        value: "Consórcio Honda",
-        title: "Consórcio Nacional Honda",
+        value: "Consórcio Nacional",
+        title: "Consórcio Nacional",
         desc: "Sem juros, parcelas que cabem no bolso e sem necessidade de entrada",
         badge: "Sem Juros · Entrada Zero",
         iconName: "Coins",
@@ -5073,23 +5073,23 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: "Atendimento oficial pela concessionária autorizada mais próxima de você",
     options: [
       {
-        value: "Lages e Serra Catarinense (SC)",
-        title: "Lages & Serra Catarinense (SC)",
-        desc: "Concessionária autorizada em Lages / SC para toda a região serrana",
+        value: "Nova Serra e Região Central (SC)",
+        title: "Nova Serra & Região Central (SC)",
+        desc: "Concessionária autorizada em Nova Serra / SC para toda a região central",
         badge: "Santa Catarina",
         iconName: "MapPin",
       },
       {
-        value: "Três Passos e Região Celeiro (RS)",
-        title: "Três Passos & Região Celeiro (RS)",
-        desc: "Concessionária autorizada em Três Passos / RS e cidades vizinhas",
+        value: "Vale Azul e Região Sul (RS)",
+        title: "Vale Azul & Região Sul (RS)",
+        desc: "Concessionária autorizada em Vale Azul / RS e cidades vizinhas",
         badge: "Rio Grande do Sul",
         iconName: "MapPin",
       },
       {
-        value: "Santa Rosa e Noroeste (RS)",
-        title: "Santa Rosa & Noroeste Gaúcho (RS)",
-        desc: "Concessionária autorizada em Santa Rosa / RS e região noroeste",
+        value: "Santa Aurora e Região Norte (RS)",
+        title: "Santa Aurora & Região Norte (RS)",
+        desc: "Concessionária autorizada em Santa Aurora / RS e região norte",
         badge: "Rio Grande do Sul",
         iconName: "MapPin",
       },
@@ -5102,8 +5102,8 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: "Montamos a melhor condição personalizada para o seu planejamento",
     options: [
       {
-        value: "Consórcio Honda (Sem juros e sem entrada)",
-        title: "Consórcio Honda",
+        value: "Consórcio Nacional (Sem juros e sem entrada)",
+        title: "Consórcio Nacional",
         desc: "Parcelas reduzidas sem juros bancários e sem entrada obrigatória",
         badge: "Econômico · Sem Entrada",
         iconName: "Coins",
@@ -5178,39 +5178,42 @@ function resolveLeadLocation(answers: Record<string, string>): {
   const regiao = answers["regiao"] || answers["cidade_loja"] || "";
   const estado = answers["estado"] || "";
   const isSC =
+    regiao.includes("Nova Serra") ||
     regiao.includes("Lages") ||
     regiao.includes("Santa Catarina") ||
     regiao.includes("(SC)") ||
     estado.includes("Santa Catarina") ||
     estado === "SC";
 
-  const isSantaRosa =
+  const isSantaAurora =
+    regiao.includes("Santa Aurora") ||
     regiao.includes("Santa Rosa") ||
+    answers["cidade_loja"]?.includes("Santa Aurora") ||
     answers["cidade_loja"]?.includes("Santa Rosa");
 
   if (isSC) {
     return {
       state: "SC",
-      store: "Lages / SC",
-      city: "Lages",
-      region: "Serra Catarinense (SC)",
+      store: "Nova Serra / SC",
+      city: "Nova Serra",
+      region: "Região Central (SC)",
     };
   }
 
-  if (isSantaRosa) {
+  if (isSantaAurora) {
     return {
       state: "RS",
-      store: "Santa Rosa / RS",
-      city: "Santa Rosa",
-      region: "Noroeste Gaúcho (RS)",
+      store: "Santa Aurora / RS",
+      city: "Santa Aurora",
+      region: "Região Norte (RS)",
     };
   }
 
   return {
     state: "RS",
-    store: "Três Passos / RS",
-    city: "Três Passos",
-    region: "Região Celeiro (RS)",
+    store: "Vale Azul / RS",
+    city: "Vale Azul",
+    region: "Região Sul (RS)",
   };
 }
 
@@ -5244,6 +5247,7 @@ function Qualification() {
   const loc = resolveLeadLocation(answers);
 
   const isConsorcio =
+    answers["produto"] === "Consórcio Nacional" ||
     answers["produto"] === "Consórcio Honda" ||
     answers["forma"]?.toLowerCase().includes("consórcio");
 
@@ -5266,7 +5270,7 @@ function Qualification() {
   const handleCreateLead = () => {
     if (createdLeadId) return;
     const category =
-      answers["produto"] === "Seminova revisada" || answers["produto"] === "Honda seminova"
+      answers["produto"] === "Seminova revisada" || answers["produto"] === "Honda seminova" || answers["produto"]?.toLowerCase().includes("seminov")
         ? "Seminova"
         : "0 km";
 
@@ -5277,7 +5281,7 @@ function Qualification() {
         : "Financiamento";
 
     const downPayment = isConsorcio
-      ? "Sem entrada (Consórcio Honda)"
+      ? "Sem entrada (Consórcio Nacional)"
       : answers["forma"]?.includes("troca") || answers["forma"]?.includes("moto atual")
         ? "Moto usada na troca"
         : answers["forma"]?.includes("Financiamento")
@@ -5292,7 +5296,7 @@ function Qualification() {
       state: loc.state,
       store: loc.store,
       city: loc.city,
-      product: answers["produto"] || "Honda 0 km",
+      product: answers["produto"] || "Modelo 0 km",
       category,
       method,
       budget: isConsorcio ? "Parcela reduzida sem juros" : "Conforme simulação",
@@ -5309,7 +5313,7 @@ function Qualification() {
             : "Financiamento",
         alternative: isConsorcio ? "0 km" : "Consórcio",
         rationale: isConsorcio
-          ? `Lead com perfil ideal para Consórcio Nacional Honda. Roteado imediatamente para consultores da concessionária ${loc.store}.`
+          ? `Lead com perfil ideal para Consórcio Nacional. Roteado imediatamente para consultores da concessionária ${loc.store}.`
           : `Lead qualificado com alta intenção de compra para a concessionária ${loc.store} (${loc.city}).`,
         budgetFit: result.score >= 70 ? "alta" : "média",
       },
@@ -5396,7 +5400,7 @@ function Qualification() {
                 <div className="text-xs font-bold text-primary tracking-wider uppercase">ROTA COMERCIAL SUGERIDA</div>
                 {isConsorcio ? (
                   <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-                    Rota Oficial Consórcio Honda
+                    Rota Oficial Consórcio Nacional
                   </span>
                 ) : (
                   <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
@@ -5406,15 +5410,15 @@ function Qualification() {
               </div>
               <div className="mt-3 text-lg font-semibold">
                 {isConsorcio
-                  ? "Consórcio Nacional Honda — Rota de Alta Conversão"
+                  ? "Consórcio Nacional — Rota de Alta Conversão"
                   : answers["produto"] === "Seminova revisada"
                     ? "Seminova com Procedência — Atendimento Imediato"
-                    : "Honda 0 km — Simulação Especial na Concessionária"}
+                    : "Modelo 0 km — Simulação Especial na Concessionária"}
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {isConsorcio
-                  ? `Perfil excelente para aquisição programada sem cobrança de juros bancários. Direcionado imediatamente para especialistas em Consórcio Honda de ${loc.store}.`
-                  : `Cliente qualificado com interesse em ${answers["produto"] || "moto Honda"}. Contato preparado com simulação pronta para a equipe de vendas de ${loc.store}.`}
+                  ? `Perfil excelente para aquisição programada sem cobrança de juros bancários. Direcionado imediatamente para especialistas em Consórcio de ${loc.store}.`
+                  : `Cliente qualificado com interesse em ${answers["produto"] || "veículo 0 km"}. Contato preparado com simulação pronta para a equipe de vendas de ${loc.store}.`}
               </p>
             </div>
 
@@ -5950,8 +5954,8 @@ function Impact() {
             <div className="mt-4 space-y-2.5 text-xs">
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
-                  <strong className="text-foreground block">Lages / SC (Serra Catarinense)</strong>
-                  <span className="text-[11px] text-muted-foreground">Francine & Guilherme</span>
+                  <strong className="text-foreground block">Nova Serra / SC (Região Central)</strong>
+                  <span className="text-[11px] text-muted-foreground">Lucas Mendes & Rafael Costa</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-cyan-300">+R$ 98.000</span>
@@ -5961,8 +5965,8 @@ function Impact() {
 
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
-                  <strong className="text-foreground block">Três Passos / RS (Noroeste RS)</strong>
-                  <span className="text-[11px] text-muted-foreground">Vitor & Fila Regional</span>
+                  <strong className="text-foreground block">Vale Azul / RS (Região Sul)</strong>
+                  <span className="text-[11px] text-muted-foreground">Bruno Martins & Fila Regional</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-emerald-400">+R$ 52.000</span>
@@ -5972,8 +5976,8 @@ function Impact() {
 
               <div className="rounded-lg border border-border/60 bg-surface-2/40 p-3 flex items-center justify-between">
                 <div>
-                  <strong className="text-foreground block">Santa Rosa / RS (Missões / Fronteira)</strong>
-                  <span className="text-[11px] text-muted-foreground">Gabriel & Francine</span>
+                  <strong className="text-foreground block">Santa Aurora / RS (Região Norte)</strong>
+                  <span className="text-[11px] text-muted-foreground">Felipe Oliveira & Lucas Mendes</span>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-indigo-300">+R$ 36.400</span>

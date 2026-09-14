@@ -127,7 +127,7 @@ Top bar:
 
 * Search
 * Notifications
-* Current dealership: “Via Passos Honda — Demonstração”
+* Current dealership: “Grupo Nova Serra — Demonstração”
 * User profile
 
 ==================================================

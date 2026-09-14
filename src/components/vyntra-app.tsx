@@ -2570,7 +2570,7 @@ function OpportunitiesPage({
           >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-400">
-                <Clock className="size-3.5 text-rose-400" /> SLA Atrasado
+                <Clock3 className="size-3.5 text-rose-400" /> SLA Atrasado
               </span>
               <span className="rounded-md bg-destructive/20 px-1.5 py-0.2 text-[10px] font-bold text-rose-300">
                 {urgentCount}

@@ -44,12 +44,15 @@ export const TEMPERATURE_META: Record<
   },
 };
 
-export function minutesSince(isoDate: string, now: number = Date.now()) {
-  return Math.max(0, Math.floor((now - new Date(isoDate).getTime()) / 60000));
+export function minutesSince(isoDate?: string | null, now: number = Date.now()) {
+  if (!isoDate) return 0;
+  const time = new Date(isoDate).getTime();
+  if (Number.isNaN(time)) return 0;
+  return Math.max(0, Math.floor((now - time) / 60000));
 }
 
-export function waitingMinutes(o: Opportunity, now: number = Date.now()) {
-  if (o.firstResponseAt) return null;
+export function waitingMinutes(o?: Opportunity | null, now: number = Date.now()) {
+  if (!o || o.firstResponseAt || !o.assignedAt) return null;
   return minutesSince(o.assignedAt, now);
 }
 

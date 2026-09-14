@@ -2165,7 +2165,9 @@ function FilterBar({
   hideSellerFilter?: boolean;
 }) {
   const { sellers, opportunities } = useVyntra();
-  const products = [...new Set(opportunities.map((o) => o.product))];
+  const products = [
+    ...new Set(opportunities.map((o) => o.product).filter(Boolean)),
+  ].filter((p) => typeof p === "string" && p.trim() !== "");
   const storeOptions: Array<[string, string]> =
     filters.state === "SC"
       ? [
@@ -2213,12 +2215,18 @@ function FilterBar({
   // Lista de cidades disponíveis com base nos filtros regionais
   const availableCities: Array<[string, string]> = [["all", "Todas as cidades"]];
   if (filters.state === "SC" || filters.store === "Nova Serra / SC") {
-    NOVA_SERRA_REGION_CITIES.forEach((c) => availableCities.push([c, c]));
+    NOVA_SERRA_REGION_CITIES.filter(Boolean).forEach((c) => availableCities.push([c, c]));
   } else if (filters.state === "RS") {
-    const rsCities = Array.from(new Set(opportunities.filter((o) => o.state === "RS").map((o) => o.city))).sort();
+    const rsCities = Array.from(new Set(opportunities.filter((o) => o.state === "RS").map((o) => o.city)))
+      .filter((c): c is string => Boolean(c) && typeof c === "string" && c.trim() !== "")
+      .sort();
     rsCities.forEach((c) => availableCities.push([c, c]));
   } else {
-    const allUniqueCities = Array.from(new Set([...NOVA_SERRA_REGION_CITIES, ...opportunities.map((o) => o.city)])).sort();
+    const allUniqueCities = Array.from(
+      new Set([...NOVA_SERRA_REGION_CITIES, ...opportunities.map((o) => o.city)]),
+    )
+      .filter((c): c is string => Boolean(c) && typeof c === "string" && c.trim() !== "")
+      .sort();
     allUniqueCities.forEach((c) => availableCities.push([c, c]));
   }
 
@@ -2345,7 +2353,7 @@ function applyFilters(o: Opportunity, f: OpportunityFilters) {
     (f.temperature === "all" || temperatureOf(o.score) === f.temperature) &&
     (f.status === "all" || o.status === f.status) &&
     (!f.search ||
-      `${o.customer.name} ${o.product} ${o.city} ${o.store} ${o.state}`
+      `${o.customer?.name || ""} ${o.product || ""} ${o.city || ""} ${o.store || ""} ${o.state || ""}`
         .toLowerCase()
         .includes(f.search.toLowerCase()))
   );
@@ -2371,48 +2379,48 @@ function OpportunitiesPage({
   }, [opportunities, isSeller, currentSellerId]);
 
   // Contadores para a Barra de Insights
-  const hotCount = useMemo(() => baseOpportunities.filter((o) => o.score >= 80).length, [baseOpportunities]);
+  const hotCount = useMemo(() => baseOpportunities.filter((o) => (o.score ?? 0) >= 80).length, [baseOpportunities]);
   const consorcioCount = useMemo(
     () =>
       baseOpportunities.filter(
         (o) =>
-          o.method.toLowerCase().includes("consórcio") ||
-          o.product.toLowerCase().includes("consórcio") ||
-          o.route.alternative?.toLowerCase().includes("consórcio"),
+          (o.method || "").toLowerCase().includes("consórcio") ||
+          (o.product || "").toLowerCase().includes("consórcio") ||
+          (o.route?.alternative || "").toLowerCase().includes("consórcio"),
       ).length,
     [baseOpportunities],
   );
   const urgentCount = useMemo(() => {
     return baseOpportunities.filter((o) => {
       const waiting = waitingMinutes(o, now);
-      return o.score >= 80 && waiting !== null && waiting >= 10;
+      return (o.score ?? 0) >= 80 && waiting !== null && waiting >= 10;
     }).length;
   }, [baseOpportunities, now]);
   const novaSerraCount = useMemo(
-    () => baseOpportunities.filter((o) => o.store === "Nova Serra / SC").length,
+    () => baseOpportunities.filter((o) => (o.store || "") === "Nova Serra / SC").length,
     [baseOpportunities],
   );
   const rsCount = useMemo(
-    () => baseOpportunities.filter((o) => o.store.includes("RS")).length,
+    () => baseOpportunities.filter((o) => (o.store || "").includes("RS")).length,
     [baseOpportunities],
   );
 
   const list = useMemo(() => {
     return baseOpportunities.filter((o) => {
-      if (insightFilter === "hot" && o.score < 80) return false;
+      if (insightFilter === "hot" && (o.score ?? 0) < 80) return false;
       if (
         insightFilter === "consorcio" &&
-        !o.method.toLowerCase().includes("consórcio") &&
-        !o.product.toLowerCase().includes("consórcio") &&
-        !o.route.alternative?.toLowerCase().includes("consórcio")
+        !(o.method || "").toLowerCase().includes("consórcio") &&
+        !(o.product || "").toLowerCase().includes("consórcio") &&
+        !(o.route?.alternative || "").toLowerCase().includes("consórcio")
       )
         return false;
       if (insightFilter === "urgent") {
         const waiting = waitingMinutes(o, now);
-        if (o.score < 80 || waiting === null || waiting < 10) return false;
+        if ((o.score ?? 0) < 80 || waiting === null || waiting < 10) return false;
       }
-      if (insightFilter === "novaserra" && o.store !== "Nova Serra / SC") return false;
-      if (insightFilter === "rs" && !o.store.includes("RS")) return false;
+      if (insightFilter === "novaserra" && (o.store || "") !== "Nova Serra / SC") return false;
+      if (insightFilter === "rs" && !(o.store || "").includes("RS")) return false;
 
       return applyFilters(o, f);
     });
@@ -2702,8 +2710,8 @@ function OpportunitiesPage({
               const tm = TEMPERATURE_META[temperatureOf(o.score)];
               const waiting = waitingMinutes(o, now);
               const isConsorcio =
-                o.method.toLowerCase().includes("consórcio") ||
-                o.product.toLowerCase().includes("consórcio");
+                (o.method || "").toLowerCase().includes("consórcio") ||
+                (o.product || "").toLowerCase().includes("consórcio");
               const isSelected = selectedIds.includes(o.id);
               const seller = sellerById(o.sellerId);
 
@@ -2718,68 +2726,42 @@ function OpportunitiesPage({
                   )}
                 >
                   <div>
-                    {/* Header do Card */}
+                    {/* Cabeçalho do Card */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLead(o.id);
-                          }}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleLead(o.id)}
-                            aria-label={`Selecionar lead ${o.customer.name}`}
-                          />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm text-foreground line-clamp-1">
-                            {o.customer.name}
-                          </h4>
-                          <span className="font-mono text-[10px] text-muted-foreground">{o.id}</span>
+                        <Checkbox
+                          aria-label={`Selecionar lead de ${o.customer?.name || "Lead"}`}
+                          checked={isSelected}
+                          onCheckedChange={() => toggleLead(o.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <ScoreMini score={o.score} />
+                          <span className="text-sm" title={tm.label}>{tm.emoji}</span>
                         </div>
                       </div>
+                      <span className="font-mono text-[10px] text-muted-foreground">{o.id}</span>
+                    </div>
 
-                      {/* Score Badge */}
-                      <div
-                        className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-bold shrink-0"
-                        style={{
-                          color: tm.color,
-                          backgroundColor: `color-mix(in oklab, ${tm.color} 15%, transparent)`,
-                          border: `1px solid color-mix(in oklab, ${tm.color} 30%, transparent)`,
-                        }}
-                        title={`${tm.label}: Score ${o.score}`}
-                      >
-                        {o.score >= 80 ? (
-                          <Flame className="size-3 fill-current" />
-                        ) : o.score >= 40 ? (
-                          <Activity className="size-3" />
-                        ) : (
-                          <Snowflake className="size-3" />
-                        )}
-                        {o.score}
+                    {/* Cliente e Loja */}
+                    <div className="mt-3">
+                      <h4 className="text-sm font-bold text-foreground leading-tight">{o.customer?.name || "Cliente"}</h4>
+                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="size-3 text-cyan-400 shrink-0" />
+                        <span className="truncate">{o.store} · {o.city}</span>
                       </div>
                     </div>
 
-                    {/* Localização / Loja */}
-                    <div className="mt-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <MapPin className="size-3 text-cyan-400 shrink-0" />
-                      <span className="font-medium text-foreground">{o.store}</span>
-                      <span>·</span>
-                      <span>{o.city}</span>
-                    </div>
-
-                    {/* Produto & Forma de Pagamento */}
-                    <div className="mt-2.5 rounded-lg border border-border/60 bg-surface-2/40 p-2 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Modelo:</span>
-                        <strong className="text-foreground font-semibold">{o.product}</strong>
+                    {/* Produto & Categoria */}
+                    <div className="mt-3 rounded-lg bg-surface-2/60 p-2.5 border border-border/40">
+                      <div className="text-xs font-semibold text-foreground flex items-center justify-between">
+                        <span className="truncate">{o.product}</span>
+                        <span className="text-[10px] font-normal text-muted-foreground shrink-0">{o.category}</span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="mt-1 flex items-center justify-between text-[11px]">
                         <span className="text-muted-foreground">Forma:</span>
                         {isConsorcio ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
                             <Coins className="size-2.5" /> Consórcio
                           </span>
                         ) : (
@@ -2797,7 +2779,7 @@ function OpportunitiesPage({
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <UserRound className="size-3 text-primary" />
                         <span className="font-medium text-foreground">
-                          {seller?.name.split(" ")[0] || "Sem vendedor"}
+                          {seller?.name?.split(" ")[0] || "Sem vendedor"}
                         </span>
                       </div>
                       <span className={cn("rounded-md border px-2 py-0.5 text-[10px] font-semibold", STATUS_TONE[o.status])}>
@@ -2880,8 +2862,8 @@ function OpportunitiesPage({
                     const tm = TEMPERATURE_META[temperatureOf(o.score)];
                     const waiting = waitingMinutes(o, now);
                     const isConsorcio =
-                      o.method.toLowerCase().includes("consórcio") ||
-                      o.product.toLowerCase().includes("consórcio");
+                      (o.method || "").toLowerCase().includes("consórcio") ||
+                      (o.product || "").toLowerCase().includes("consórcio");
 
                     return (
                       <tr
@@ -2891,7 +2873,7 @@ function OpportunitiesPage({
                       >
                         <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
                           <Checkbox
-                            aria-label={`Selecionar lead de ${o.customer.name}`}
+                            aria-label={`Selecionar lead de ${o.customer?.name || "Lead"}`}
                             checked={selectedIds.includes(o.id)}
                             onCheckedChange={() => toggleLead(o.id)}
                           />
@@ -2903,7 +2885,7 @@ function OpportunitiesPage({
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="text-sm font-semibold text-foreground">{o.customer.name}</div>
+                          <div className="text-sm font-semibold text-foreground">{o.customer?.name || "Lead"}</div>
                           <div className="font-mono text-[10px] text-muted-foreground">{o.id}</div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -2934,7 +2916,7 @@ function OpportunitiesPage({
                         <td className="px-4 py-3 text-xs whitespace-nowrap">{o.deadline}</td>
                         <td className="px-4 py-3 text-xs whitespace-nowrap">
                           <span className="font-medium text-foreground">
-                            {sellerById(o.sellerId)?.name.split(" ")[0] || "—"}
+                            {sellerById(o.sellerId)?.name?.split(" ")[0] || "—"}
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -3137,23 +3119,25 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-                {o.route.primary.toUpperCase()} — PRINCIPAL
+                {(o.route?.primary || "").toUpperCase()} — PRINCIPAL
               </span>
-              <span className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold">
-                {o.route.alternative.toUpperCase()} — ALTERNATIVA
-              </span>
+              {o.route?.alternative && (
+                <span className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold">
+                  {o.route.alternative.toUpperCase()} — ALTERNATIVA
+                </span>
+              )}
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs">
               <span className="text-muted-foreground">Compatibilidade com orçamento:</span>
               <strong
                 className={
-                  o.route.budgetFit === "baixa" ? "text-destructive" : "text-[color:var(--success)]"
+                  o.route?.budgetFit === "baixa" ? "text-destructive" : "text-[color:var(--success)]"
                 }
               >
-                {o.route.budgetFit}
+                {o.route?.budgetFit || "—"}
               </strong>
             </div>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{o.route.rationale}</p>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{o.route?.rationale || ""}</p>
             <div className="mt-3 text-[10px] leading-4 text-muted-foreground">
               Opção recomendada para avaliação. Aprovação real depende do processo autorizado da
               instituição financeira ou administradora.
@@ -3173,7 +3157,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
                   <Button
                     key={r}
                     size="sm"
-                    variant={r === o.route.primary ? "default" : "secondary"}
+                    variant={r === o.route?.primary ? "default" : "secondary"}
                     onClick={() => {
                       v.changeRoute(o.id, r);
                       setRouteOpen(false);
@@ -3194,7 +3178,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
               <ScoreRing score={o.score} />
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {o.scoreReasons.slice(0, 6).map((r) => (
+              {o.scoreReasons?.slice(0, 6).map((r) => (
                 <div key={r} className="flex items-start gap-2 text-xs text-muted-foreground">
                   <Check className="mt-0.5 size-3.5 shrink-0 text-[color:var(--success)]" />
                   {r}
@@ -3205,7 +3189,7 @@ function OpportunityDrawer({ id, onClose }: { id: string | null; onClose: () => 
           <section className="panel p-4">
             <h3 className="mb-4 text-sm font-semibold">Responsável e status</h3>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Select value={o.sellerId} onValueChange={(x) => v.assignSeller(o.id, x)}>
+              <Select value={o.sellerId || ""} onValueChange={(x) => v.assignSeller(o.id, x)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

@@ -61,6 +61,8 @@ import {
   Award,
   BadgeCheck,
   Calculator,
+  Smartphone,
+  Monitor,
 } from "lucide-react";
 import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
 import { AdCampaignPage } from "./vyntra-ad-campaign";
@@ -950,6 +952,9 @@ function Workspace() {
     followUps,
     now,
     currentSellerId,
+    sellers,
+    sellerById,
+    logout,
   } = useVyntra();
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
@@ -958,7 +963,25 @@ function Workspace() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
 
-  // Contadores para os badges da barra de navegação móvel
+  // Versão ativa: "desktop" (PC) ou "mobile" (Celular)
+  const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("vyntra_device_mode");
+      if (saved === "desktop" || saved === "mobile") return saved;
+      return window.innerWidth < 1024 ? "mobile" : "desktop";
+    }
+    return "desktop";
+  });
+
+  const setMode = (mode: "desktop" | "mobile") => {
+    setDeviceMode(mode);
+    try {
+      localStorage.setItem("vyntra_device_mode", mode);
+    } catch (_) {}
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  };
+
+  // Contadores para os badges da navegação móvel
   const hotCount = useMemo(() => {
     return opportunities.filter((o) => {
       if (role === "vendedor" && currentSellerId && o.sellerId !== currentSellerId) return false;
@@ -1027,41 +1050,68 @@ function Workspace() {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Sidebar
-        view={view}
-        setView={(v) => {
-          setView(v);
-          setMobileNav(false);
-        }}
-        mobileOpen={mobileNav}
-        setMobileOpen={setMobileNav}
-        onGoHome={handleGoHome}
-      />
-      <div className="lg:pl-[244px]">
-        <Topbar
-          onMenu={() => setMobileNav(true)}
-          globalSearch={globalSearch}
-          setGlobalSearch={setGlobalSearch}
-          searchOpen={searchOpen}
-          setSearchOpen={setSearchOpen}
-          setSelected={setSelected}
-          alertsOpen={alertsOpen}
-          setAlertsOpen={setAlertsOpen}
-          onGoHome={handleGoHome}
+  // =========================================================================
+  // 1. VERSÃO EXCLUSIVA PARA COMPUTADOR (PC / DESKTOP)
+  // 100% autônoma, pura, sem alterações mobile interferindo na navegação de PC
+  // =========================================================================
+  if (deviceMode === "desktop") {
+    return (
+      <div className="min-h-screen bg-background">
+        <DesktopSidebar
+          view={view}
           setView={setView}
+          onGoHome={handleGoHome}
         />
-        <main className="mx-auto max-w-[1680px] px-3.5 py-4 pb-28 sm:px-6 lg:px-8 lg:py-7 lg:pb-7">
-          {role === "vendedor" ? (
-            <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
-          ) : (
-            <ManagerView view={view} setView={setView} setSelected={setSelected} />
-          )}
-        </main>
+        <div className="pl-[244px]">
+          <DesktopTopbar
+            globalSearch={globalSearch}
+            setGlobalSearch={setGlobalSearch}
+            searchOpen={searchOpen}
+            setSearchOpen={setSearchOpen}
+            setSelected={setSelected}
+            alertsOpen={alertsOpen}
+            setAlertsOpen={setAlertsOpen}
+            onGoHome={handleGoHome}
+            setView={setView}
+            onSwitchToMobile={() => setMode("mobile")}
+          />
+          <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+            {role === "vendedor" ? (
+              <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
+            ) : (
+              <ManagerView view={view} setView={setView} setSelected={setSelected} />
+            )}
+          </main>
+        </div>
+        <OpportunityDrawer id={selected} onClose={() => setSelected(null)} />
       </div>
+    );
+  }
 
-      {/* Barra de Navegação Móvel Exclusiva (Mobile Bottom Nav) */}
+  // =========================================================================
+  // 2. VERSÃO EXCLUSIVA PARA CELULAR (MOBILE / SMARTPHONE)
+  // 100% autônoma, com barra inferior, menu nativo gaveta e ergonomia de toque
+  // =========================================================================
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <MobileHeader
+        onMenu={() => setMobileNav(true)}
+        globalSearch={globalSearch}
+        setGlobalSearch={setGlobalSearch}
+        setSelected={setSelected}
+        alertsOpen={alertsOpen}
+        setAlertsOpen={setAlertsOpen}
+        onGoHome={handleGoHome}
+        onSwitchToDesktop={() => setMode("desktop")}
+      />
+      <main className="mx-auto max-w-lg px-3.5 py-4 pb-28">
+        {role === "vendedor" ? (
+          <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
+        ) : (
+          <ManagerView view={view} setView={setView} setSelected={setSelected} />
+        )}
+      </main>
+
       <MobileBottomNav
         view={view}
         setView={(v) => {
@@ -1073,6 +1123,27 @@ function Workspace() {
         role={role}
         hotCount={hotCount}
         overdueCount={overdueCount}
+      />
+
+      <MobileActionSheet
+        open={mobileNav}
+        onClose={() => setMobileNav(false)}
+        view={view}
+        setView={setView}
+        role={role}
+        setRole={setRole}
+        currentPlan={currentPlan}
+        setCurrentPlan={setCurrentPlan}
+        currentSellerId={currentSellerId}
+        setCurrentSellerId={setCurrentSellerId}
+        sellers={sellers}
+        sellerById={sellerById}
+        logout={logout}
+        onGoHome={handleGoHome}
+        onSwitchToDesktop={() => {
+          setMobileNav(false);
+          setMode("desktop");
+        }}
       />
 
       <OpportunityDrawer id={selected} onClose={() => setSelected(null)} />
@@ -1253,6 +1324,7 @@ function MobileActionSheet({
   sellerById,
   logout,
   onGoHome,
+  onSwitchToDesktop,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1268,6 +1340,7 @@ function MobileActionSheet({
   sellerById: (id: string) => { id: string; name: string; store: string } | undefined;
   logout: () => void;
   onGoHome?: () => void;
+  onSwitchToDesktop?: () => void;
 }) {
   if (!open) return null;
 
@@ -1562,6 +1635,26 @@ function MobileActionSheet({
             )}
           </div>
 
+          {/* Alternar para Versão de Computador (PC) */}
+          {onSwitchToDesktop && (
+            <button
+              type="button"
+              onClick={onSwitchToDesktop}
+              className="flex w-full items-center justify-between rounded-xl p-3 border border-border/80 bg-surface/90 text-left hover:bg-surface text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid size-8 place-items-center rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  <Monitor className="size-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-foreground">Alternar para Versão PC</div>
+                  <div className="text-[10px] text-muted-foreground">Visualizar layout executivo de computador</div>
+                </div>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+          )}
+
           {/* Usuário e Logout */}
           <div className="flex items-center justify-between border-t border-border/80 pt-3 pb-2">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1603,17 +1696,13 @@ function MobileActionSheet({
   );
 }
 
-function Sidebar({
+function DesktopSidebar({
   view,
   setView,
-  mobileOpen,
-  setMobileOpen,
   onGoHome,
 }: {
   view: View;
   setView: (v: View) => void;
-  mobileOpen: boolean;
-  setMobileOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
 }) {
   const {
@@ -1639,10 +1728,6 @@ function Sidebar({
       ];
     }
 
-    // Gestão Comercial filtrada de acordo com o plano ativo no Modo Demonstração:
-    // ESSENCIAL: Visão Geral, Oportunidades, Follow-ups, Propostas e Planos
-    // PERFORMANCE: Tudo do Essencial + Qualificação, Campanhas no WhatsApp, Distribuição, Insights, Impacto Comercial e Gestão de equipe
-    // ENTERPRISE: Tudo do Performance + Integrações, Logs de integração e Configurações
     return NAV.filter((item) => {
       if (item.id === "plans") return true;
 
@@ -1670,7 +1755,6 @@ function Sidebar({
         );
       }
 
-      // Enterprise: experiência completa da Vyntra
       return true;
     });
   }, [role, currentPlan]);
@@ -1680,7 +1764,6 @@ function Sidebar({
       onGoHome();
     } else {
       setView("overview");
-      setMobileOpen(false);
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }
   };
@@ -1731,7 +1814,6 @@ function Sidebar({
         </nav>
       </ScrollArea>
       <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
-        {/* Card do Modo Demonstração Comercial (exclusivo para perfil executivo/gestor) */}
         {role === "gestor" && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
@@ -1854,33 +1936,15 @@ function Sidebar({
       </div>
     </div>
   );
+
   return (
-    <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[244px] border-r border-sidebar-border lg:block">
-        {body}
-      </aside>
-      <MobileActionSheet
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        view={view}
-        setView={setView}
-        role={role}
-        setRole={setRole}
-        currentPlan={currentPlan}
-        setCurrentPlan={setCurrentPlan}
-        currentSellerId={currentSellerId}
-        setCurrentSellerId={setCurrentSellerId}
-        sellers={sellers}
-        sellerById={sellerById}
-        logout={logout}
-        onGoHome={handleHomeNavigation}
-      />
-    </>
+    <aside className="fixed inset-y-0 left-0 z-40 w-[244px] border-r border-sidebar-border bg-sidebar">
+      {body}
+    </aside>
   );
 }
 
-function Topbar({
-  onMenu,
+function DesktopTopbar({
   globalSearch,
   setGlobalSearch,
   searchOpen,
@@ -1890,8 +1954,8 @@ function Topbar({
   setAlertsOpen,
   onGoHome,
   setView,
+  onSwitchToMobile,
 }: {
-  onMenu: () => void;
   globalSearch: string;
   setGlobalSearch: (v: string) => void;
   searchOpen: boolean;
@@ -1901,6 +1965,7 @@ function Topbar({
   setAlertsOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
   setView?: (v: View) => void;
+  onSwitchToMobile: () => void;
 }) {
   const {
     opportunities,
@@ -1914,7 +1979,6 @@ function Topbar({
     setCurrentPlan,
   } = useVyntra();
   const [demoMenuOpen, setDemoMenuOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const currentSeller = sellerById(currentSellerId || "francine");
   const matches = useMemo(() => {
     const q = globalSearch.toLowerCase().trim();
@@ -1926,370 +1990,180 @@ function Topbar({
       .slice(0, 6);
   }, [globalSearch, opportunities, sellerById]);
   const unread = notifications.filter((n) => !n.read).length;
+
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
-      {/* 1. TOPBAR DESKTOP - 100% INTACTO E PRESERVADO (lg:flex) */}
-      <div className="hidden h-16 items-center gap-3 px-4 sm:px-6 lg:flex lg:px-8">
-        <div className="relative flex-1 max-w-xl">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={globalSearch}
-            onFocus={() => setSearchOpen(true)}
-            onChange={(e) => {
-              setGlobalSearch(e.target.value);
-              setSearchOpen(true);
-            }}
-            placeholder="Buscar cliente, modelo ou vendedor..."
-            className="h-9 border-transparent bg-surface pl-9 focus:border-input"
-          />
-          {searchOpen && globalSearch && (
-            <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-lg border border-border bg-popover shadow-2xl">
-              {matches.length ? (
-                matches.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => {
-                      setSelected(o.id);
-                      setSearchOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 border-b border-border px-3 py-3 text-left last:border-0 hover:bg-accent"
-                  >
-                    <ScoreMini score={o.score} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium">{o.customer.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {o.product} · {sellerById(o.sellerId)?.name}
-                      </div>
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-6 backdrop-blur-xl lg:px-8">
+      <div className="relative flex-1 max-w-xl">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={globalSearch}
+          onFocus={() => setSearchOpen(true)}
+          onChange={(e) => {
+            setGlobalSearch(e.target.value);
+            setSearchOpen(true);
+          }}
+          placeholder="Buscar cliente, modelo ou vendedor..."
+          className="h-9 border-transparent bg-surface pl-9 focus:border-input"
+        />
+        {searchOpen && globalSearch && (
+          <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-lg border border-border bg-popover shadow-2xl">
+            {matches.length ? (
+              matches.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => {
+                    setSelected(o.id);
+                    setSearchOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 border-b border-border px-3 py-3 text-left last:border-0 hover:bg-accent"
+                >
+                  <ScoreMini score={o.score} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium">{o.customer.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {o.product} · {sellerById(o.sellerId)?.name}
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-sm text-muted-foreground">Nenhum resultado encontrado.</div>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="hidden items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground xl:flex">
-          <Bike className="size-4 text-primary" />
-          {DEALERSHIP}
-        </div>
-
-        {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado (exclusivo para o gestor) */}
-        {role === "gestor" && (
-          <div className="relative hidden sm:block">
-            <button
-              type="button"
-              onClick={() => setDemoMenuOpen(!demoMenuOpen)}
-              className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition-all shadow-xs"
-            >
-              <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
-              <span className="font-bold uppercase text-foreground">{currentPlan}</span>
-              <ChevronRight
-                className={cn(
-                  "size-3 transition-transform text-muted-foreground",
-                  demoMenuOpen && "rotate-90",
-                )}
-              />
-            </button>
-
-            {demoMenuOpen && (
-              <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-                  Alternar Plano da Demonstração
-                </div>
-                <div className="space-y-1">
-                  {(["essencial", "performance", "enterprise"] as const).map((p) => {
-                    const isSelected = currentPlan === p;
-                    const priceLabel =
-                      p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => {
-                          setCurrentPlan(p);
-                          setDemoMenuOpen(false);
-                        }}
-                        className={cn(
-                          "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
-                          isSelected
-                            ? "bg-primary text-primary-foreground font-bold"
-                            : "text-foreground hover:bg-secondary",
-                        )}
-                      >
-                        <span className="capitalize">{p}</span>
-                        <span className="text-[10px] opacity-80">{priceLabel}/mês</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="border-t border-border/60 pt-2 px-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (setView) setView("plans");
-                      setDemoMenuOpen(false);
-                    }}
-                    className="w-full text-left text-xs font-semibold text-primary hover:underline flex items-center justify-between"
-                  >
-                    Ver comparação de planos
-                    <ChevronRight className="size-3" />
-                  </button>
-                </div>
-              </div>
+                  </div>
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </button>
+              ))
+            ) : (
+              <div className="p-4 text-sm text-muted-foreground">Nenhum resultado encontrado.</div>
             )}
           </div>
         )}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setAlertsOpen(!alertsOpen)}
-            aria-label="Notificações"
-          >
-            <Bell />
-            {unread > 0 && (
-              <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
-                {unread}
-              </span>
-            )}
-          </Button>
-          {alertsOpen && (
-            <div className="absolute right-0 top-12 w-[380px] rounded-xl border border-border bg-popover shadow-2xl">
-              <div className="flex items-center justify-between border-b border-border p-4">
-                <div>
-                  <h3 className="font-semibold">Central de alertas</h3>
-                  <p className="text-xs text-muted-foreground">{unread} não lidos</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={markAllNotificationsRead}>
-                  Marcar como lidos
-                </Button>
-              </div>
-              <div className="max-h-[440px] overflow-y-auto custom-scrollbar p-2 pr-2.5 space-y-1">
-                {notifications.map((n) => (
-                  <button
-                    key={n.id}
-                    className={cn(
-                      "w-full rounded-lg p-3 text-left hover:bg-accent",
-                      !n.read && "bg-primary/5",
-                    )}
-                    onClick={() => {
-                      markNotificationRead(n.id);
-                      if (n.opportunityId) setSelected(n.opportunityId);
-                    }}
-                  >
-                    <div className="flex gap-3">
-                      <AlertIcon kind={n.kind} />
-                      <div>
-                        <div className="text-sm font-medium leading-5">{n.title}</div>
-                        <div className="mt-1 text-xs leading-4 text-muted-foreground">
-                          {n.description}
-                        </div>
-                        <div className="mt-2 text-[10px] text-muted-foreground">
-                          {relativeTime(n.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="hidden h-8 items-center gap-2 border-l border-border pl-3 sm:flex">
-          <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
-            {role === "gestor"
-              ? "G"
-              : (currentSeller?.name || "VD")
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase()}
-          </div>
-          <div className="hidden xl:block">
-            <div className="text-xs font-semibold">
-              {role === "gestor" ? "Gestor" : currentSeller?.name || "Consultor"}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {role === "gestor" ? "Gerência & Supervisão" : "Consultor Comercial"}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* 2. HEADER EXCLUSIVO PARA CELULAR (lg:hidden) */}
-      <div className="flex flex-col lg:hidden">
-        <div className="flex h-14 items-center justify-between gap-2 px-3.5 sm:px-5">
-          <div className="flex items-center gap-2 min-w-0">
-            <Brand compact onClick={onGoHome} />
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  role === "gestor"
-                    ? "bg-primary/20 text-primary border border-primary/30"
-                    : "bg-violet-500/20 text-violet-300 border border-violet-500/30",
-                )}
-              >
-                {role === "gestor" ? "Gestor" : "Consultor"}
-              </span>
-              {role === "gestor" && (
-                <span className="truncate rounded-full bg-secondary/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border border-border">
-                  {currentPlan}
-                </span>
-              )}
-            </div>
-          </div>
+      {/* Botão de Alternar para Versão Celular */}
+      <button
+        type="button"
+        onClick={onSwitchToMobile}
+        className="flex items-center gap-1.5 rounded-full border border-cyan-500/35 bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition-all shadow-xs cursor-pointer shrink-0"
+        title="Alternar para a visualização dedicada para celular"
+      >
+        <Smartphone className="size-3.5 text-cyan-400" />
+        <span>Versão Celular</span>
+      </button>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
+      <div className="hidden items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground xl:flex shrink-0">
+        <Bike className="size-4 text-primary" />
+        {DEALERSHIP}
+      </div>
+
+      {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado (exclusivo para o gestor) */}
+      {role === "gestor" && (
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setDemoMenuOpen(!demoMenuOpen)}
+            className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition-all shadow-xs"
+          >
+            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
+            <span className="font-bold uppercase text-foreground">{currentPlan}</span>
+            <ChevronRight
               className={cn(
-                "size-9 text-muted-foreground",
-                mobileSearchOpen && "text-primary bg-primary/10",
+                "size-3 transition-transform text-muted-foreground",
+                demoMenuOpen && "rotate-90",
               )}
-              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-              aria-label="Buscar"
-            >
-              <Search className="size-4" />
-            </Button>
+            />
+          </button>
 
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9 text-muted-foreground relative"
-                onClick={() => setAlertsOpen(!alertsOpen)}
-                aria-label="Notificações"
-              >
-                <Bell className="size-4" />
-                {unread > 0 && (
-                  <span className="absolute right-1 top-1 grid size-3.5 place-items-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
-                    {unread}
-                  </span>
-                )}
-              </Button>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 text-foreground"
-              onClick={onMenu}
-              aria-label="Menu"
-            >
-              <Menu className="size-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Busca rápida expandível para celular */}
-        {mobileSearchOpen && (
-          <div className="relative px-3.5 pb-3 border-t border-border/40 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={globalSearch}
-                autoFocus
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                placeholder="Buscar cliente, modelo ou vendedor..."
-                className="h-9 border-border bg-surface/90 pl-9 pr-8 text-xs focus:border-primary"
-              />
-              {globalSearch && (
+          {demoMenuOpen && (
+            <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
+                Alternar Plano da Demonstração
+              </div>
+              <div className="space-y-1">
+                {(["essencial", "performance", "enterprise"] as const).map((p) => {
+                  const isSelected = currentPlan === p;
+                  const priceLabel =
+                    p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setCurrentPlan(p);
+                        setDemoMenuOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                        isSelected
+                          ? "bg-primary text-primary-foreground font-bold"
+                          : "text-foreground hover:bg-secondary",
+                      )}
+                    >
+                      <span className="capitalize">{p}</span>
+                      <span className="text-[10px] opacity-80">{priceLabel}/mês</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="border-t border-border/60 pt-2 px-1">
                 <button
                   type="button"
-                  onClick={() => setGlobalSearch("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    if (setView) setView("plans");
+                    setDemoMenuOpen(false);
+                  }}
+                  className="w-full text-left text-xs font-semibold text-primary hover:underline flex items-center justify-between"
                 >
-                  <X className="size-3.5" />
+                  Ver comparação de planos
+                  <ChevronRight className="size-3" />
                 </button>
-              )}
-            </div>
-            {globalSearch.trim() && (
-              <div className="mt-2 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl divide-y divide-border/60">
-                {matches.length ? (
-                  matches.map((o) => (
-                    <button
-                      key={o.id}
-                      onClick={() => {
-                        setSelected(o.id);
-                        setMobileSearchOpen(false);
-                      }}
-                      className="flex w-full items-center gap-3 p-2.5 text-left active:bg-accent"
-                    >
-                      <ScoreMini score={o.score} />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold truncate">{o.customer.name}</div>
-                        <div className="text-[10px] text-muted-foreground truncate">
-                          {o.product} · {sellerById(o.sellerId)?.name}
-                        </div>
-                      </div>
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
-                    </button>
-                  ))
-                ) : (
-                  <div className="p-3 text-center text-xs text-muted-foreground">
-                    Nenhuma oportunidade encontrada.
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* Modal de Alertas no Mobile */}
+      <div className="relative shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setAlertsOpen(!alertsOpen)}
+          aria-label="Notificações"
+        >
+          <Bell />
+          {unread > 0 && (
+            <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+              {unread}
+            </span>
+          )}
+        </Button>
         {alertsOpen && (
-          <div className="fixed inset-x-3 top-16 z-50 rounded-2xl border border-border bg-popover p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-border pb-2.5 mb-2">
+          <div className="absolute right-0 top-12 w-[380px] rounded-xl border border-border bg-popover shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border p-4">
               <div>
-                <h3 className="text-sm font-semibold">Central de Alertas</h3>
-                <p className="text-[10px] text-muted-foreground">{unread} não lidos</p>
+                <h3 className="font-semibold">Central de alertas</h3>
+                <p className="text-xs text-muted-foreground">{unread} não lidos</p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={markAllNotificationsRead}
-                >
-                  Marcar lidos
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setAlertsOpen(false)}
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={markAllNotificationsRead}>
+                Marcar como lidos
+              </Button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+            <div className="max-h-[440px] overflow-y-auto custom-scrollbar p-2 pr-2.5 space-y-1">
               {notifications.map((n) => (
                 <button
                   key={n.id}
                   className={cn(
-                    "w-full rounded-xl p-2.5 text-left transition-colors border border-border/40",
-                    !n.read ? "bg-primary/10 border-primary/30" : "bg-surface/50",
+                    "w-full rounded-lg p-3 text-left hover:bg-accent",
+                    !n.read && "bg-primary/5",
                   )}
                   onClick={() => {
                     markNotificationRead(n.id);
                     if (n.opportunityId) setSelected(n.opportunityId);
-                    setAlertsOpen(false);
                   }}
                 >
-                  <div className="flex gap-2.5">
+                  <div className="flex gap-3">
                     <AlertIcon kind={n.kind} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold leading-tight">{n.title}</div>
-                      <div className="mt-1 text-[11px] leading-snug text-muted-foreground line-clamp-2">
+                    <div>
+                      <div className="text-sm font-medium leading-5">{n.title}</div>
+                      <div className="mt-1 text-xs leading-4 text-muted-foreground">
                         {n.description}
                       </div>
-                      <div className="mt-1.5 text-[9px] text-muted-foreground">
+                      <div className="mt-2 text-[10px] text-muted-foreground">
                         {relativeTime(n.createdAt)}
                       </div>
                     </div>
@@ -2300,6 +2174,260 @@ function Topbar({
           </div>
         )}
       </div>
+
+      <div className="flex h-8 items-center gap-2 border-l border-border pl-3 shrink-0">
+        <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
+          {role === "gestor"
+            ? "G"
+            : (currentSeller?.name || "VD")
+                .split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+        </div>
+        <div className="hidden xl:block">
+          <div className="text-xs font-semibold">
+            {role === "gestor" ? "Gestor" : currentSeller?.name || "Consultor"}
+          </div>
+          <div className="text-[10px] text-muted-foreground">
+            {role === "gestor" ? "Gerência & Supervisão" : "Consultor Comercial"}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function MobileHeader({
+  onMenu,
+  globalSearch,
+  setGlobalSearch,
+  setSelected,
+  alertsOpen,
+  setAlertsOpen,
+  onGoHome,
+  onSwitchToDesktop,
+}: {
+  onMenu: () => void;
+  globalSearch: string;
+  setGlobalSearch: (v: string) => void;
+  setSelected: (v: string | null) => void;
+  alertsOpen: boolean;
+  setAlertsOpen: (v: boolean) => void;
+  onGoHome?: (() => void) | undefined;
+  onSwitchToDesktop: () => void;
+}) {
+  const {
+    opportunities,
+    sellerById,
+    notifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    role,
+    currentPlan = "performance",
+  } = useVyntra();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const unread = notifications.filter((n) => !n.read).length;
+
+  const matches = useMemo(() => {
+    const q = globalSearch.toLowerCase().trim();
+    if (!q) return [];
+    return opportunities
+      .filter((o) =>
+        `${o.customer.name} ${o.product} ${sellerById(o.sellerId)?.name}`.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [globalSearch, opportunities, sellerById]);
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between gap-2 px-3.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <Brand compact onClick={onGoHome} />
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                role === "gestor"
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+              )}
+            >
+              {role === "gestor" ? "Gestor" : "Consultor"}
+            </span>
+            {role === "gestor" && (
+              <span className="truncate rounded-full bg-secondary/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border border-border">
+                {currentPlan}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Botão de Alternar para Versão PC */}
+          <button
+            type="button"
+            onClick={onSwitchToDesktop}
+            className="flex items-center gap-1 rounded-full border border-border bg-secondary/80 hover:bg-secondary px-2.5 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer mr-0.5"
+            title="Alternar para a versão de computador (PC)"
+          >
+            <Monitor className="size-3 text-cyan-400" />
+            <span className="font-bold">PC</span>
+          </button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "size-8 text-muted-foreground",
+              mobileSearchOpen && "text-primary bg-primary/10",
+            )}
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            aria-label="Buscar"
+          >
+            <Search className="size-4" />
+          </Button>
+
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground relative"
+              onClick={() => setAlertsOpen(!alertsOpen)}
+              aria-label="Notificações"
+            >
+              <Bell className="size-4" />
+              {unread > 0 && (
+                <span className="absolute right-1 top-1 grid size-3.5 place-items-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
+                  {unread}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-foreground"
+            onClick={onMenu}
+            aria-label="Menu"
+          >
+            <Menu className="size-5" />
+          </Button>
+        </div>
+      </div>
+
+      {mobileSearchOpen && (
+        <div className="relative px-3.5 pb-3 border-t border-border/40 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={globalSearch}
+              autoFocus
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              placeholder="Buscar cliente, modelo ou vendedor..."
+              className="h-9 border-border bg-surface/90 pl-9 pr-8 text-xs focus:border-primary"
+            />
+            {globalSearch && (
+              <button
+                type="button"
+                onClick={() => setGlobalSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+          {globalSearch.trim() && (
+            <div className="mt-2 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl divide-y divide-border/60">
+              {matches.length ? (
+                matches.map((o) => (
+                  <button
+                    key={o.id}
+                    onClick={() => {
+                      setSelected(o.id);
+                      setMobileSearchOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 p-2.5 text-left active:bg-accent"
+                  >
+                    <ScoreMini score={o.score} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold truncate">{o.customer.name}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {o.product} · {sellerById(o.sellerId)?.name}
+                      </div>
+                    </div>
+                    <ChevronRight className="size-3.5 text-muted-foreground" />
+                  </button>
+                ))
+              ) : (
+                <div className="p-3 text-center text-xs text-muted-foreground">
+                  Nenhuma oportunidade encontrada.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {alertsOpen && (
+        <div className="fixed inset-x-3 top-16 z-50 rounded-2xl border border-border bg-popover p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-border pb-2.5 mb-2">
+            <div>
+              <h3 className="text-sm font-semibold">Central de Alertas</h3>
+              <p className="text-[10px] text-muted-foreground">{unread} não lidos</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs px-2"
+                onClick={markAllNotificationsRead}
+              >
+                Marcar lidos
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={() => setAlertsOpen(false)}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+            {notifications.map((n) => (
+              <button
+                key={n.id}
+                className={cn(
+                  "w-full rounded-xl p-2.5 text-left transition-colors border border-border/40",
+                  !n.read ? "bg-primary/10 border-primary/30" : "bg-surface/50",
+                )}
+                onClick={() => {
+                  markNotificationRead(n.id);
+                  if (n.opportunityId) setSelected(n.opportunityId);
+                  setAlertsOpen(false);
+                }}
+              >
+                <div className="flex gap-2.5">
+                  <AlertIcon kind={n.kind} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-semibold leading-tight">{n.title}</div>
+                    <div className="mt-1 text-[11px] leading-snug text-muted-foreground line-clamp-2">
+                      {n.description}
+                    </div>
+                    <div className="mt-1.5 text-[9px] text-muted-foreground">
+                      {relativeTime(n.createdAt)}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -18,7 +18,7 @@ import {
   pickSellerByPerformance,
 } from "./mock-data";
 import {
-  LAGES_REGION_CITIES,
+  NOVA_SERRA_REGION_CITIES,
   type AppNotification,
   Category,
   CommercialRoute,
@@ -47,7 +47,7 @@ import {
   type ProcessWebhookResult,
 } from "./webhook-service";
 
-const STORAGE_KEY = "vyntra-demo-state-v7";
+const STORAGE_KEY = "vyntra-demo-state-v8";
 
 export type RoleView = "gestor" | "vendedor";
 
@@ -69,7 +69,7 @@ function initialState(): PersistedState {
     authed: false,
     role: "gestor",
     currentPlan: "performance",
-    currentSellerId: "francine",
+    currentSellerId: "lucas",
     opportunities,
     followUps: buildFollowUps(opportunities),
     proposals: buildProposals(opportunities),
@@ -213,9 +213,15 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as PersistedState;
+        let currentSellerId = parsed.currentSellerId ?? "lucas";
+        if (currentSellerId === "francine") currentSellerId = "lucas";
+        if (currentSellerId === "guilherme") currentSellerId = "rafael";
+        if (currentSellerId === "vitor") currentSellerId = "bruno";
+        if (currentSellerId === "gabriel") currentSellerId = "felipe";
+
         setState({
           ...parsed,
-          currentSellerId: parsed.currentSellerId ?? "francine",
+          currentSellerId,
           role: parsed.role ?? "gestor",
           opportunities: parsed.opportunities.map((opportunity, index) => {
             const isSC = index % 3 === 0;
@@ -240,19 +246,27 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
               !opportunity.city.includes("Santa Rosa")
                 ? opportunity.city
                 : store === "Nova Serra / SC"
-                  ? LAGES_REGION_CITIES[Math.floor(index / 3) % LAGES_REGION_CITIES.length]
+                  ? NOVA_SERRA_REGION_CITIES[Math.floor(index / 3) % NOVA_SERRA_REGION_CITIES.length]
                   : store === "Vale Azul / RS"
                     ? "Vale Azul"
                     : "Santa Aurora";
             const region =
               opportunity.region ??
               (state === "SC" ? "Santa Catarina" : "Rio Grande do Sul");
+
+            let sellerId = opportunity.sellerId;
+            if (sellerId === "francine") sellerId = "lucas";
+            if (sellerId === "guilherme") sellerId = "rafael";
+            if (sellerId === "vitor") sellerId = "bruno";
+            if (sellerId === "gabriel") sellerId = "felipe";
+
             return {
               ...opportunity,
               state,
               store,
               city,
               region,
+              sellerId,
             };
           }),
         });
@@ -310,7 +324,7 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
       sellers: SELLERS,
       sellerById,
       opportunityById,
-      currentSellerId: state.currentSellerId || "francine",
+      currentSellerId: state.currentSellerId || "lucas",
       setCurrentSellerId: (sellerId: string) =>
         setState((s) => ({ ...s, currentSellerId: sellerId })),
       login: (email, password, roleHint, sellerIdHint) => {
@@ -331,22 +345,22 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
           clean.includes("gabriel")
             ? "vendedor"
             : "gestor");
-        let targetSellerId = sellerIdHint ?? (state.currentSellerId || "francine");
+        let targetSellerId = sellerIdHint ?? (state.currentSellerId || "lucas");
 
         if (clean === "gestor@vyntra.com" || clean.includes("gestor") || clean.includes("marcos")) {
           targetRole = "gestor";
         } else if (clean === "vendedor@vyntra.com" || clean.includes("lucas") || clean.includes("francine")) {
           targetRole = "vendedor";
-          targetSellerId = "francine";
+          targetSellerId = "lucas";
         } else if (clean.includes("rafael") || clean.includes("guilherme")) {
           targetRole = "vendedor";
-          targetSellerId = "guilherme";
+          targetSellerId = "rafael";
         } else if (clean.includes("bruno") || clean.includes("vitor")) {
           targetRole = "vendedor";
-          targetSellerId = "vitor";
+          targetSellerId = "bruno";
         } else if (clean.includes("felipe") || clean.includes("gabriel")) {
           targetRole = "vendedor";
-          targetSellerId = "gabriel";
+          targetSellerId = "felipe";
         }
 
         setState((s) => ({
@@ -357,12 +371,17 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
         }));
         return true;
       },
-      loginAs: (role, sellerId = "francine") => {
+      loginAs: (role, sellerId = "lucas") => {
+        let finalSellerId = sellerId;
+        if (finalSellerId === "francine") finalSellerId = "lucas";
+        if (finalSellerId === "guilherme") finalSellerId = "rafael";
+        if (finalSellerId === "vitor") finalSellerId = "bruno";
+        if (finalSellerId === "gabriel") finalSellerId = "felipe";
         setState((s) => ({
           ...s,
           authed: true,
           role,
-          currentSellerId: sellerId,
+          currentSellerId: finalSellerId,
         }));
       },
       setCurrentPlan: (plan: PlanTier) => {
@@ -615,7 +634,7 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
             email: "carlos.nogueira@teste.com.br",
             interest: "Toyota Corolla Cross XRE 0km",
             budget: 185000,
-            city: "Santa Rosa",
+            city: "Santa Aurora",
             message:
               "Quero simular financiamento com 40% de entrada e taxa zero. Teste de webhook ao vivo.",
             source: "Simulador Webhook Vyntra",

@@ -110,7 +110,7 @@ import {
 } from "@/lib/vyntra/mock-data";
 import { useVyntra, VyntraProvider, type RoleView } from "@/lib/vyntra/store";
 import {
-  LAGES_REGION_CITIES,
+  NOVA_SERRA_REGION_CITIES,
   type CommercialRoute,
   type FollowUpBucket,
   type LeadState,
@@ -253,7 +253,7 @@ function Login() {
   const { login, loginAs, sellers } = useVyntra();
   const [authMode, setAuthMode] = useState<"login" | "forgot-password" | "first-access">("login");
   const [selectedRole, setSelectedRole] = useState<RoleView>("gestor");
-  const [selectedSellerId, setSelectedSellerId] = useState("francine");
+  const [selectedSellerId, setSelectedSellerId] = useState("lucas");
   const [email, setEmail] = useState(DEMO_CREDENTIALS_GESTOR.email);
   const [password, setPassword] = useState("123456");
   const [show, setShow] = useState(false);
@@ -266,8 +266,8 @@ function Login() {
 
   // First access state
   const [firstRole, setFirstRole] = useState<RoleView>("vendedor");
-  const [firstSellerId, setFirstSellerId] = useState("francine");
-  const [firstEmail, setFirstEmail] = useState("francine@vyntra.com");
+  const [firstSellerId, setFirstSellerId] = useState("lucas");
+  const [firstEmail, setFirstEmail] = useState("lucas@vyntra.com");
   const [firstPass, setFirstPass] = useState("");
   const [firstPassConfirm, setFirstPassConfirm] = useState("");
   const [firstShowPass, setFirstShowPass] = useState(false);
@@ -279,7 +279,7 @@ function Login() {
       setEmail("gestor@vyntra.com");
     } else {
       const s = sellers.find((x) => x.id === selectedSellerId) ?? sellers[0];
-      setEmail(`${s?.id || "francine"}@vyntra.com`);
+      setEmail(`${s?.id || "lucas"}@vyntra.com`);
     }
   };
 
@@ -655,7 +655,7 @@ function Login() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => triggerAnimatedLogin("vendedor", "francine")}
+                    onClick={() => triggerAnimatedLogin("vendedor", "lucas")}
                     className="flex flex-col items-start gap-1 rounded-xl border border-violet-500/30 bg-[#0d0a26]/70 p-3 text-left transition-all hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)]"
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400">
@@ -1099,7 +1099,7 @@ function Sidebar({
     currentPlan = "performance",
     setCurrentPlan,
   } = useVyntra();
-  const currentSeller = sellerById(currentSellerId || "francine") ?? sellers[0]!;
+  const currentSeller = sellerById(currentSellerId || "lucas") ?? sellers[0]!;
 
   const navItems = useMemo(() => {
     if (role === "vendedor") {
@@ -1284,7 +1284,7 @@ function Sidebar({
           {role === "vendedor" && (
             <div className="mt-2">
               <Select
-                value={currentSellerId || "francine"}
+                value={currentSellerId || "lucas"}
                 onValueChange={(val) => setCurrentSellerId(val)}
               >
                 <SelectTrigger className="h-7 text-xs bg-background">
@@ -1387,7 +1387,7 @@ function Topbar({
     setCurrentPlan,
   } = useVyntra();
   const [demoMenuOpen, setDemoMenuOpen] = useState(false);
-  const currentSeller = sellerById(currentSellerId || "francine");
+  const currentSeller = sellerById(currentSellerId || "lucas");
   const matches = useMemo(() => {
     const q = globalSearch.toLowerCase().trim();
     if (!q) return [];
@@ -2213,12 +2213,12 @@ function FilterBar({
   // Lista de cidades disponíveis com base nos filtros regionais
   const availableCities: Array<[string, string]> = [["all", "Todas as cidades"]];
   if (filters.state === "SC" || filters.store === "Nova Serra / SC") {
-    LAGES_REGION_CITIES.forEach((c) => availableCities.push([c, c]));
+    NOVA_SERRA_REGION_CITIES.forEach((c) => availableCities.push([c, c]));
   } else if (filters.state === "RS") {
     const rsCities = Array.from(new Set(opportunities.filter((o) => o.state === "RS").map((o) => o.city))).sort();
     rsCities.forEach((c) => availableCities.push([c, c]));
   } else {
-    const allUniqueCities = Array.from(new Set([...LAGES_REGION_CITIES, ...opportunities.map((o) => o.city)])).sort();
+    const allUniqueCities = Array.from(new Set([...NOVA_SERRA_REGION_CITIES, ...opportunities.map((o) => o.city)])).sort();
     allUniqueCities.forEach((c) => availableCities.push([c, c]));
   }
 
@@ -2273,7 +2273,7 @@ function FilterBar({
         onValueChange={(v) => {
           let nextState = filters.state;
           let nextStore = filters.store;
-          if (LAGES_REGION_CITIES.includes(v as (typeof LAGES_REGION_CITIES)[number])) {
+          if (NOVA_SERRA_REGION_CITIES.includes(v as (typeof NOVA_SERRA_REGION_CITIES)[number])) {
             nextState = "SC";
             nextStore = "Nova Serra / SC";
           }
@@ -3578,7 +3578,7 @@ function Distribution({ setView }: { setView?: ((v: View) => void) | undefined }
             Cobertura regional: Nova Serra, Vale Azul, Santa Aurora, Jardim Norte, Vila Central, Alto da Serra, Bela Vista, Porto Belo, Monte Alto, Rio Claro e Pinhal Novo.
           </p>
           <div className="mt-3 flex flex-wrap gap-1">
-            {LAGES_REGION_CITIES.map((c) => {
+            {NOVA_SERRA_REGION_CITIES.map((c) => {
               const count = v.opportunities.filter((o) => o.city === c).length;
               return (
                 <span
@@ -6161,7 +6161,7 @@ function SettingsPage({ setView }: { setView?: (v: View) => void }) {
 }
 function SellerDashboard({ setSelected }: { setSelected: (id: string) => void }) {
   const v = useVyntra();
-  const sellerId = v.currentSellerId || "francine";
+  const sellerId = v.currentSellerId || "lucas";
   const seller = v.sellerById(sellerId);
   const firstName = seller?.name?.split(" ")[0] || "Consultor";
   const own = v.opportunities.filter(

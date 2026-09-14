@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 import { useVyntra } from "@/lib/vyntra/store";
 import type { IntegrationLog, ProcessWebhookResult } from "@/lib/vyntra/webhook-service";
 import { BRL, relativeTime } from "@/lib/vyntra/utils";
-import { LAGES_REGION_CITIES } from "@/lib/vyntra/types";
+import { NOVA_SERRA_REGION_CITIES } from "@/lib/vyntra/types";
 
 // ---------------------------------------------------------------------------
 // Componente de Badge de Score e Classificação
@@ -297,12 +297,12 @@ export function IntegrationsPage({
   const [lastTestResult, setLastTestResult] = useState<ProcessWebhookResult | null>(null);
 
   // Payload customizado
-  const [customName, setCustomName] = useState("Guilherme Schneider");
+  const [customName, setCustomName] = useState("Rafael Becker");
   const [customPhone, setCustomPhone] = useState("(54) 99122-3344");
-  const [customEmail, setCustomEmail] = useState("guilherme.schneider@empresa.com");
-  const [customInterest, setCustomInterest] = useState("BMW 320i M Sport 0km");
+  const [customEmail, setCustomEmail] = useState("rafael.becker@empresa.com");
+  const [customInterest, setCustomInterest] = useState("SUV Especial 0km");
   const [customBudget, setCustomBudget] = useState("195000");
-  const [customCity, setCustomCity] = useState("Santa Rosa");
+  const [customCity, setCustomCity] = useState("Santa Aurora");
   const [customSource, setCustomSource] = useState("Meta Ads");
   const [customMessage, setCustomMessage] = useState("Quero proposta com taxa especial e avaliar meu Corolla seminovo na troca.");
 
@@ -691,7 +691,7 @@ export function IntegrationsPage({
                 className="mt-1 h-8 text-xs bg-background/80"
               />
               <div className="mt-1 flex flex-wrap gap-1">
-                {LAGES_REGION_CITIES.slice(0, 6).map((c) => (
+                {NOVA_SERRA_REGION_CITIES.slice(0, 6).map((c) => (
                   <button
                     key={c}
                     type="button"

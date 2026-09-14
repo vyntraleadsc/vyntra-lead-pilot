@@ -146,9 +146,9 @@ export const NOVA_SERRA_REGION_CITIES = [
   "Pinhal Novo",
 ] as const;
 
+export type NovaSerraRegionCity = (typeof NOVA_SERRA_REGION_CITIES)[number];
 export const LAGES_REGION_CITIES = NOVA_SERRA_REGION_CITIES;
-
-export type LagesRegionCity = (typeof LAGES_REGION_CITIES)[number];
+export type LagesRegionCity = NovaSerraRegionCity;
 
 export interface OpportunityFilters {
   search: string;

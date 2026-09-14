@@ -4,7 +4,7 @@
 
 - Manter todos os clientes e leads como dados fictícios de demonstração.
 - Criar no Lovable Cloud uma base de leads com cidade, estado, região, loja e vendedor responsável.
-- Cadastrar as lojas **Lages/SC**, **Três Passos/RS** e **Santa Rosa/RS** e preencher os leads fictícios com cidades coerentes de cada região.
+- Cadastrar as lojas **Nova Serra/SC**, **Vale Azul/RS** e **Santa Aurora/RS** e preencher os leads fictícios com cidades coerentes de cada região.
 - Atualizar o quiz para perguntar primeiro o estado e depois a cidade do cliente.
 - Definir automaticamente a região e a loja correta a partir das respostas do quiz.
 - Adicionar ao painel do gestor seletores de estado, região e loja, além dos filtros já existentes.
@@ -14,8 +14,8 @@
 
 ## Regras de encaminhamento
 
-- Respostas de cidades de Santa Catarina serão vinculadas à região e loja de **Lages/SC**.
-- Respostas do Rio Grande do Sul serão vinculadas a **Três Passos/RS** ou **Santa Rosa/RS**, conforme a cidade escolhida.
+- Respostas de cidades de Santa Catarina serão vinculadas à região e loja de **Nova Serra/SC**.
+- Respostas do Rio Grande do Sul serão vinculadas a **Vale Azul/RS** ou **Santa Aurora/RS**, conforme a cidade escolhida.
 - O lead carregará essas respostas em sua ficha, na listagem e no painel do vendedor.
 - Redistribuições feitas pelo gestor atualizarão imediatamente a carteira do vendedor e ficarão persistidas.
 

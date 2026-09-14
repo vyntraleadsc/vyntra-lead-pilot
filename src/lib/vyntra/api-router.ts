@@ -151,7 +151,7 @@ export async function handleWebhookApiRequest(request: Request): Promise<Respons
         email: "carlos.nogueira@teste.com.br",
         interest: "Toyota Corolla Cross XRE 0km",
         budget: 185000,
-        city: "Santa Rosa",
+        city: "Santa Aurora",
         message: "Quero simular financiamento com 40% de entrada e taxa zero. Teste de webhook ao vivo.",
         source: "Simulador Webhook Vyntra",
         campaign: "Teste de Homologação de Integração",

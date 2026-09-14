@@ -61,8 +61,6 @@ import {
   Award,
   BadgeCheck,
   Calculator,
-  Smartphone,
-  Monitor,
 } from "lucide-react";
 import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
 import { AdCampaignPage } from "./vyntra-ad-campaign";
@@ -945,60 +943,13 @@ function Login() {
 }
 
 function Workspace() {
-  const {
-    role,
-    currentPlan = "performance",
-    opportunities,
-    followUps,
-    now,
-    currentSellerId,
-    sellers,
-    sellerById,
-    setRole,
-    setCurrentPlan,
-    setCurrentSellerId,
-    logout,
-  } = useVyntra();
+  const { role, currentPlan = "performance" } = useVyntra();
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [globalSearch, setGlobalSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
-
-  // Versão ativa: "desktop" (PC) ou "mobile" (Celular)
-  const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("vyntra_device_mode");
-      if (saved === "desktop" || saved === "mobile") return saved;
-      return window.innerWidth < 1024 ? "mobile" : "desktop";
-    }
-    return "desktop";
-  });
-
-  const setMode = (mode: "desktop" | "mobile") => {
-    setDeviceMode(mode);
-    try {
-      localStorage.setItem("vyntra_device_mode", mode);
-    } catch (_) {}
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  };
-
-  // Contadores para os badges da navegação móvel
-  const hotCount = useMemo(() => {
-    return opportunities.filter((o) => {
-      if (role === "vendedor" && currentSellerId && o.sellerId !== currentSellerId) return false;
-      return o.score >= 75;
-    }).length;
-  }, [opportunities, role, currentSellerId]);
-
-  const overdueCount = useMemo(() => {
-    return followUps.filter((f) => {
-      const opportunity = opportunities.find((item) => item.id === f.opportunityId);
-      if (role === "vendedor" && currentSellerId && opportunity?.sellerId !== currentSellerId) return false;
-      return !f.done && new Date(f.dueAt).getTime() < now;
-    }).length;
-  }, [followUps, opportunities, now, role, currentSellerId]);
 
   // Garante que a tela aberta pertença ao plano atualmente demonstrado
   useEffect(() => {
@@ -1054,102 +1005,39 @@ function Workspace() {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   };
 
-  // =========================================================================
-  // 1. VERSÃO EXCLUSIVA PARA COMPUTADOR (PC / DESKTOP)
-  // 100% autônoma, pura, sem alterações mobile interferindo na navegação de PC
-  // =========================================================================
-  if (deviceMode === "desktop") {
-    return (
-      <div className="min-h-screen bg-background">
-        <DesktopSidebar
-          view={view}
-          setView={setView}
-          onGoHome={handleGoHome}
-        />
-        <div className="pl-[244px]">
-          <DesktopTopbar
-            globalSearch={globalSearch}
-            setGlobalSearch={setGlobalSearch}
-            searchOpen={searchOpen}
-            setSearchOpen={setSearchOpen}
-            setSelected={setSelected}
-            alertsOpen={alertsOpen}
-            setAlertsOpen={setAlertsOpen}
-            onGoHome={handleGoHome}
-            setView={setView}
-            onSwitchToMobile={() => setMode("mobile")}
-          />
-          <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-            {role === "vendedor" ? (
-              <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
-            ) : (
-              <ManagerView view={view} setView={setView} setSelected={setSelected} />
-            )}
-          </main>
-        </div>
-        <OpportunityDrawer id={selected} onClose={() => setSelected(null)} />
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // 2. VERSÃO EXCLUSIVA PARA CELULAR (MOBILE / SMARTPHONE)
-  // 100% autônoma, com barra inferior, menu nativo gaveta e ergonomia de toque
-  // =========================================================================
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <MobileHeader
-        onMenu={() => setMobileNav(true)}
-        globalSearch={globalSearch}
-        setGlobalSearch={setGlobalSearch}
-        setSelected={setSelected}
-        alertsOpen={alertsOpen}
-        setAlertsOpen={setAlertsOpen}
-        onGoHome={handleGoHome}
-        onSwitchToDesktop={() => setMode("desktop")}
-      />
-      <main className="mx-auto max-w-lg px-3.5 py-4 pb-28">
-        {role === "vendedor" ? (
-          <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
-        ) : (
-          <ManagerView view={view} setView={setView} setSelected={setSelected} />
-        )}
-      </main>
-
-      <MobileBottomNav
+    <div className="min-h-screen bg-background">
+      <Sidebar
         view={view}
         setView={(v) => {
           setView(v);
           setMobileNav(false);
-          window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}
-        onOpenMenu={() => setMobileNav(true)}
-        role={role}
-        hotCount={hotCount}
-        overdueCount={overdueCount}
-      />
-
-      <MobileActionSheet
-        open={mobileNav}
-        onClose={() => setMobileNav(false)}
-        view={view}
-        setView={setView}
-        role={role}
-        setRole={setRole}
-        currentPlan={currentPlan}
-        setCurrentPlan={setCurrentPlan}
-        currentSellerId={currentSellerId}
-        setCurrentSellerId={setCurrentSellerId}
-        sellers={sellers}
-        sellerById={sellerById}
-        logout={logout}
+        mobileOpen={mobileNav}
+        setMobileOpen={setMobileNav}
         onGoHome={handleGoHome}
-        onSwitchToDesktop={() => {
-          setMobileNav(false);
-          setMode("desktop");
-        }}
       />
-
+      <div className="lg:pl-[244px]">
+        <Topbar
+          onMenu={() => setMobileNav(true)}
+          globalSearch={globalSearch}
+          setGlobalSearch={setGlobalSearch}
+          searchOpen={searchOpen}
+          setSearchOpen={setSearchOpen}
+          setSelected={setSelected}
+          alertsOpen={alertsOpen}
+          setAlertsOpen={setAlertsOpen}
+          onGoHome={handleGoHome}
+          setView={setView}
+        />
+        <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          {role === "vendedor" ? (
+            <SellerWorkspace view={view} setView={setView} setSelected={setSelected} />
+          ) : (
+            <ManagerView view={view} setView={setView} setSelected={setSelected} />
+          )}
+        </main>
+      </div>
       <OpportunityDrawer id={selected} onClose={() => setSelected(null)} />
     </div>
   );
@@ -1187,526 +1075,17 @@ function SellerWorkspace({
   );
 }
 
-function MobileBottomNav({
+function Sidebar({
   view,
   setView,
-  onOpenMenu,
-  role,
-  hotCount,
-  overdueCount,
-}: {
-  view: View;
-  setView: (v: View) => void;
-  onOpenMenu: () => void;
-  role: RoleView;
-  hotCount: number;
-  overdueCount: number;
-}) {
-  const tabs = useMemo(() => {
-    if (role === "vendedor") {
-      return [
-        { id: "overview" as const, label: "Fila", icon: Zap, badge: null, badgeColor: "" },
-        {
-          id: "opportunities" as const,
-          label: "Leads",
-          icon: Target,
-          badge: hotCount > 0 ? hotCount : null,
-          badgeColor: "bg-amber-500 text-black",
-        },
-        {
-          id: "followups" as const,
-          label: "Follow-up",
-          icon: CalendarClock,
-          badge: overdueCount > 0 ? overdueCount : null,
-          badgeColor: "bg-destructive text-destructive-foreground",
-        },
-        { id: "proposals" as const, label: "Propostas", icon: FileText, badge: null, badgeColor: "" },
-        { id: "menu" as const, label: "Menu", icon: Menu, badge: null, badgeColor: "" },
-      ];
-    }
-    return [
-      { id: "overview" as const, label: "Início", icon: LayoutDashboard, badge: null, badgeColor: "" },
-      {
-        id: "opportunities" as const,
-        label: "Leads",
-        icon: Target,
-        badge: hotCount > 0 ? hotCount : null,
-        badgeColor: "bg-amber-500 text-black",
-      },
-      {
-        id: "followups" as const,
-        label: "Follow-up",
-        icon: CalendarClock,
-        badge: overdueCount > 0 ? overdueCount : null,
-        badgeColor: "bg-destructive text-destructive-foreground",
-      },
-      { id: "proposals" as const, label: "Propostas", icon: FileText, badge: null, badgeColor: "" },
-      { id: "menu" as const, label: "Mais", icon: Menu, badge: null, badgeColor: "" },
-    ];
-  }, [role, hotCount, overdueCount]);
-
-  return (
-    <nav
-      aria-label="Navegação móvel"
-      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-border/80 bg-background/95 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-    >
-      <div className="grid grid-cols-5 items-center h-[58px] px-1 max-w-md mx-auto">
-        {tabs.map((tab) => {
-          const isMenu = tab.id === "menu";
-          const isActive = !isMenu && view === tab.id;
-          const Icon = tab.icon;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                if (isMenu) {
-                  onOpenMenu();
-                } else {
-                  setView(tab.id as View);
-                }
-              }}
-              className={cn(
-                "relative flex flex-col items-center justify-center h-full py-1 transition-all group focus:outline-none active:scale-95",
-                isActive ? "text-cyan-400" : "text-muted-foreground/75 hover:text-foreground",
-              )}
-            >
-              {/* Indicador sutil de aba ativa no topo */}
-              {isActive && (
-                <span className="absolute top-0 h-[2.5px] w-8 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.9)] animate-in fade-in duration-200" />
-              )}
-
-              <div className="relative">
-                <Icon
-                  className={cn(
-                    "size-5 transition-transform duration-200",
-                    isActive ? "scale-110 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" : "group-hover:scale-105",
-                  )}
-                />
-                {tab.badge !== null && tab.badge > 0 && (
-                  <span
-                    className={cn(
-                      "absolute -top-1.5 -right-2.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-extrabold leading-none shadow-sm",
-                      tab.badgeColor,
-                    )}
-                  >
-                    {tab.badge > 99 ? "99+" : tab.badge}
-                  </span>
-                )}
-              </div>
-
-              <span
-                className={cn(
-                  "mt-1 text-[10px] tracking-tight leading-none transition-colors",
-                  isActive ? "font-bold text-cyan-400" : "font-medium",
-                )}
-              >
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-function MobileActionSheet({
-  open,
-  onClose,
-  view,
-  setView,
-  role,
-  setRole,
-  currentPlan,
-  setCurrentPlan,
-  currentSellerId,
-  setCurrentSellerId,
-  sellers,
-  sellerById,
-  logout,
-  onGoHome,
-  onSwitchToDesktop,
-}: {
-  open: boolean;
-  onClose: () => void;
-  view: View;
-  setView: (v: View) => void;
-  role: RoleView;
-  setRole: (r: RoleView) => void;
-  currentPlan: PlanTier;
-  setCurrentPlan: (p: PlanTier) => void;
-  currentSellerId?: string | undefined;
-  setCurrentSellerId: (s: string) => void;
-  sellers: Array<{ id: string; name: string; store?: string }>;
-  sellerById: (id: string) => { id: string; name: string; store?: string } | undefined;
-  logout: () => void;
-  onGoHome?: () => void;
-  onSwitchToDesktop?: () => void;
-}) {
-  if (!open) return null;
-
-  const currentSeller = sellerById(currentSellerId || "francine") ?? sellers[0];
-
-  const sections = useMemo(() => {
-    if (role === "vendedor") {
-      return [
-        {
-          title: "Operação Comercial",
-          tag: "Vendedor",
-          items: [
-            { id: "overview" as View, label: "Fila de Atendimento", icon: Zap, desc: "SLA e novos leads em tempo real" },
-            { id: "opportunities" as View, label: "Meus Leads", icon: Target, desc: "Oportunidades atribuídas" },
-            { id: "followups" as View, label: "Meus Follow-ups", icon: CalendarClock, desc: "Compromissos e retornos" },
-            { id: "proposals" as View, label: "Minhas Propostas", icon: FileText, desc: "Negociações e cotações ativas" },
-          ],
-        },
-      ];
-    }
-
-    // Gestor comercial organizado por pilares executivos
-    const operacao = [
-      { id: "overview" as View, label: "Visão Geral", icon: LayoutDashboard, desc: "Painel executivo e SLAs da rede" },
-      { id: "opportunities" as View, label: "Oportunidades", icon: Target, desc: "Funil completo e pipeline" },
-      { id: "followups" as View, label: "Follow-ups", icon: CalendarClock, desc: "Acompanhamento diário" },
-      { id: "proposals" as View, label: "Propostas Comerciais", icon: FileText, desc: "Propostas e fechamentos" },
-    ];
-
-    const inteligencia = [
-      { id: "qualification" as View, label: "Qualificação com IA", icon: Bot, desc: "Agente inteligente e score preditivo" },
-      { id: "campaign" as View, label: "Campanhas WhatsApp", icon: Megaphone, desc: "Disparos e reengajamento" },
-      { id: "distribution" as View, label: "Distribuição de Leads", icon: RouteIcon, desc: "Regras por concessionária" },
-      { id: "insights" as View, label: "Insights Preditivos", icon: Sparkles, desc: "Gargalos e oportunidades" },
-      { id: "impact" as View, label: "Impacto Comercial", icon: CircleDollarSign, desc: "ROI e receita estimada" },
-      { id: "team" as View, label: "Gestão de Equipe", icon: UsersRound, desc: "Ranking e conversão da equipe" },
-    ].filter(() => currentPlan !== "essencial");
-
-    const governanca = [
-      { id: "integrations" as View, label: "Integrações", icon: Webhook, desc: "HubSpot, RD Station e WhatsApp" },
-      { id: "integration-logs" as View, label: "Logs de Integração", icon: Terminal, desc: "Webhooks e auditoria de sync" },
-      { id: "settings" as View, label: "Configurações", icon: Settings, desc: "Parâmetros operacionais" },
-    ].filter(() => currentPlan === "enterprise");
-
-    const planos = [
-      { id: "plans" as View, label: "Planos & Assinatura", icon: Trophy, desc: "Comparativo comercial completo" },
-    ];
-
-    const result = [{ title: "Operação Diária", tag: "Essencial", items: operacao }];
-
-    if (inteligencia.length > 0) {
-      result.push({ title: "Inteligência & Escala", tag: "Performance", items: inteligencia });
-    }
-    if (governanca.length > 0) {
-      result.push({ title: "Governança & Integrações", tag: "Enterprise", items: governanca });
-    }
-    result.push({ title: "Planos Comerciais", tag: "Comercial", items: planos });
-
-    return result;
-  }, [role, currentPlan]);
-
-  return (
-    <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end animate-in fade-in duration-200">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-background/85 backdrop-blur-md"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Sheet Modal nativo de navegação móvel */}
-      <div
-        className="relative z-10 flex max-h-[88vh] w-full flex-col rounded-t-[28px] border-t border-border/80 bg-[#070d1e]/98 backdrop-blur-2xl shadow-[0_-20px_60px_rgba(0,0,0,0.85)] animate-in slide-in-from-bottom duration-300"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        {/* Handle de arraste superior */}
-        <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
-
-        {/* Topo do Menu Móvel */}
-        <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-border/60">
-          <Brand
-            compact
-            onClick={() => {
-              if (onGoHome) onGoHome();
-              onClose();
-            }}
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground font-medium truncate max-w-[170px]">
-              {DEALERSHIP}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-full bg-secondary/60 text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-              aria-label="Fechar menu"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Conteúdo com rolagem nativa */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-3 space-y-4">
-          {/* Seletor rápido de plano demo para Gestor */}
-          {role === "gestor" && (
-            <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-3.5 shadow-sm">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Trophy className="size-3.5 text-primary" />
-                  Plano da Demonstração
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setView("plans");
-                    onClose();
-                  }}
-                  className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
-                >
-                  Comparar
-                  <ChevronRight className="size-3" />
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {(["essencial", "performance", "enterprise"] as const).map((p) => {
-                  const active = currentPlan === p;
-                  const price =
-                    p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
-                  return (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setCurrentPlan(p)}
-                      className={cn(
-                        "flex flex-col items-center justify-center rounded-xl py-2 px-1 text-center transition-all",
-                        active
-                          ? "bg-primary text-primary-foreground font-bold shadow-md ring-1 ring-primary"
-                          : "bg-background/80 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/70",
-                      )}
-                    >
-                      <span className="text-xs font-semibold capitalize">{p}</span>
-                      <span className="text-[9px] opacity-80 mt-0.5 font-normal">{price}/mês</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Telas organizadas por categoria */}
-          <div className="space-y-4">
-            {sections.map((sec) => (
-              <div key={sec.title} className="space-y-1.5">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {sec.title}
-                  </span>
-                  <span className="rounded px-1.5 py-0.2 text-[9px] font-semibold text-muted-foreground/80 bg-surface border border-border/60">
-                    {sec.tag}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {sec.items.map((item) => {
-                    const active = view === item.id;
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setView(item.id);
-                          onClose();
-                        }}
-                        className={cn(
-                          "flex items-center justify-between rounded-xl p-2.5 text-left transition-all border",
-                          active
-                            ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-semibold shadow-xs"
-                            : "bg-surface/60 border-border/50 text-muted-foreground hover:bg-surface hover:text-foreground",
-                        )}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={cn(
-                              "grid size-8 shrink-0 place-items-center rounded-lg border transition-colors",
-                              active
-                                ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
-                                : "bg-background/60 border-border/60 text-muted-foreground",
-                            )}
-                          >
-                            <Icon className="size-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div
-                              className={cn(
-                                "text-xs font-medium leading-tight",
-                                active && "text-cyan-300 font-bold",
-                              )}
-                            >
-                              {item.label}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground truncate mt-0.5">
-                              {item.desc}
-                            </div>
-                          </div>
-                        </div>
-                        <ChevronRight
-                          className={cn(
-                            "size-3.5 shrink-0 text-muted-foreground/60",
-                            active && "text-cyan-400",
-                          )}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Troca de Perfil (Gestor <-> Vendedor) */}
-          <div className="rounded-2xl border border-border bg-surface/70 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Alternar Perfil
-              </span>
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
-                  role === "gestor"
-                    ? "bg-primary/20 text-primary border border-primary/30"
-                    : "bg-violet-500/20 text-violet-300 border border-violet-500/30",
-                )}
-              >
-                {role === "gestor" ? "Gestor Comercial" : "Vendedor"}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1 border border-border/50">
-              <Button
-                variant={role === "gestor" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn(
-                  "h-8 text-xs font-semibold",
-                  role === "gestor" &&
-                    "bg-primary/20 text-primary hover:bg-primary/25 border border-primary/30",
-                )}
-                onClick={() => {
-                  setRole("gestor");
-                  setView("overview");
-                }}
-              >
-                Gestor
-              </Button>
-              <Button
-                variant={role === "vendedor" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn(
-                  "h-8 text-xs font-semibold",
-                  role === "vendedor" &&
-                    "bg-violet-500/20 text-violet-300 hover:bg-violet-500/25 border border-violet-500/30",
-                )}
-                onClick={() => {
-                  setRole("vendedor");
-                  setView("overview");
-                }}
-              >
-                Vendedor
-              </Button>
-            </div>
-            {role === "vendedor" && (
-              <div className="pt-1">
-                <label className="text-[10px] text-muted-foreground font-medium mb-1 block">
-                  Consultor Simulado:
-                </label>
-                <Select
-                  value={currentSellerId || "francine"}
-                  onValueChange={(val) => setCurrentSellerId(val)}
-                >
-                  <SelectTrigger className="h-8 text-xs bg-background border-border">
-                    <SelectValue placeholder="Escolher vendedor" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[70]">
-                    {sellers.map((s) => (
-                      <SelectItem key={s.id} value={s.id} className="text-xs">
-                        {s.name}{s.store ? ` (${s.store})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {/* Alternar para Versão de Computador (PC) */}
-          {onSwitchToDesktop && (
-            <button
-              type="button"
-              onClick={onSwitchToDesktop}
-              className="flex w-full items-center justify-between rounded-xl p-3 border border-border/80 bg-surface/90 text-left hover:bg-surface text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="grid size-8 place-items-center rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                  <Monitor className="size-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-foreground">Alternar para Versão PC</div>
-                  <div className="text-[10px] text-muted-foreground">Visualizar layout executivo de computador</div>
-                </div>
-              </div>
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </button>
-          )}
-
-          {/* Usuário e Logout */}
-          <div className="flex items-center justify-between border-t border-border/80 pt-3 pb-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-xs font-bold text-primary border border-primary/30">
-                {role === "gestor"
-                  ? "G"
-                  : (currentSeller?.name || "VD")
-                      .split(" ")
-                      .map((x) => x[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-semibold">
-                  {role === "gestor" ? "Gestor" : currentSeller?.name || "Consultor"}
-                </div>
-                <div className="truncate text-[10px] text-muted-foreground">
-                  {role === "gestor" ? "gestor@vyntra.com" : `${currentSeller?.id || "francine"}@vyntra.com`}
-                </div>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onClose();
-                logout();
-              }}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive gap-1.5 text-xs font-semibold px-2.5 h-8"
-            >
-              <LogOut className="size-3.5" />
-              <span>Sair</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DesktopSidebar({
-  view,
-  setView,
+  mobileOpen,
+  setMobileOpen,
   onGoHome,
 }: {
   view: View;
   setView: (v: View) => void;
+  mobileOpen: boolean;
+  setMobileOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
 }) {
   const {
@@ -1732,6 +1111,10 @@ function DesktopSidebar({
       ];
     }
 
+    // Gestão Comercial filtrada de acordo com o plano ativo no Modo Demonstração:
+    // ESSENCIAL: Visão Geral, Oportunidades, Follow-ups, Propostas e Planos
+    // PERFORMANCE: Tudo do Essencial + Qualificação, Campanhas no WhatsApp, Distribuição, Insights, Impacto Comercial e Gestão de equipe
+    // ENTERPRISE: Tudo do Performance + Integrações, Logs de integração e Configurações
     return NAV.filter((item) => {
       if (item.id === "plans") return true;
 
@@ -1759,6 +1142,7 @@ function DesktopSidebar({
         );
       }
 
+      // Enterprise: experiência completa da Vyntra
       return true;
     });
   }, [role, currentPlan]);
@@ -1768,6 +1152,7 @@ function DesktopSidebar({
       onGoHome();
     } else {
       setView("overview");
+      setMobileOpen(false);
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }
   };
@@ -1818,6 +1203,7 @@ function DesktopSidebar({
         </nav>
       </ScrollArea>
       <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
+        {/* Card do Modo Demonstração Comercial (exclusivo para perfil executivo/gestor) */}
         {role === "gestor" && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
@@ -1940,15 +1326,34 @@ function DesktopSidebar({
       </div>
     </div>
   );
-
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 w-[244px] border-r border-sidebar-border bg-sidebar">
-      {body}
-    </aside>
+    <>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[244px] border-r border-sidebar-border lg:block">
+        {body}
+      </aside>
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="relative h-full w-[280px] border-r border-border">{body}</aside>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X />
+          </Button>
+        </div>
+      )}
+    </>
   );
 }
 
-function DesktopTopbar({
+function Topbar({
+  onMenu,
   globalSearch,
   setGlobalSearch,
   searchOpen,
@@ -1958,8 +1363,8 @@ function DesktopTopbar({
   setAlertsOpen,
   onGoHome,
   setView,
-  onSwitchToMobile,
 }: {
+  onMenu: () => void;
   globalSearch: string;
   setGlobalSearch: (v: string) => void;
   searchOpen: boolean;
@@ -1969,7 +1374,6 @@ function DesktopTopbar({
   setAlertsOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
   setView?: (v: View) => void;
-  onSwitchToMobile: () => void;
 }) {
   const {
     opportunities,
@@ -1994,9 +1398,14 @@ function DesktopTopbar({
       .slice(0, 6);
   }, [globalSearch, opportunities, sellerById]);
   const unread = notifications.filter((n) => !n.read).length;
-
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-6 backdrop-blur-xl lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="flex items-center gap-2 lg:hidden">
+        <Button variant="ghost" size="icon" onClick={onMenu}>
+          <Menu />
+        </Button>
+        <Brand compact onClick={onGoHome} />
+      </div>
       <div className="relative flex-1 max-w-xl">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -2037,26 +1446,14 @@ function DesktopTopbar({
           </div>
         )}
       </div>
-
-      {/* Botão de Alternar para Versão Celular */}
-      <button
-        type="button"
-        onClick={onSwitchToMobile}
-        className="flex items-center gap-1.5 rounded-full border border-cyan-500/35 bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition-all shadow-xs cursor-pointer shrink-0"
-        title="Alternar para a visualização dedicada para celular"
-      >
-        <Smartphone className="size-3.5 text-cyan-400" />
-        <span>Versão Celular</span>
-      </button>
-
-      <div className="hidden items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground xl:flex shrink-0">
+      <div className="hidden items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground xl:flex">
         <Bike className="size-4 text-primary" />
         {DEALERSHIP}
       </div>
 
       {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado (exclusivo para o gestor) */}
       {role === "gestor" && (
-        <div className="relative shrink-0">
+        <div className="relative hidden sm:block">
           <button
             type="button"
             onClick={() => setDemoMenuOpen(!demoMenuOpen)}
@@ -2065,12 +1462,7 @@ function DesktopTopbar({
             <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
             <span className="font-bold uppercase text-foreground">{currentPlan}</span>
-            <ChevronRight
-              className={cn(
-                "size-3 transition-transform text-muted-foreground",
-                demoMenuOpen && "rotate-90",
-              )}
-            />
+            <ChevronRight className={cn("size-3 transition-transform text-muted-foreground", demoMenuOpen && "rotate-90")} />
           </button>
 
           {demoMenuOpen && (
@@ -2081,8 +1473,7 @@ function DesktopTopbar({
               <div className="space-y-1">
                 {(["essencial", "performance", "enterprise"] as const).map((p) => {
                   const isSelected = currentPlan === p;
-                  const priceLabel =
-                    p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
+                  const priceLabel = p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
                   return (
                     <button
                       key={p}
@@ -2121,8 +1512,7 @@ function DesktopTopbar({
           )}
         </div>
       )}
-
-      <div className="relative shrink-0">
+      <div className="relative">
         <Button
           variant="ghost"
           size="icon"
@@ -2137,7 +1527,7 @@ function DesktopTopbar({
           )}
         </Button>
         {alertsOpen && (
-          <div className="absolute right-0 top-12 w-[380px] rounded-xl border border-border bg-popover shadow-2xl">
+          <div className="absolute right-0 top-12 w-[min(380px,calc(100vw-32px))] rounded-xl border border-border bg-popover shadow-2xl">
             <div className="flex items-center justify-between border-b border-border p-4">
               <div>
                 <h3 className="font-semibold">Central de alertas</h3>
@@ -2178,8 +1568,7 @@ function DesktopTopbar({
           </div>
         )}
       </div>
-
-      <div className="flex h-8 items-center gap-2 border-l border-border pl-3 shrink-0">
+      <div className="hidden h-8 items-center gap-2 border-l border-border pl-3 sm:flex">
         <div className="grid size-8 place-items-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
           {role === "gestor"
             ? "G"
@@ -2199,239 +1588,6 @@ function DesktopTopbar({
           </div>
         </div>
       </div>
-    </header>
-  );
-}
-
-function MobileHeader({
-  onMenu,
-  globalSearch,
-  setGlobalSearch,
-  setSelected,
-  alertsOpen,
-  setAlertsOpen,
-  onGoHome,
-  onSwitchToDesktop,
-}: {
-  onMenu: () => void;
-  globalSearch: string;
-  setGlobalSearch: (v: string) => void;
-  setSelected: (v: string | null) => void;
-  alertsOpen: boolean;
-  setAlertsOpen: (v: boolean) => void;
-  onGoHome?: (() => void) | undefined;
-  onSwitchToDesktop: () => void;
-}) {
-  const {
-    opportunities,
-    sellerById,
-    notifications,
-    markNotificationRead,
-    markAllNotificationsRead,
-    role,
-    currentPlan = "performance",
-  } = useVyntra();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const unread = notifications.filter((n) => !n.read).length;
-
-  const matches = useMemo(() => {
-    const q = globalSearch.toLowerCase().trim();
-    if (!q) return [];
-    return opportunities
-      .filter((o) =>
-        `${o.customer.name} ${o.product} ${sellerById(o.sellerId)?.name}`.toLowerCase().includes(q),
-      )
-      .slice(0, 6);
-  }, [globalSearch, opportunities, sellerById]);
-
-  return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-xl">
-      <div className="flex h-14 items-center justify-between gap-2 px-3.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <Brand compact onClick={onGoHome} />
-          <div className="flex items-center gap-1.5 overflow-hidden">
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                role === "gestor"
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "bg-violet-500/20 text-violet-300 border border-violet-500/30",
-              )}
-            >
-              {role === "gestor" ? "Gestor" : "Consultor"}
-            </span>
-            {role === "gestor" && (
-              <span className="truncate rounded-full bg-secondary/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border border-border">
-                {currentPlan}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Botão de Alternar para Versão PC */}
-          <button
-            type="button"
-            onClick={onSwitchToDesktop}
-            className="flex items-center gap-1 rounded-full border border-border bg-secondary/80 hover:bg-secondary px-2.5 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer mr-0.5"
-            title="Alternar para a versão de computador (PC)"
-          >
-            <Monitor className="size-3 text-cyan-400" />
-            <span className="font-bold">PC</span>
-          </button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "size-8 text-muted-foreground",
-              mobileSearchOpen && "text-primary bg-primary/10",
-            )}
-            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            aria-label="Buscar"
-          >
-            <Search className="size-4" />
-          </Button>
-
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground relative"
-              onClick={() => setAlertsOpen(!alertsOpen)}
-              aria-label="Notificações"
-            >
-              <Bell className="size-4" />
-              {unread > 0 && (
-                <span className="absolute right-1 top-1 grid size-3.5 place-items-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
-                  {unread}
-                </span>
-              )}
-            </Button>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-foreground"
-            onClick={onMenu}
-            aria-label="Menu"
-          >
-            <Menu className="size-5" />
-          </Button>
-        </div>
-      </div>
-
-      {mobileSearchOpen && (
-        <div className="relative px-3.5 pb-3 border-t border-border/40 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={globalSearch}
-              autoFocus
-              onChange={(e) => setGlobalSearch(e.target.value)}
-              placeholder="Buscar cliente, modelo ou vendedor..."
-              className="h-9 border-border bg-surface/90 pl-9 pr-8 text-xs focus:border-primary"
-            />
-            {globalSearch && (
-              <button
-                type="button"
-                onClick={() => setGlobalSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
-          </div>
-          {globalSearch.trim() && (
-            <div className="mt-2 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl divide-y divide-border/60">
-              {matches.length ? (
-                matches.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => {
-                      setSelected(o.id);
-                      setMobileSearchOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 p-2.5 text-left active:bg-accent"
-                  >
-                    <ScoreMini score={o.score} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold truncate">{o.customer.name}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">
-                        {o.product} · {sellerById(o.sellerId)?.name}
-                      </div>
-                    </div>
-                    <ChevronRight className="size-3.5 text-muted-foreground" />
-                  </button>
-                ))
-              ) : (
-                <div className="p-3 text-center text-xs text-muted-foreground">
-                  Nenhuma oportunidade encontrada.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {alertsOpen && (
-        <div className="fixed inset-x-3 top-16 z-50 rounded-2xl border border-border bg-popover p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between border-b border-border pb-2.5 mb-2">
-            <div>
-              <h3 className="text-sm font-semibold">Central de Alertas</h3>
-              <p className="text-[10px] text-muted-foreground">{unread} não lidos</p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={markAllNotificationsRead}
-              >
-                Marcar lidos
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                onClick={() => setAlertsOpen(false)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
-            {notifications.map((n) => (
-              <button
-                key={n.id}
-                className={cn(
-                  "w-full rounded-xl p-2.5 text-left transition-colors border border-border/40",
-                  !n.read ? "bg-primary/10 border-primary/30" : "bg-surface/50",
-                )}
-                onClick={() => {
-                  markNotificationRead(n.id);
-                  if (n.opportunityId) setSelected(n.opportunityId);
-                  setAlertsOpen(false);
-                }}
-              >
-                <div className="flex gap-2.5">
-                  <AlertIcon kind={n.kind} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold leading-tight">{n.title}</div>
-                    <div className="mt-1 text-[11px] leading-snug text-muted-foreground line-clamp-2">
-                      {n.description}
-                    </div>
-                    <div className="mt-1.5 text-[9px] text-muted-foreground">
-                      {relativeTime(n.createdAt)}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </header>
   );
 }

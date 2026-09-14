@@ -153,14 +153,14 @@ type View =
 const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: "overview", label: "Visão geral", icon: LayoutDashboard },
   { id: "opportunities", label: "Oportunidades", icon: Target },
-  { id: "qualification", label: "Qualificação", icon: Bot },
   { id: "followups", label: "Follow-ups", icon: CalendarClock },
   { id: "proposals", label: "Propostas", icon: FileText },
-  { id: "campaign", label: "Campanha de Anúncio", icon: Megaphone },
+  { id: "qualification", label: "Qualificação", icon: Bot },
+  { id: "campaign", label: "Campanhas no WhatsApp", icon: Megaphone },
   { id: "distribution", label: "Distribuição", icon: RouteIcon },
   { id: "insights", label: "Insights", icon: Sparkles },
   { id: "impact", label: "Impacto comercial", icon: CircleDollarSign },
-  { id: "team", label: "Equipe", icon: UsersRound },
+  { id: "team", label: "Gestão de equipe", icon: UsersRound },
   { id: "plans", label: "Planos", icon: Trophy },
   { id: "integrations", label: "Integrações", icon: Webhook },
   { id: "integration-logs", label: "Logs de integração", icon: Terminal },
@@ -953,29 +953,29 @@ function Workspace() {
 
   // Garante que a tela aberta pertença ao plano atualmente demonstrado
   useEffect(() => {
-    if (role === "gestor" && view !== "plans") {
-      const allowedInEssencial = [
-        "overview",
-        "opportunities",
-        "qualification",
-        "followups",
-        "proposals",
-        "campaign",
-        "plans",
-      ];
-      const allowedInPerformance = [
-        ...allowedInEssencial,
-        "distribution",
-        "insights",
-        "impact",
-        "team",
-      ];
+    if (view === "plans") return;
 
-      if (currentPlan === "essencial" && !allowedInEssencial.includes(view)) {
-        setView("overview");
-      } else if (currentPlan === "performance" && !allowedInPerformance.includes(view)) {
-        setView("overview");
-      }
+    const allowedInEssencial: View[] = [
+      "overview",
+      "opportunities",
+      "followups",
+      "proposals",
+      "plans",
+    ];
+    const allowedInPerformance: View[] = [
+      ...allowedInEssencial,
+      "qualification",
+      "campaign",
+      "distribution",
+      "insights",
+      "impact",
+      "team",
+    ];
+
+    if (currentPlan === "essencial" && !allowedInEssencial.includes(view)) {
+      setView("overview");
+    } else if (currentPlan === "performance" && !allowedInPerformance.includes(view)) {
+      setView("overview");
     }
   }, [currentPlan, view, role]);
 
@@ -1107,12 +1107,17 @@ function Sidebar({
         { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
         { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
         { id: "plans" as View, label: "Planos", icon: Trophy },
-      ];
+      ].filter((item) => {
+        if (currentPlan === "essencial" && item.id === "qualification") {
+          return false;
+        }
+        return true;
+      });
     }
 
     // Gestão Comercial filtrada de acordo com o plano ativo no Modo Demonstração:
-    // ESSENCIAL: Visão Geral, Oportunidades, Qualificação, Follow-ups, Propostas, Campanha de Anúncio e Planos
-    // PERFORMANCE: Tudo do Essencial + Distribuição, Insights, Impacto Comercial e Equipe
+    // ESSENCIAL: Visão Geral, Oportunidades, Follow-ups, Propostas e Planos
+    // PERFORMANCE: Tudo do Essencial + Qualificação, Campanhas no WhatsApp, Distribuição, Insights, Impacto Comercial e Gestão de equipe
     // ENTERPRISE: Tudo do Performance + Integrações, Logs de integração e Configurações
     return NAV.filter((item) => {
       if (item.id === "plans") return true;
@@ -1121,10 +1126,8 @@ function Sidebar({
         return (
           item.id === "overview" ||
           item.id === "opportunities" ||
-          item.id === "qualification" ||
           item.id === "followups" ||
-          item.id === "proposals" ||
-          item.id === "campaign"
+          item.id === "proposals"
         );
       }
 
@@ -1132,9 +1135,9 @@ function Sidebar({
         return (
           item.id === "overview" ||
           item.id === "opportunities" ||
-          item.id === "qualification" ||
           item.id === "followups" ||
           item.id === "proposals" ||
+          item.id === "qualification" ||
           item.id === "campaign" ||
           item.id === "distribution" ||
           item.id === "insights" ||
@@ -1728,7 +1731,7 @@ function Overview({
     document.body.scrollTop = 0;
   }, []);
 
-  const { opportunities, followUps, now } = useVyntra();
+  const { opportunities, followUps, now, currentPlan = "performance" } = useVyntra();
   const hot = opportunities.filter((o) => o.score >= 80);
   const critical = hot.filter((o) => {
     const m = waitingMinutes(o, now);
@@ -1794,33 +1797,37 @@ function Overview({
 
           {/* Ações Rápidas Executivas */}
           <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t border-border/40 lg:border-t-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView?.("impact")}
-              className="border-cyan-500/40 bg-cyan-950/30 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-            >
-              <TrendingUp className="mr-1.5 size-3.5 text-cyan-400" />
-              Simulador de Impacto
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView?.("distribution")}
-              className="border-violet-500/40 bg-violet-950/30 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/60 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
-            >
-              <Sparkles className="mr-1.5 size-3.5 text-violet-400" />
-              Distribuição de Leads
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView?.("campaign")}
-              className="border-emerald-500/40 bg-emerald-950/30 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-            >
-              <Megaphone className="mr-1.5 size-3.5 text-emerald-400" />
-              Campanha de Anúncio
-            </Button>
+            {currentPlan !== "essencial" && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView?.("impact")}
+                  className="border-cyan-500/40 bg-cyan-950/30 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                >
+                  <TrendingUp className="mr-1.5 size-3.5 text-cyan-400" />
+                  Simulador de Impacto
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView?.("distribution")}
+                  className="border-violet-500/40 bg-violet-950/30 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/60 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                >
+                  <Sparkles className="mr-1.5 size-3.5 text-violet-400" />
+                  Distribuição de Leads
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setView?.("campaign")}
+                  className="border-emerald-500/40 bg-emerald-950/30 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                >
+                  <Megaphone className="mr-1.5 size-3.5 text-emerald-400" />
+                  Campanhas no WhatsApp
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               size="sm"

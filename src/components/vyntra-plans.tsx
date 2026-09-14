@@ -55,37 +55,31 @@ export const PLANS_DATA: PlanDetail[] = [
     price: "R$ 797",
     priceValue: 797,
     period: "/mês",
-    headline: "Recursos fundamentais para iniciar a gestão de leads",
+    headline: "Recursos fundamentais para iniciar a gestão comercial",
     description:
-      "Pacote enxuto e essencial para estruturar o atendimento e a qualificação de novos contatos.",
+      "Plano simples e enxuto focado nos pilares essenciais de atendimento e fechamento de negócios.",
     features: [
       "Visão Geral",
       "Oportunidades",
-      "Qualificação",
       "Follow-ups",
       "Propostas",
-      "Campanha de Anúncio",
     ],
     exclusiveFeatures: [
       {
         name: "Visão Geral & Fila",
-        description: "Acompanhamento em tempo real dos leads e fila de atendimento",
+        description: "Acompanhamento em tempo real dos leads e fila rápida de atendimento",
       },
       {
         name: "Oportunidades & Pipeline",
-        description: "Gestão do funil de vendas e status dos clientes",
+        description: "Gestão do funil de vendas, etapas e status dos contatos",
       },
       {
-        name: "Qualificação & Vyntra Score",
-        description: "Quiz simplificado em 4 cliques e pontuação automática",
+        name: "Follow-ups Comerciais",
+        description: "Agendamento de retornos e histórico de interações",
       },
       {
-        name: "Follow-ups & Propostas",
-        description: "Agendamento de contatos e envio de propostas comerciais",
-      },
-      {
-        name: "Campanha de Anúncio",
-        description: "Captação de leads e campanhas promocionais de entrada",
+        name: "Propostas Comerciais",
+        description: "Envio e acompanhamento de propostas de vendas com simulação",
       },
     ],
   },
@@ -102,16 +96,25 @@ export const PLANS_DATA: PlanDetail[] = [
       "A operação comercial definitiva com inteligência ativa, distribuição por regras e métricas financeiras.",
     features: [
       "Tudo do Essencial",
+      "Qualificação",
+      "Campanhas de anúncio no WhatsApp",
       "Distribuição",
       "Insights",
       "Impacto Comercial",
-      "Campanhas avançadas",
-      "Disparos personalizados",
       "Gestão de equipe",
       "Automações",
-      "Qualificação avançada",
     ],
     exclusiveFeatures: [
+      {
+        name: "Qualificação & Vyntra Score",
+        lockedIn: ["essencial"],
+        description: "Quiz interativo de qualificação em 4 cliques e pontuação em tempo real",
+      },
+      {
+        name: "Campanhas de Anúncio no WhatsApp",
+        lockedIn: ["essencial"],
+        description: "Criação, disparo e gestão de campanhas com segmentação e inteligência",
+      },
       {
         name: "Distribuição Inteligente",
         lockedIn: ["essencial"],
@@ -133,7 +136,7 @@ export const PLANS_DATA: PlanDetail[] = [
         description: "Monitoramento individual de vendedores, metas e tempo de resposta",
       },
       {
-        name: "Automações & Disparos",
+        name: "Automações Comerciais",
         lockedIn: ["essencial"],
         description: "Ações automáticas e réguas de relacionamento programadas",
       },
@@ -156,7 +159,7 @@ export const PLANS_DATA: PlanDetail[] = [
       "Personalização avançada",
       "Administração avançada",
       "Recursos exclusivos Enterprise",
-      "Suporte prioritário",
+      "Todos os futuros recursos Enterprise",
     ],
     exclusiveFeatures: [
       {
@@ -170,7 +173,7 @@ export const PLANS_DATA: PlanDetail[] = [
         description: "Controle granular por nível de cargo, departamento e unidade",
       },
       {
-        name: "Personalização & Regras Customizadas",
+        name: "Personalização Avançada",
         lockedIn: ["essencial", "performance"],
         description: "Campos customizados, etapas sob medida e branding institucional",
       },
@@ -180,9 +183,9 @@ export const PLANS_DATA: PlanDetail[] = [
         description: "Histórico completo de ações, logs de acesso e exportação executiva",
       },
       {
-        name: "Suporte Prioritário & SLA Dedicado",
+        name: "Recursos Exclusivos Enterprise",
         lockedIn: ["essencial", "performance"],
-        description: "Canal direto com gerente de sucesso e consultoria de implantação",
+        description: "Integrações via webhook, logs de telemetria e configurações completas",
       },
     ],
   },
@@ -518,48 +521,48 @@ export function PlansPage({ setView }: PlansPageProps) {
 
           {/* Essencial 2 */}
           <FeatureAccessCard
-            title="Qualificação & Vyntra Score"
-            description="Algoritmo de pontuação e perguntas rápidas em 4 cliques."
-            planRequired="essencial"
-            currentPlan={currentPlan}
-          />
-
-          {/* Essencial 3 */}
-          <FeatureAccessCard
-            title="Follow-ups, Propostas & Anúncios"
-            description="Agendamento comercial de retorno, propostas com simulação e campanhas de captação."
+            title="Follow-ups & Propostas Comerciais"
+            description="Agendamento comercial de retorno, propostas com simulação e histórico de interações."
             planRequired="essencial"
             currentPlan={currentPlan}
           />
 
           {/* Performance 1 */}
           <FeatureAccessCard
-            title="Distribuição Avançada"
-            description="Regras dinâmicas por carga horária, especialidade do vendedor e taxa de fechamento."
+            title="Qualificação & Vyntra Score"
+            description="Algoritmo de pontuação e quiz interativo de qualificação em 4 cliques."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
           {/* Performance 2 */}
           <FeatureAccessCard
-            title="Insights Comerciais"
-            description="Métricas de conversão, canais de captação mais rentáveis e diagnóstico da operação."
+            title="Campanhas de Anúncio no WhatsApp"
+            description="Criação, disparo e gestão de campanhas com segmentação e inteligência."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
           {/* Performance 3 */}
           <FeatureAccessCard
-            title="Impacto Comercial & ROI"
-            description="Simulador financeiro de receita incremental e projeção de faturamento."
+            title="Distribuição Inteligente"
+            description="Regras dinâmicas por carga horária, especialidade do vendedor e taxa de fechamento."
             planRequired="performance"
             currentPlan={currentPlan}
           />
 
           {/* Performance 4 */}
           <FeatureAccessCard
-            title="Gestão Avançada da Equipe"
-            description="Acompanhamento individual de cada vendedor, tempo de resposta e produtividade."
+            title="Insights Comerciais & Impacto"
+            description="Inteligência preditiva, horários de pico, canais mais rentáveis e simulador financeiro."
+            planRequired="performance"
+            currentPlan={currentPlan}
+          />
+
+          {/* Performance 5 */}
+          <FeatureAccessCard
+            title="Gestão de Equipe & Automações"
+            description="Acompanhamento individual de cada vendedor, SLA, metas e regras automáticas."
             planRequired="performance"
             currentPlan={currentPlan}
           />

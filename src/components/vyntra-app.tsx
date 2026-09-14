@@ -954,6 +954,9 @@ function Workspace() {
     currentSellerId,
     sellers,
     sellerById,
+    setRole,
+    setCurrentPlan,
+    setCurrentSellerId,
     logout,
   } = useVyntra();
   const [view, setView] = useState<View>("overview");
@@ -985,16 +988,17 @@ function Workspace() {
   const hotCount = useMemo(() => {
     return opportunities.filter((o) => {
       if (role === "vendedor" && currentSellerId && o.sellerId !== currentSellerId) return false;
-      return o.temperature === "quente" || o.score >= 75;
+      return o.score >= 75;
     }).length;
   }, [opportunities, role, currentSellerId]);
 
   const overdueCount = useMemo(() => {
     return followUps.filter((f) => {
-      if (role === "vendedor" && currentSellerId && f.sellerId !== currentSellerId) return false;
+      const opportunity = opportunities.find((item) => item.id === f.opportunityId);
+      if (role === "vendedor" && currentSellerId && opportunity?.sellerId !== currentSellerId) return false;
       return !f.done && new Date(f.dueAt).getTime() < now;
     }).length;
-  }, [followUps, now, role, currentSellerId]);
+  }, [followUps, opportunities, now, role, currentSellerId]);
 
   // Garante que a tela aberta pertença ao plano atualmente demonstrado
   useEffect(() => {
@@ -1336,8 +1340,8 @@ function MobileActionSheet({
   setCurrentPlan: (p: PlanTier) => void;
   currentSellerId?: string | undefined;
   setCurrentSellerId: (s: string) => void;
-  sellers: Array<{ id: string; name: string; store: string }>;
-  sellerById: (id: string) => { id: string; name: string; store: string } | undefined;
+  sellers: Array<{ id: string; name: string; store?: string }>;
+  sellerById: (id: string) => { id: string; name: string; store?: string } | undefined;
   logout: () => void;
   onGoHome?: () => void;
   onSwitchToDesktop?: () => void;
@@ -1626,7 +1630,7 @@ function MobileActionSheet({
                   <SelectContent className="z-[70]">
                     {sellers.map((s) => (
                       <SelectItem key={s.id} value={s.id} className="text-xs">
-                        {s.name} ({s.store})
+                        {s.name}{s.store ? ` (${s.store})` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>

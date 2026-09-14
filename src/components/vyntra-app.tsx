@@ -955,6 +955,11 @@ function Workspace() {
   useEffect(() => {
     if (view === "plans") return;
 
+    if (role === "vendedor" && view === "qualification") {
+      setView("overview");
+      return;
+    }
+
     const allowedInEssencial: View[] = [
       "overview",
       "opportunities",
@@ -1051,7 +1056,6 @@ function SellerWorkspace({
   if (view === "opportunities") return <OpportunitiesPage setSelected={setSelected} />;
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
-  if (view === "qualification") return <Qualification />;
   if (view === "plans") return <PlansPage setView={setView} />;
 
   return (
@@ -1105,14 +1109,8 @@ function Sidebar({
         { id: "opportunities" as View, label: "Meus leads", icon: Target },
         { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
         { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
-        { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
         { id: "plans" as View, label: "Planos", icon: Trophy },
-      ].filter((item) => {
-        if (currentPlan === "essencial" && item.id === "qualification") {
-          return false;
-        }
-        return true;
-      });
+      ];
     }
 
     // Gestão Comercial filtrada de acordo com o plano ativo no Modo Demonstração:

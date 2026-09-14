@@ -239,8 +239,8 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
             } else if (opportunity.store === "Santa Aurora / RS" || (opportunity.store as unknown as string) === "Santa Rosa / RS") {
               store = "Santa Aurora / RS";
             }
-            const city =
-              opportunity.city &&
+            const city: string =
+              (opportunity.city &&
               !opportunity.city.includes("Lages") &&
               !opportunity.city.includes("Três Passos") &&
               !opportunity.city.includes("Santa Rosa")
@@ -249,7 +249,7 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
                   ? NOVA_SERRA_REGION_CITIES[Math.floor(index / 3) % NOVA_SERRA_REGION_CITIES.length]
                   : store === "Vale Azul / RS"
                     ? "Vale Azul"
-                    : "Santa Aurora";
+                    : "Santa Aurora") || "Nova Serra";
             const region =
               opportunity.region ??
               (state === "SC" ? "Santa Catarina" : "Rio Grande do Sul");

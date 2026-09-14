@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   Clock3,
   Coins,
   Eye,

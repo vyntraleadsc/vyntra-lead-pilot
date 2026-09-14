@@ -162,3 +162,5 @@ export interface OpportunityFilters {
   status: string;
 }
 
+export type PlanTier = "essencial" | "performance" | "enterprise";
+

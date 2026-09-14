@@ -28,6 +28,7 @@ import {
   LeadStore,
   Opportunity,
   OpportunityStatus,
+  PlanTier,
   Proposal,
   ProposalStatus,
   PurchaseMethod,
@@ -53,6 +54,7 @@ export type RoleView = "gestor" | "vendedor";
 interface PersistedState {
   authed: boolean;
   role: RoleView;
+  currentPlan: PlanTier;
   currentSellerId: string;
   opportunities: Opportunity[];
   followUps: FollowUp[];
@@ -66,6 +68,7 @@ function initialState(): PersistedState {
   return {
     authed: false,
     role: "gestor",
+    currentPlan: "performance",
     currentSellerId: "francine",
     opportunities,
     followUps: buildFollowUps(opportunities),
@@ -89,6 +92,7 @@ interface VyntraContextValue extends PersistedState {
   login: (email: string, password: string, roleHint?: RoleView, sellerIdHint?: string) => boolean;
   loginAs: (role: RoleView, sellerId?: string) => void;
   setCurrentSellerId: (sellerId: string) => void;
+  setCurrentPlan: (plan: PlanTier) => void;
   logout: () => void;
   setRole: (role: RoleView) => void;
   resetDemo: () => void;
@@ -348,6 +352,10 @@ function VyntraProviderInternal({ children }: { children: ReactNode }) {
           role,
           currentSellerId: sellerId,
         }));
+      },
+      setCurrentPlan: (plan: PlanTier) => {
+        setState((s) => ({ ...s, currentPlan: plan }));
+        toast.success(`Plano demonstrado alterado para ${plan.toUpperCase()}`);
       },
       logout: () => setState((s) => ({ ...s, authed: false, role: "gestor" })),
       setRole: (role) => setState((s) => ({ ...s, role })),
@@ -650,6 +658,7 @@ function getFallbackContext(): VyntraContextValue {
       login: () => false,
       loginAs: () => {},
       setCurrentSellerId: () => {},
+      setCurrentPlan: () => {},
       logout: () => {},
       setRole: () => {},
       resetDemo: () => {},

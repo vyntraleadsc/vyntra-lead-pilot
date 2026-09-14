@@ -64,6 +64,7 @@ import {
 } from "lucide-react";
 import { IntegrationsPage, IntegrationLogsPage } from "./vyntra-integrations";
 import { AdCampaignPage } from "./vyntra-ad-campaign";
+import { PlansPage } from "./vyntra-plans";
 import {
   Area,
   AreaChart,
@@ -117,6 +118,7 @@ import {
   type Opportunity,
   type OpportunityFilters,
   type OpportunityStatus,
+  type PlanTier,
   type PurchaseMethod,
 } from "@/lib/vyntra/types";
 import {
@@ -143,6 +145,7 @@ type View =
   | "insights"
   | "qualification"
   | "impact"
+  | "plans"
   | "integrations"
   | "integration-logs"
   | "settings";
@@ -158,6 +161,7 @@ const NAV: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: "insights", label: "Insights", icon: Sparkles },
   { id: "qualification", label: "Qualificação", icon: Bot },
   { id: "impact", label: "Impacto comercial", icon: CircleDollarSign },
+  { id: "plans", label: "Planos", icon: Trophy },
   { id: "integrations", label: "Integrações", icon: Webhook },
   { id: "integration-logs", label: "Logs de integração", icon: Terminal },
   { id: "settings", label: "Configurações", icon: Settings },
@@ -991,6 +995,7 @@ function Workspace() {
           alertsOpen={alertsOpen}
           setAlertsOpen={setAlertsOpen}
           onGoHome={handleGoHome}
+          setView={setView}
         />
         <main className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           {role === "vendedor" ? (
@@ -1019,6 +1024,7 @@ function SellerWorkspace({
   if (view === "followups") return <FollowUps setSelected={setSelected} />;
   if (view === "proposals") return <Proposals setSelected={setSelected} />;
   if (view === "qualification") return <Qualification />;
+  if (view === "plans") return <PlansPage setView={setView} />;
 
   return (
     <div className="panel mx-auto mt-12 max-w-lg p-8 text-center">
@@ -1051,8 +1057,17 @@ function Sidebar({
   setMobileOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
 }) {
-  const { logout, role, setRole, currentSellerId, setCurrentSellerId, sellers, sellerById } =
-    useVyntra();
+  const {
+    logout,
+    role,
+    setRole,
+    currentSellerId,
+    setCurrentSellerId,
+    sellers,
+    sellerById,
+    currentPlan = "performance",
+    setCurrentPlan,
+  } = useVyntra();
   const currentSeller = sellerById(currentSellerId || "francine") ?? sellers[0]!;
 
   const navItems =
@@ -1063,6 +1078,7 @@ function Sidebar({
           { id: "followups" as View, label: "Meus follow-ups", icon: CalendarClock },
           { id: "proposals" as View, label: "Minhas propostas", icon: FileText },
           { id: "qualification" as View, label: "Qualificação (Quiz)", icon: Bot },
+          { id: "plans" as View, label: "Planos", icon: Trophy },
         ]
       : NAV;
 
@@ -1108,6 +1124,44 @@ function Sidebar({
         </nav>
       </ScrollArea>
       <div className="shrink-0 mt-auto pt-3 space-y-3 border-t border-sidebar-border/60">
+        {/* Card do Modo Demonstração Comercial */}
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1">
+              <Trophy className="size-3" />
+              Plano Demo
+            </span>
+            <button
+              type="button"
+              onClick={() => setView("plans")}
+              className="text-[10px] font-semibold text-primary hover:underline"
+            >
+              Ver todos
+            </button>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-foreground capitalize">
+              {currentPlan || "performance"}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const nextPlan: PlanTier =
+                  currentPlan === "essencial"
+                    ? "performance"
+                    : currentPlan === "performance"
+                      ? "enterprise"
+                      : "essencial";
+                setCurrentPlan(nextPlan);
+              }}
+              className="text-[10px] font-bold text-primary bg-primary/15 hover:bg-primary/25 px-2 py-0.5 rounded transition-colors"
+              title="Clique para alternar o plano da demonstração"
+            >
+              Alterar plano
+            </button>
+          </div>
+        </div>
+
         <div className="rounded-lg border border-border bg-surface/60 p-2.5">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -1227,6 +1281,7 @@ function Topbar({
   alertsOpen,
   setAlertsOpen,
   onGoHome,
+  setView,
 }: {
   onMenu: () => void;
   globalSearch: string;
@@ -1237,6 +1292,7 @@ function Topbar({
   alertsOpen: boolean;
   setAlertsOpen: (v: boolean) => void;
   onGoHome?: (() => void) | undefined;
+  setView?: (v: View) => void;
 }) {
   const {
     opportunities,
@@ -1246,7 +1302,10 @@ function Topbar({
     markAllNotificationsRead,
     role,
     currentSellerId,
+    currentPlan = "performance",
+    setCurrentPlan,
   } = useVyntra();
+  const [demoMenuOpen, setDemoMenuOpen] = useState(false);
   const currentSeller = sellerById(currentSellerId || "francine");
   const matches = useMemo(() => {
     const q = globalSearch.toLowerCase().trim();
@@ -1310,8 +1369,65 @@ function Topbar({
         <Bike className="size-4 text-primary" />
         {DEALERSHIP}
       </div>
-      <div className="hidden rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-bold tracking-wide text-primary sm:block">
-        DEMO — Dados fictícios
+
+      {/* Seletor Rápido do Modo Demonstração & Plano Demonstrado */}
+      <div className="relative hidden sm:block">
+        <button
+          type="button"
+          onClick={() => setDemoMenuOpen(!demoMenuOpen)}
+          className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition-all shadow-xs"
+        >
+          <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-muted-foreground font-normal">Plano demonstrado:</span>
+          <span className="font-bold uppercase text-foreground">{currentPlan}</span>
+          <ChevronRight className={cn("size-3 transition-transform text-muted-foreground", demoMenuOpen && "rotate-90")} />
+        </button>
+
+        {demoMenuOpen && (
+          <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
+              Alternar Plano da Demonstração
+            </div>
+            <div className="space-y-1">
+              {(["essencial", "performance", "enterprise"] as const).map((p) => {
+                const isSelected = currentPlan === p;
+                const priceLabel = p === "essencial" ? "R$ 797" : p === "performance" ? "R$ 1.197" : "R$ 1.997";
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPlan(p);
+                      setDemoMenuOpen(false);
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                      isSelected
+                        ? "bg-primary text-primary-foreground font-bold"
+                        : "text-foreground hover:bg-secondary",
+                    )}
+                  >
+                    <span className="capitalize">{p}</span>
+                    <span className="text-[10px] opacity-80">{priceLabel}/mês</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="border-t border-border/60 pt-2 px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (setView) setView("plans");
+                  setDemoMenuOpen(false);
+                }}
+                className="w-full text-left text-xs font-semibold text-primary hover:underline flex items-center justify-between"
+              >
+                Ver comparação de planos
+                <ChevronRight className="size-3" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="relative">
         <Button
@@ -1430,6 +1546,7 @@ function ManagerView({
   if (view === "insights") return <Insights setView={setView} setSelected={setSelected} />;
   if (view === "qualification") return <Qualification />;
   if (view === "impact") return <Impact />;
+  if (view === "plans") return <PlansPage setView={setView} />;
   if (view === "integrations")
     return (
       <IntegrationsPage
